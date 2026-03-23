@@ -17,15 +17,15 @@ function renderLoginUI() {
             <div class="login-tabs">
                 <button class="login-tab active" data-role="student" onclick="switchLoginTab('student')">นักศึกษา</button>
                 <button class="login-tab" data-role="staff" onclick="switchLoginTab('staff')">บุคลากร</button>
-                <button class="login-tab" data-role="admin" onclick="switchLoginTab('admin')">Super Admin</button>
+                <button class="login-tab" data-role="admin" onclick="switchLoginTab('admin')">Admin</button>
             </div>
             
             <div id="loginError" class="login-error" style="display: none; color: #ef4444; background: #fef2f2; padding: 12px; border-radius: 8px; margin-bottom: 20px; text-align: center; font-size: 0.9rem; font-weight: 500;"></div>
             
             <div class="login-form" id="loginFormStudent">
                 <div class="form-group">
-                    <label class="form-label">เลขบัตรประชาชน (13) หรือ รหัสนักศึกษา (11)</label>
-                    <input type="text" id="studentIdInput" class="form-input" placeholder="ตัวเลข 11 หรือ 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    <label class="form-label">เลขประจำตัวประชาชน (13 หลัก)</label>
+                    <input type="text" id="studentIdInput" class="form-input" placeholder="เลขบัตรประชาชน 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('student')">เข้าสู่ระบบ</button>
             </div>
@@ -33,7 +33,7 @@ function renderLoginUI() {
             <div class="login-form" id="loginFormStaff" style="display: none;">
                 <div class="form-group">
                     <label class="form-label">อีเมลสถาบัน</label>
-                    <input type="email" id="staffEmailInput" class="form-input" placeholder="ชื่อ.นามสกุล@pi.ac.th">
+                    <input type="email" id="staffEmailInput" class="form-input" placeholder="email@pi.ac.th">
                 </div>
                 <div class="form-group">
                     <label class="form-label">รหัสผ่าน (6 หลัก)</label>
@@ -44,9 +44,8 @@ function renderLoginUI() {
             
             <div class="login-form" id="loginFormAdmin" style="display: none;">
                 <div class="form-group">
-                    <label class="form-label">รหัสผ่าน Super Admin (6 หลัก)</label>
+                    <label class="form-label">รหัสผ่าน Admin (6 หลัก)</label>
                     <input type="password" id="adminPassInput" class="form-input" placeholder="ตัวเลข 6 หลัก" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
-                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:5px; text-align:right;">(รหัสผ่านเริ่มต้น: 999999)</div>
                 </div>
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('admin')">เข้าสู่ระบบ</button>
             </div>
@@ -82,14 +81,14 @@ function showError(msg) {
 function handleLogin(role) {
     if (role === 'student') {
         const id = document.getElementById('studentIdInput').value;
-        if (id.length !== 13 && id.length !== 11) {
-            return showError("กรุณากรอกเลขบัตรประชาชน (13 หลัก) หรือ รหัสนักศึกษา (11 หลัก) ให้ถูกต้อง");
+        if (id.length !== 13) {
+            return showError("กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก");
         }
 
-        // Find matching student by ID or Username (bulletproof trimming & lowercase)
+        // Find matching student by 13-digit ID searching ALL fields
         const idTrimmed = id.trim();
-        const studentRecord = (MOCK.students || []).find(s => String(s.id).trim() === idTrimmed || String(s.username).trim() === idTrimmed || String(s.studentId).trim() === idTrimmed);
-        const userRecord = (MOCK.users || []).find(u => String(u.username).trim() === idTrimmed && u.role && (String(u.role).toLowerCase().trim() === 'student' || String(u.role).trim() === 'นักศึกษา'));
+        const studentRecord = (MOCK.students || []).find(s => Object.values(s).some(val => String(val).trim() === idTrimmed));
+        const userRecord = (MOCK.users || []).find(u => Object.values(u).some(val => String(val).trim() === idTrimmed) && u.role && (String(u.role).toLowerCase().trim() === 'student' || String(u.role).trim() === 'นักศึกษา'));
 
         if (studentRecord || userRecord) {
             const name = studentRecord ? ((studentRecord.firstName && studentRecord.lastName) ? studentRecord.firstName + ' ' + studentRecord.lastName : studentRecord.name || id) : (userRecord.name || id);
@@ -133,7 +132,7 @@ function handleLogin(role) {
         const adminUser = (MOCK.users || []).find(u => u.role && (String(u.role).toLowerCase().trim() === 'admin' || String(u.role).toLowerCase().trim() === 'super admin') && String(u.password).trim() === passTrimmed);
 
         if (adminUser) {
-            performLogin('admin', { name: adminUser.name || 'ผู้ดูแลระบบ', roleName: 'Super Admin' });
+            performLogin('admin', { name: adminUser.name || 'ผู้ดูแลระบบ', roleName: 'Admin' });
         } else {
             return showError("รหัสผ่านไม่ถูกต้อง");
         }

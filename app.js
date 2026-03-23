@@ -78,7 +78,8 @@ async function bootApp() {
         // Map and merge real data
         if (studentsData && studentsData.length > 0) {
             MOCK.students = studentsData.map(s => ({
-                id: s['รหัสนักศึกษา'] || s.id,
+                ...s, // Keep all dynamic fields (e.g., 13-digit ID)
+                id: s['รหัสนักศึกษา'] || s.id || s.studentId,
                 studentId: s['รหัสนักศึกษา'] || s.studentId,
                 prefix: s['คำนำหน้า'] || s.prefix,
                 firstName: s['ชื่อ'] || s.firstName,
@@ -116,7 +117,13 @@ async function bootApp() {
             MOCK.thesisAdvisors = [...MOCK.academicAdvisors];
         }
 
-        if (usersData && usersData.length > 0) MOCK.users = usersData;
+        if (usersData && usersData.length > 0) {
+            MOCK.users = usersData.map(u => ({
+                ...u, // Keep all dynamic fields
+                username: u['Username'] || u.username,
+                password: u['Password'] || u.password
+            }));
+        }
 
         if (coursesData && coursesData.length > 0) {
             MOCK.courses = coursesData.map(c => ({
