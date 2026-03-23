@@ -121,7 +121,10 @@ async function bootApp() {
             MOCK.users = usersData.map(u => ({
                 ...u, // Keep all dynamic fields
                 username: u['Username'] || u.username,
-                password: u['Password'] || u.password
+                password: u['Password'] || u.password,
+                name: u['Name'] || u.name,
+                role: u['Role'] || u.role,
+                status: u['Status'] || u.status || 'ใช้งาน'
             }));
         }
 
