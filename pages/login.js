@@ -86,9 +86,10 @@ function handleLogin(role) {
             return showError("กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก");
         }
 
-        // Find matching student by ID or Username
-        const studentRecord = (MOCK.students || []).find(s => String(s.id) === id || String(s.username) === id || String(s.studentId) === id);
-        const userRecord = (MOCK.users || []).find(u => String(u.username) === id && u.role && (u.role.toLowerCase() === 'student' || u.role === 'นักศึกษา'));
+        // Find matching student by ID or Username (bulletproof trimming & lowercase)
+        const idTrimmed = id.trim();
+        const studentRecord = (MOCK.students || []).find(s => String(s.id).trim() === idTrimmed || String(s.username).trim() === idTrimmed || String(s.studentId).trim() === idTrimmed);
+        const userRecord = (MOCK.users || []).find(u => String(u.username).trim() === idTrimmed && u.role && (String(u.role).toLowerCase().trim() === 'student' || String(u.role).trim() === 'นักศึกษา'));
 
         if (studentRecord || userRecord) {
             const name = studentRecord ? ((studentRecord.firstName && studentRecord.lastName) ? studentRecord.firstName + ' ' + studentRecord.lastName : studentRecord.name || id) : (userRecord.name || id);
@@ -108,8 +109,10 @@ function handleLogin(role) {
         }
 
         // Find matching staff by Username/Email and Password
-        const userRecord = (MOCK.users || []).find(u => String(u.username) === email && String(u.password) === pass);
-        const teacherRecord = (MOCK.academicAdvisors || []).find(t => String(t.email) === email && String(t.password) === pass);
+        const emailTrimmed = email.trim();
+        const passTrimmed = pass.trim();
+        const userRecord = (MOCK.users || []).find(u => String(u.username).trim() === emailTrimmed && String(u.password).trim() === passTrimmed);
+        const teacherRecord = (MOCK.academicAdvisors || []).find(t => String(t.email).trim() === emailTrimmed && String(t.password).trim() === passTrimmed);
 
         if (userRecord || teacherRecord) {
             const roleName = userRecord ? userRecord.role : (teacherRecord.position || 'บุคลากร');
@@ -126,7 +129,8 @@ function handleLogin(role) {
         }
 
         // Find matching admin by Password
-        const adminUser = (MOCK.users || []).find(u => u.role && (u.role.toLowerCase() === 'admin' || u.role.toLowerCase() === 'super admin') && String(u.password) === pass);
+        const passTrimmed = pass.trim();
+        const adminUser = (MOCK.users || []).find(u => u.role && (String(u.role).toLowerCase().trim() === 'admin' || String(u.role).toLowerCase().trim() === 'super admin') && String(u.password).trim() === passTrimmed);
 
         if (adminUser) {
             performLogin('admin', { name: adminUser.name || 'ผู้ดูแลระบบ', roleName: 'Super Admin' });
