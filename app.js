@@ -64,14 +64,15 @@ async function bootApp() {
     }
     try {
         // Fetch all necessary data from Google Sheets API
-        const [studentsData, teachersData, usersData, coursesData, enrollmentsData, paymentsData, evaluationsData] = await Promise.all([
+        const [studentsData, teachersData, usersData, coursesData, enrollmentsData, paymentsData, evaluationsData, documentsData] = await Promise.all([
             fetchData('getStudents'),
             fetchData('getTeachers'),
             fetchData('getUsers'),
             fetchData('getCourses'),
             fetchData('getEnrollments'),
             fetchData('getPayments'),
-            fetchData('getEvaluations')
+            fetchData('getEvaluations'),
+            fetchData('getDocuments')
         ]);
         
         // Map and merge real data
@@ -154,6 +155,18 @@ async function bootApp() {
                 score: parseFloat(e['คะแนน (1-5)'] || e.score) || 5,
                 comment: e['ความคิดเห็น'] || e.comment || '',
                 date: e['วันที่ประเมิน'] || e.date || ''
+            }));
+        }
+
+        if (documentsData && documentsData.length > 0) {
+            MOCK.documents = documentsData.map(d => ({
+                studentId: d['รหัสนักศึกษา'] || d.studentId,
+                senderName: d['ชื่อผู้ส่ง'] || d.senderName,
+                documentType: d['ประเภทเอกสาร'] || d.documentType,
+                fileName: d['ชื่อไฟล์'] || d.fileName,
+                fileUrl: d['ลิงก์เอกสาร'] || d.fileUrl,
+                date: d['วันที่ส่ง'] || d.date,
+                status: d['สถานะ'] || d.status
             }));
         }
         

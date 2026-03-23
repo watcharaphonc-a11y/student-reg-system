@@ -2,7 +2,7 @@
 // Google Sheets API Integration
 // ============================
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwZKoqhRac5igc9mHQs2jnJkI2DXy4Q85SNaJb5llUIWS_pBDTsfoGgpnFx2h08t_5H/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzllzh-VMsaY8rbOvzj4I4dOLdowTH6jJ_PWW6feIJOHjkNZUXTX6NX4YOOy-xJ4JQw/exec';
 
 // Loading overlay to block UI during API calls
 function showApiLoading(message = 'กำลังโหลดข้อมูล...') {
@@ -58,3 +58,29 @@ async function postData(action, payload) {
         return { status: 'error', message: error.toString() };
     }
 }
+
+// Upload File (POST with Base64)
+// parameters: file (File object), metadata (object with studentId, etc.)
+window.uploadFile = async function (file, metadata) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async () => {
+            const base64Data = reader.result;
+            const payload = {
+                ...metadata,
+                fileName: file.name,
+                mimeType: file.type,
+                base64Data: base64Data
+            };
+
+            try {
+                const response = await postData('uploadDocument', payload);
+                resolve(response);
+            } catch (err) {
+                reject(err);
+            }
+        };
+        reader.onerror = error => reject(error);
+        reader.readAsDataURL(file); // This converts file to base64 string
+    });
+};

@@ -51,24 +51,10 @@ function renderLoginUI() {
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('admin')">เข้าสู่ระบบ</button>
             </div>
 
-            <!-- Demo Accounts Info -->
-            <div style="margin-top: 24px; padding-top: 20px; border-top: 1px dashed var(--border-color); font-size: 0.8rem; color: var(--text-muted);">
-                <div style="font-weight: 600; margin-bottom: 8px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-                    ข้อมูลสำหรับทดสอบระบบ (Demo Accounts)
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr; gap: 4px; line-height: 1.5;">
-                    <div>• <strong>นักศึกษา:</strong> 0000000000000</div>
-                    <div>• <strong>บุคลากร:</strong> demo.staff@pi.ac.th (PIN: 111111)</div>
-                    <div>• <strong>ประธานหลักสูตร:</strong> chair.nursing@pi.ac.th (PIN: 222222)</div>
-                    <div>• <strong>คณบดี:</strong> dean.nursing@pi.ac.th (PIN: 333333)</div>
-                    <div>• <strong>Super Admin (sa):</strong> PIN: 999999</div>
-                </div>
-            </div>
         </div>
     </div>
     `;
-    
+
     const overlay = document.createElement('div');
     overlay.id = 'loginOverlay';
     overlay.className = 'login-overlay';
@@ -79,9 +65,9 @@ function renderLoginUI() {
 function switchLoginTab(role) {
     document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
     document.querySelector(`.login-tab[data-role="${role}"]`).classList.add('active');
-    
+
     document.querySelectorAll('.login-form').forEach(f => f.style.display = 'none');
-    
+
     let targetForm = document.getElementById('loginForm' + role.charAt(0).toUpperCase() + role.slice(1));
     targetForm.style.display = 'block';
     document.getElementById('loginError').style.display = 'none';
@@ -99,78 +85,89 @@ function handleLogin(role) {
         if (id.length !== 13) {
             return showError("กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก");
         }
-        performLogin('student', { id: id, name: (id === '1234567890123' || id === '0000000000000') ? 'นักศึกษา ทดสอบ' : 'สมชาย ใจดี' });
+
+        // Find matching student by ID or Username
+        const studentRecord = (MOCK.students || []).find(s => s.id === id || s.username === id || s.studentId === id);
+        const userRecord = (MOCK.users || []).find(u => u.username === id && (u.role === 'student' || u.role === 'นักศึกษา'));
+
+        if (studentRecord || userRecord) {
+            const name = studentRecord ? ((studentRecord.firstName && studentRecord.lastName) ? studentRecord.firstName + ' ' + studentRecord.lastName : studentRecord.name || id) : (userRecord.name || id);
+            performLogin('student', { id: id, name: name });
+        } else {
+            return showError("ไม่พบข้อมูลนักศึกษาในระบบ หรือบัญชียังไม่ถูกสร้าง");
+        }
+
     } else if (role === 'staff') {
         const email = document.getElementById('staffEmailInput').value;
         const pass = document.getElementById('staffPassInput').value;
-        if (!email.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
-            return showError("รูปแบบอีเมลไม่ถูกต้อง");
+        if (!email) {
+            return showError("กรุณากรอกอีเมล/ชื่อผู้ใช้");
         }
-        if (!email.endsWith('@pi.ac.th')) {
-            return showError("สงวนสิทธิ์การเข้าสู่ระบบเฉพาะอีเมลสถาบัน (@pi.ac.th) เท่านั้น");
-        }
-        if (pass.length !== 6) {
-            return showError("รหัสผ่านต้องเป็นตัวเลข 6 หลัก");
-        }
-        
-        let roleName = 'เจ้าหน้าที่';
-        // Demo credentials check
-        if (email === 'demo.staff@pi.ac.th') {
-            if (pass !== '111111') return showError("รหัสผ่านสำหรับบัญชีทดลองคือ 111111");
-            roleName = 'บุคลากร';
-        } else if (email === 'chair.nursing@pi.ac.th') {
-            if (pass !== '222222') return showError("รหัสผ่านสำหรับประธานหลักสูตรคือ 222222");
-            roleName = 'ประธานหลักสูตร';
-        } else if (email === 'dean.nursing@pi.ac.th') {
-            if (pass !== '333333') return showError("รหัสผ่านสำหรับคณบดีคือ 333333");
-            roleName = 'คณบดี';
+        if (pass.length === 0) {
+            return showError("กรุณากรอกรหัสผ่าน");
         }
 
-        performLogin('staff', { email: email, name: email.split('@')[0], roleName: roleName });
+        // Find matching staff by Username/Email and Password
+        const userRecord = (MOCK.users || []).find(u => u.username === email && u.password === pass);
+        const teacherRecord = (MOCK.academicAdvisors || []).find(t => t.email === email && t.password === pass);
+
+        if (userRecord || teacherRecord) {
+            const roleName = userRecord ? userRecord.role : (teacherRecord.position || 'บุคลากร');
+            const name = userRecord ? userRecord.name : teacherRecord.name;
+            performLogin('staff', { email: email, name: name, roleName: roleName });
+        } else {
+            return showError("ชือผู้ใช้ หรือรหัสผ่านไม่ถูกต้อง");
+        }
+
     } else if (role === 'admin') {
         const pass = document.getElementById('adminPassInput').value;
-        if (pass.length !== 6) {
-            return showError("รหัสผ่านต้องเป็นตัวเลข 6 หลัก");
+        if (pass.length === 0) {
+            return showError("กรุณากรอกรหัสผ่าน");
         }
-        if (pass !== '999999') {
+
+        // Find matching admin by Password
+        const adminUser = (MOCK.users || []).find(u => (u.role === 'admin' || u.role === 'Super Admin') && u.password === pass);
+
+        if (adminUser) {
+            performLogin('admin', { name: adminUser.name || 'ผู้ดูแลระบบ', roleName: 'Super Admin' });
+        } else {
             return showError("รหัสผ่านไม่ถูกต้อง");
         }
-        performLogin('admin', { name: 'ผู้ดูแลระบบ', roleName: 'Super Admin' });
     }
 }
 
 function performLogin(role, userData) {
     window.currentUserRole = role;
     window.isAdmin = (role === 'admin' || role === 'staff');
-    
+
     // Update Layout Profile Info
     const userNameEl = document.querySelector('.user-name');
     const userRoleEl = document.querySelector('.user-role');
     const userAvatarEl = document.querySelector('.user-avatar');
-    
+
     const roleMap = {
         'student': 'นักศึกษา',
         'staff': userData.roleName || 'เจ้าหน้าที่',
         'admin': 'Super Admin'
     };
-    
+
     const displayName = userData.name || userData.id;
     if (userNameEl) userNameEl.textContent = displayName;
     if (userRoleEl) userRoleEl.textContent = roleMap[role];
     if (userAvatarEl) userAvatarEl.textContent = displayName.charAt(0).toUpperCase();
-    
+
     // Cleanup UI
     document.getElementById('loginOverlay').remove();
     document.querySelector('.app').style.display = 'flex';
-    
+
     // Enforce role-based access to sidebar items
     applyRolePermissions(role);
-    
+
     // Force a re-render of current view (often dashboard)
     if (typeof navigateTo === 'function') {
         navigateTo('dashboard');
     }
-    
+
     // Inject Logout Button into header if not present
     if (!document.getElementById('logoutBtn')) {
         const headerRight = document.querySelector('.header-right');
@@ -185,7 +182,7 @@ function performLogin(role, userData) {
     }
 }
 
-window.performLogout = function() {
+window.performLogout = function () {
     window.currentUserRole = null;
     window.isAdmin = false;
     document.querySelector('.app').style.display = 'none';
@@ -194,7 +191,7 @@ window.performLogout = function() {
 
 function applyRolePermissions(role) {
     const allNavItems = document.querySelectorAll('.nav-item');
-    
+
     // Reset all to visible first
     allNavItems.forEach(el => el.style.display = 'flex');
 
@@ -221,7 +218,7 @@ function applyRolePermissions(role) {
             'nav-settings'
             // 'nav-user-management' is NOT in allowedIds, so it will be hidden
         ];
-        
+
         allNavItems.forEach(el => {
             if (!allowedIds.includes(el.id)) {
                 el.style.display = 'none';

@@ -3,15 +3,8 @@
 // ============================
 
 pages['user-management'] = function() {
-    // Combine static demo users with real data from Google Sheets
-    const demoUsers = [
-        { id: 'D1', username: 'admin', role: 'Super Admin', name: 'ผู้ดูแลระบบ', email: 'admin@pi.ac.th', status: 'ใช้งาน' },
-        { id: 'D2', username: 'dean.nursing', role: 'คณบดี', name: 'คณบดี คณะพยาบาลศาสตร์', email: 'dean.nursing@pi.ac.th', status: 'ใช้งาน' },
-        { id: 'D3', username: 'chair.nursing', role: 'ประธานหลักสูตร', name: 'ประธานหลักสูตรพยาบาลศาสตรมหาบัณฑิต', email: 'chair.nursing@pi.ac.th', status: 'ใช้งาน' },
-        { id: 'D4', username: 'staff.registry', role: 'เจ้าหน้าที่', name: 'สมชาย ใจดี', email: 'staff.registry@pi.ac.th', status: 'ใช้งาน' }
-    ];
-
-    const realUsers = (MOCK.users || []).map((u, i) => ({
+    // Use real data from Google Sheets
+    const finalUsers = (MOCK.users || []).map((u, i) => ({
         id: i + 1,
         username: u.Username || u.username,
         role: u.Role || u.role,
@@ -19,10 +12,6 @@ pages['user-management'] = function() {
         email: u.Email || u.email || '-',
         status: u.Status || u.status || 'ใช้งาน'
     }));
-
-    // Filter out duplicates (if any) by username
-    const usernames = new Set(realUsers.map(u => u.username));
-    const finalUsers = [...realUsers, ...demoUsers.filter(du => !usernames.has(du.username))];
 
     return `
     <div class="animate-in">

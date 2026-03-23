@@ -20,7 +20,8 @@ const SHEETS = {
   COURSES: 'Courses',
   ENROLLMENTS: 'Enrollments',
   PAYMENTS: 'Payments',
-  EVALUATIONS: 'Evaluations'
+  EVALUATIONS: 'Evaluations',
+  DOCUMENTS: 'Documents'
 };
 
 /**
@@ -52,6 +53,9 @@ function doGet(e) {
         break;
       case 'getEvaluations':
         data = getSheetData(SHEETS.EVALUATIONS);
+        break;
+      case 'getDocuments':
+        data = getSheetData(SHEETS.DOCUMENTS);
         break;
       default:
         return createResponse({ status: 'error', message: 'Unknown action' });
@@ -97,6 +101,8 @@ function doPost(e) {
       case 'registerCourse':
         appendRow(SHEETS.COURSES, payload);
         break;
+      case 'uploadDocument':
+        return uploadDocumentToDrive(payload);
       default:
         return createResponse({ status: 'error', message: 'Unknown POST action' });
     }
@@ -149,6 +155,48 @@ function appendRow(sheetName, payload) {
 }
 
 /**
+ * Helper: Upload Base64 File to Google Drive
+ */
+function uploadDocumentToDrive(payload) {
+  // 1. Get or Create Folder for Documents
+  let folder;
+  const folderName = "Student_Documents";
+  const folders = DriveApp.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    folder = folders.next();
+  } else {
+    folder = DriveApp.createFolder(folderName);
+  }
+  
+  // 2. Decode and create file
+  let data = payload.base64Data;
+  if (data && data.indexOf(',') > -1) {
+    data = data.split(',')[1];
+  }
+  
+  const blob = Utilities.newBlob(Utilities.base64Decode(data), payload.mimeType || 'application/pdf', payload.fileName || 'document.pdf');
+  const file = folder.createFile(blob);
+  
+  // Set sharing to anyone with the link can view
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  
+  const fileUrl = file.getUrl();
+  
+  // 3. Save to Sheets
+  appendRow(SHEETS.DOCUMENTS, {
+    'รหัสนักศึกษา': payload.studentId || '',
+    'ชื่อผู้ส่ง': payload.senderName || '',
+    'ประเภทเอกสาร': payload.documentType || 'ทั่วไป',
+    'ชื่อไฟล์': payload.fileName || '',
+    'ลิงก์เอกสาร': fileUrl,
+    'วันที่ส่ง': new Date().toLocaleString('th-TH'),
+    'สถานะ': 'รอตรวจสอบ'
+  });
+  
+  return createResponse({ status: 'success', fileUrl: fileUrl });
+}
+
+/**
  * Helper: Create JSON Output
  */
 function createResponse(data) {
@@ -167,7 +215,8 @@ function setupInitialSheets() {
     [SHEETS.COURSES]: ['รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'กลุ่ม', 'อาจารย์ผู้สอน'],
     [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
     [SHEETS.PAYMENTS]: ['รหัสนักศึกษา', 'รายการ', 'จำนวนเงิน', 'สถานะ', 'วันที่'],
-    [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่']
+    [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
+    [SHEETS.DOCUMENTS]: ['รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ']
   };
 
   Object.keys(defaultHeaders).forEach(sheetName => {
