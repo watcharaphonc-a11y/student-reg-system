@@ -74,14 +74,13 @@ async function bootApp() {
             fetchData('getEvaluations'),
             fetchData('getDocuments')
         ]);
-
+        
         // Map and merge real data
         if (studentsData && studentsData.length > 0) {
             MOCK.students = studentsData.map(s => ({
                 ...s, // Keep all dynamic fields (e.g., 13-digit ID)
                 id: s['รหัสนักศึกษา'] || s.id || s.studentId,
                 studentId: s['รหัสนักศึกษา'] || s.studentId,
-                citizenId: s['เลขประจำตัวประชาชน'] || s.citizenId || s['ID Card'] || '',
                 prefix: s['คำนำหน้า'] || s.prefix,
                 firstName: s['ชื่อ'] || s.firstName,
                 lastName: s['นามสกุล'] || s.lastName,
@@ -180,25 +179,15 @@ async function bootApp() {
                 status: d['สถานะ'] || d.status
             }));
         }
-
-        // Maintain or Update current mock references based on logged in user
+        
+        // Update current mock student reference to the last registered student if any real data exists
         if (studentsData && studentsData.length > 0) {
-            if (window.currentUserRole === 'student' && window.currentUserData && window.currentUserData.id) {
-                const myId = String(window.currentUserData.id).trim();
-                const me = (MOCK.students || []).find(s =>
-                    String(s.id || '').trim() === myId ||
-                    String(s.studentId || '').trim() === myId ||
-                    String(s.citizenId || '').trim() === myId
-                );
-                if (me) MOCK.student = me;
-            } else if (!MOCK.student) {
-                MOCK.student = MOCK.students[MOCK.students.length - 1]; // Use latest mapped student
-            }
+            MOCK.student = studentsData[studentsData.length - 1]; // Use latest student
         }
     } catch (e) {
         console.error('Failed to load API data, using mock data fallback', e);
     }
-
+    
     if (typeof hideApiLoading === 'function') {
         hideApiLoading();
     }
