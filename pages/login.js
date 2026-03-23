@@ -24,8 +24,8 @@ function renderLoginUI() {
             
             <div class="login-form" id="loginFormStudent">
                 <div class="form-group">
-                    <label class="form-label">เลขประจำตัวประชาชน (13 หลัก)</label>
-                    <input type="text" id="studentIdInput" class="form-input" placeholder="เลขบัตรประชาชน 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    <label class="form-label">เลขบัตรประชาชน (13) หรือ รหัสนักศึกษา (11)</label>
+                    <input type="text" id="studentIdInput" class="form-input" placeholder="ตัวเลข 11 หรือ 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                 </div>
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('student')">เข้าสู่ระบบ</button>
             </div>
@@ -82,8 +82,8 @@ function showError(msg) {
 function handleLogin(role) {
     if (role === 'student') {
         const id = document.getElementById('studentIdInput').value;
-        if (id.length !== 13) {
-            return showError("กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก");
+        if (id.length !== 13 && id.length !== 11) {
+            return showError("กรุณากรอกเลขบัตรประชาชน (13 หลัก) หรือ รหัสนักศึกษา (11 หลัก) ให้ถูกต้อง");
         }
 
         // Find matching student by ID or Username (bulletproof trimming & lowercase)
