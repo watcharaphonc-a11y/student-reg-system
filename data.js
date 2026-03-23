@@ -3,59 +3,34 @@
 // ============================
 
 const MOCK = {
-    // ข้อมูลนักศึกษา
-    student: {
-        id: '6801012630',
-        prefix: 'นางสาว',
-        firstName: 'พิมพ์ใจ',
-        lastName: 'รักดี',
-        firstNameEn: 'Pimjai',
-        lastNameEn: 'Rakdee',
-        faculty: 'คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก',
-        department: 'สาขาวิชาการพยาบาลจิตเวชและสุขภาพจิต',
-        program: 'พยาบาลศาสตรมหาบัณฑิต (พย.ม.)',
-        year: 1,
-        status: 'กำลังศึกษา',
-        admissionYear: 2568,
-        advisor: 'รศ.ดร.สมศรี ใจสว่าง',
-        email: 'pimjai.r@pi.ac.th',
-        phone: '081-234-5678',
-        dob: '15 มกราคม 2547',
-        address: '123/45 ถ.พหลโยธิน แขวงจตุจักร เขตจตุจักร กรุงเทพฯ 10900',
-        gpa: 3.45,
-        totalCredits: 96,
-        requiredCredits: 145,
-        parentName: 'นายสมศักดิ์ สุขใจ',
-        parentPhone: '089-876-5432',
-    },
+    // ข้อมูลนักศึกษา (จาก API)
+    student: null,
+    students: [],
 
     // สถิติ Dashboard
     dashboardStats: {
         totalStudents: 12847,
+        totalTeachers: 45,
         totalCourses: 342,
         pendingPayments: 15,
         avgGPA: 3.21,
     },
 
-    // รายวิชาทั้งหมด
-    courses: [
-        { code: '01005000105', name: 'แนวคิดและทฤษฎีทางการพยาบาล', credits: 2, instructor: 'รศ.ดร.สมศรี ใจสว่าง', seats: 30, enrolled: 28, schedule: 'จ. 09:00-12:00', room: 'NB301', type: 'แกน', status: 'เปิด' },
-        { code: '01005000106', name: 'ระบบสุขภาพ ภาวะผู้นำ กฎหมายและจริยธรรมฯ', credits: 2, instructor: 'ผศ.ดร.วรินทร ทองดี', seats: 30, enrolled: 30, schedule: 'อ. 13:00-16:00', room: 'NB302', type: 'แกน', status: 'เต็ม' },
-        { code: '01005000107', name: 'วิจัยและการใช้หลักฐานเชิงประจักษ์ทางการพยาบาล', credits: 2, instructor: 'รศ.ดร.ปิยะดา สุขใจ', seats: 30, enrolled: 25, schedule: 'พ. 09:00-12:00', room: 'NB303', type: 'แกน', status: 'เปิด' },
-        { code: '01005000108', name: 'สถิติประยุกต์ในการวิจัยทางการพยาบาล', credits: 2, instructor: 'อ.ดร.คำนวณ แม่นยำ', seats: 30, enrolled: 25, schedule: 'พฤ. 09:00-12:00', room: 'NB304', type: 'แกน', status: 'เปิด' },
-        { code: '0100505101', name: 'การประเมินภาวะสุขภาพขั้นสูง', credits: 1, instructor: 'ผศ.พญ.มณีรัตน์ แสงทอง', seats: 30, enrolled: 30, schedule: 'ศ. 09:00-12:00', room: 'NB305', type: 'เฉพาะสาขา', status: 'เต็ม' },
-        { code: '0100505102', name: 'จิตเภสัชวิทยา (Psychopharmacology)', credits: 2, instructor: 'อ.ดร.นพดล รักเรียน', seats: 30, enrolled: 20, schedule: 'พฤ. 13:00-16:00', room: 'NB306', type: 'เฉพาะสาขา', status: 'เปิด' },
+    // สาขาวิชา (Programs/Majors)
+    programs: [
+        { name: 'การพยาบาลผู้ใหญ่และผู้สูงอายุ' },
+        { name: 'การพยาบาลเด็ก' },
+        { name: 'การพยาบาลมารดา ทารก และการผดุงครรภ์' },
+        { name: 'การพยาบาลจิตเวชและสุขภาพจิต' },
+        { name: 'การพยาบาลอนามัยชุมชน' },
+        { name: 'การบริหารทางการพยาบาล' }
     ],
 
-    // รายวิชาที่ลงทะเบียนแล้ว
-    enrolledCourses: [
-        { code: '01005000105', name: 'แนวคิดและทฤษฎีทางการพยาบาล', credits: 2, instructor: 'รศ.ดร.สมศรี ใจสว่าง', schedule: 'จ. 09:00-12:00', room: 'NB301' },
-        { code: '01005000106', name: 'ระบบสุขภาพ ภาวะผู้นำ กฎหมายและจริยธรรมฯ', credits: 2, instructor: 'ผศ.ดร.วรินทร ทองดี', schedule: 'อ. 13:00-16:00', room: 'NB302' },
-        { code: '01005000107', name: 'วิจัยและการใช้หลักฐานเชิงประจักษ์ทางการพยาบาล', credits: 2, instructor: 'รศ.ดร.ปิยะดา สุขใจ', schedule: 'พ. 09:00-12:00', room: 'NB303' },
-        { code: '01005000108', name: 'สถิติประยุกต์ในการวิจัยทางการพยาบาล', credits: 2, instructor: 'อ.ดร.คำนวณ แม่นยำ', schedule: 'พฤ. 09:00-12:00', room: 'NB304' },
-        { code: '0100505101', name: 'การประเมินภาวะสุขภาพขั้นสูง', credits: 1, instructor: 'ผศ.พญ.มณีรัตน์ แสงทอง', schedule: 'ศ. 09:00-12:00', room: 'NB305' },
-        { code: '0100505102', name: 'จิตเภสัชวิทยา (Psychopharmacology)', credits: 2, instructor: 'อ.ดร.นพดล รักเรียน', schedule: 'พฤ. 13:00-16:00', room: 'NB306' },
-    ],
+    // รายวิชาทั้งหมด (จาก API)
+    courses: [],
+
+    // รายวิชาที่ลงทะเบียนแล้ว (จาก API)
+    enrolledCourses: [],
 
     // ผลการเรียน
     grades: [
@@ -111,15 +86,8 @@ const MOCK = {
         ]
     },
 
-    // ค่าธรรมเนียม
-    payments: [
-        { id: 'PAY-2568-2-001', description: 'ค่าลงทะเบียนเรียน ภาค 2/2568', amount: 21500, dueDate: '15 ม.ค. 2569', status: 'ค้างชำระ', type: 'ค่าเทอม' },
-        { id: 'PAY-2568-2-002', description: 'ค่าธรรมเนียมเทคโนโลยี', amount: 2500, dueDate: '15 ม.ค. 2569', status: 'ค้างชำระ', type: 'ค่าธรรมเนียม' },
-        { id: 'PAY-2568-1-001', description: 'ค่าลงทะเบียนเรียน ภาค 1/2568', amount: 21500, paidDate: '5 ส.ค. 2568', status: 'ชำระแล้ว', type: 'ค่าเทอม' },
-        { id: 'PAY-2568-1-002', description: 'ค่าธรรมเนียมเทคโนโลยี', amount: 2500, paidDate: '5 ส.ค. 2568', status: 'ชำระแล้ว', type: 'ค่าธรรมเนียม' },
-        { id: 'PAY-2567-2-001', description: 'ค่าลงทะเบียนเรียน ภาค 2/2567', amount: 20000, paidDate: '10 ม.ค. 2568', status: 'ชำระแล้ว', type: 'ค่าเทอม' },
-        { id: 'PAY-2567-1-001', description: 'ค่าลงทะเบียนเรียน ภาค 1/2567', amount: 20000, paidDate: '8 ส.ค. 2567', status: 'ชำระแล้ว', type: 'ค่าเทอม' },
-    ],
+    // ค่าธรรมเนียม (จาก API)
+    payments: [],
 
     // ปฏิทินการศึกษา
     calendarEvents: [
@@ -172,10 +140,8 @@ const MOCK = {
         { semester: '1/68', gpa: 3.45 },
     ],
     
-    // แบบประเมินการสอน
-    evaluations: [
-        { courseCode: 'MATH301', score: 5, comment: 'อาจารย์ตั้งใจสอนมากครับ', date: '2026-03-10' }
-    ],
+    // แบบประเมินการสอน (จาก API)
+    evaluations: [],
 
     // แผนการศึกษาคณะพยาบาลศาสตร์ 6 สาขา
     studyPlans: [
@@ -272,7 +238,57 @@ const MOCK = {
 
     // เอกสารทั้งหมดที่รออนุมัติ (Admin Documents)
     adminDocuments: [
-        { id: 'DOC-68054', studentId: '6801012630', studentName: 'นางสาวพิมพ์ใจ รักดี', formName: 'PI-GST-06 แบบขออนุมัติสอบโครงร่างวิทยานิพนธ์และแต่งตั้งคณะกรรมการสอบ', status: 'รออาจารย์ที่ปรึกษาลงนาม', submitDate: '18 มี.ค. 2568', attachment: 'proposal_draft.pdf', nextStep: 'อาจารย์ที่ปรึกษาหลัก' },
-        { id: 'DOC-68055', studentId: '6801012111', studentName: 'นายชายน้อย ใจบุญ', formName: 'PI-GSR-06 คำร้องขอลาพักการศึกษา', status: 'รอประธานหลักสูตรลงนาม', submitDate: '19 มี.ค. 2568', attachment: 'medical_certificate.pdf', nextStep: 'ประธานกรรมการบริหารหลักสูตร' }
+        { id: 'DOC-68488', studentId: '6803190306', studentName: 'นายสมชาย ใจดี', major: 'การพยาบาลผู้ใหญ่และผู้สูงอายุ', formName: 'PI-GST-02 แบบขออนุมัติหัวข้อวิทยานิพนธ์', status: 'รอคณบดีลงนาม', submitDate: '19 มี.ค. 2569', attachment: 'topic.pdf', nextStep: 'คณบดีคณะพยาบาลศาสตร์' },
+        { id: 'DOC-68054', studentId: '6801012630', studentName: 'นางสาวพิมพ์ใจ รักดี', major: 'การพยาบาลจิตเวชและสุขภาพจิต', formName: 'PI-GST-06 แบบขออนุมัติสอบโครงร่างวิทยานิพนธ์และแต่งตั้งคณะกรรมการสอบ', status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ', submitDate: '18 มี.ค. 2568', attachment: 'proposal_draft.pdf', nextStep: 'เจ้าหน้าที่งานบัณฑิตศึกษา' },
+        { id: 'DOC-68055', studentId: '6801012111', studentName: 'นายชายน้อย ใจบุญ', major: 'การบริหารทางการพยาบาล', formName: 'PI-GSR-06 คำร้องขอลาพักการศึกษา', status: 'รอประธานหลักสูตรลงนาม', submitDate: '19 มี.ค. 2568', attachment: 'medical_certificate.pdf', nextStep: 'ประธานกรรมการบริหารหลักสูตร' }
+    ],
+
+    // ข้อมูลวิทยานิพนธ์
+    thesisInfo: {
+        title: 'การพัฒนารูปแบบการดูแลสุขภาพจิตผู้ป่วยจิตเวชในชุมชน',
+        titleEn: 'Development of a Mental Health Care Model for Psychiatric Patients in the Community',
+        status: 'อยู่ระหว่างดำเนินการ'
+    },
+
+    // อาจารย์ที่ปรึกษาวิทยานิพนธ์ (อิงจากข้อมูลอาจารย์)
+    thesisAdvisors: [],
+
+    // อาจารย์ที่ปรึกษาด้านวิชาการ (จาก API)
+    academicAdvisors: [],
+
+    // ตารางให้คำปรึกษา
+    consultationSchedule: [],
+
+    // คณะกรรมการสอบ
+    examCommittees: [
+        {
+            type: 'การสอบโครงร่างวิทยานิพนธ์ (Proposal Defense)',
+            status: 'ผ่านการสอบ',
+            date: '15 ก.พ. 2569',
+            thesisTitle: 'การพัฒนารูปแบบการดูแลสุขภาพจิตผู้ป่วยจิตเวชในชุมชน',
+            room: 'ห้องประชุม 501 อาคารพยาบาลศาสตร์',
+            time: '09:00 - 12:00 น.',
+            members: [
+                { name: 'ศ.ดร.พิชญ์ ศรีเมือง', role: 'ประธานกรรมการ', position: 'ศาสตราจารย์', affiliation: 'คณะพยาบาลศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย' },
+                { name: 'รศ.ดร.สมศรี ใจสว่าง', role: 'กรรมการ (อาจารย์ที่ปรึกษาหลัก)', position: 'รองศาสตราจารย์', affiliation: 'สถาบันพระบรมราชชนก' },
+                { name: 'ผศ.ดร.วิภาวี รักษ์สุข', role: 'กรรมการ (อาจารย์ที่ปรึกษาร่วม)', position: 'ผู้ช่วยศาสตราจารย์', affiliation: 'สถาบันพระบรมราชชนก' },
+                { name: 'รศ.ดร.สุพัตรา วงศ์ไพบูลย์', role: 'กรรมการผู้ทรงคุณวุฒิภายนอก', position: 'รองศาสตราจารย์', affiliation: 'คณะพยาบาลศาสตร์ ม.มหิดล' }
+            ]
+        },
+        {
+            type: 'การสอบป้องกันวิทยานิพนธ์ (Thesis Defense)',
+            status: 'กำลังศึกษา',
+            date: 'ยังไม่กำหนด',
+            thesisTitle: 'การพัฒนารูปแบบการดูแลสุขภาพจิตผู้ป่วยจิตเวชในชุมชน',
+            room: '',
+            time: '',
+            members: [
+                { name: 'ศ.ดร.พิชญ์ ศรีเมือง', role: 'ประธานกรรมการ', position: 'ศาสตราจารย์', affiliation: 'คณะพยาบาลศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย' },
+                { name: 'รศ.ดร.สมศรี ใจสว่าง', role: 'กรรมการ (อาจารย์ที่ปรึกษาหลัก)', position: 'รองศาสตราจารย์', affiliation: 'สถาบันพระบรมราชชนก' },
+                { name: 'ผศ.ดร.วิภาวี รักษ์สุข', role: 'กรรมการ (อาจารย์ที่ปรึกษาร่วม)', position: 'ผู้ช่วยศาสตราจารย์', affiliation: 'สถาบันพระบรมราชชนก' },
+                { name: 'รศ.ดร.สุพัตรา วงศ์ไพบูลย์', role: 'กรรมการผู้ทรงคุณวุฒิภายนอก', position: 'รองศาสตราจารย์', affiliation: 'คณะพยาบาลศาสตร์ ม.มหิดล' },
+                { name: 'ผศ.ดร.เกียรติ อุดมพร', role: 'กรรมการผู้ทรงคุณวุฒิภายนอก', position: 'ผู้ช่วยศาสตราจารย์', affiliation: 'คณะสาธารณสุขศาสตร์ ม.ขอนแก่น' }
+            ]
+        }
     ]
 };

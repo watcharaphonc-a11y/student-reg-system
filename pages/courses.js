@@ -9,7 +9,18 @@ pages.courses = function() {
                 <h1 class="page-title">รายวิชา</h1>
                 <p class="page-subtitle">รายวิชาทั้งหมดที่เปิดสอนในภาคเรียนปัจจุบัน</p>
             </div>
-            <div style="display:flex;gap:8px">
+            <div style="display:flex;gap:8px; align-items:center;">
+                ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+                    <button class="btn btn-secondary" onclick="exportCoursesTemplate()" style="gap:6px; font-size:0.82rem; padding:8px 12px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Template
+                    </button>
+                    <button class="btn btn-primary" onclick="importCourses()" style="gap:6px; font-size:0.82rem; padding:8px 12px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        นำเข้าข้อมูล
+                    </button>
+                    <div style="width:1px; height:24px; background:var(--border-color); margin:0 4px;"></div>
+                ` : ''}
                 <select class="form-select" style="width:auto;padding:8px 12px;font-size:0.82rem" id="courseFilter">
                     <option value="">ทุกประเภท</option>
                     <option value="บังคับ">วิชาบังคับ</option>
@@ -130,3 +141,35 @@ function removeCourseModal(code) {
 function confirmEnrollment() {
     openModal('ยืนยันการลงทะเบียน', `<div style="text-align:center;padding:12px"><div style="font-size:3rem;margin-bottom:12px">✅</div><p style="margin-bottom:16px">ยืนยันลงทะเบียนทั้งหมด ${MOCK.enrolledCourses.length} วิชา?</p><div style="display:flex;gap:8px;justify-content:center"><button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button><button class="btn btn-primary" onclick="closeModal()">ยืนยัน</button></div></div>`);
 }
+
+window.exportCoursesTemplate = function() {
+    const headers = ['รหัสวิชา','ชื่อวิชา','หน่วยกิต','ประเภท','อาจารย์ผู้สอน','เวลาเรียน','ห้องเรียน','ที่นั่งรวม','จำนวนผู้เรียน','สถานะ'];
+    const sample = ['01005000109','การพยาบาลชุมชนขั้นสูง','2','บังคับ','รศ.ดร.ใจดี มานะ','ศ. 13:00-16:00','NB307','30','0','เปิด'];
+    downloadCSVTemplate('template_รายวิชา.csv', headers, sample);
+};
+
+window.importCourses = function() {
+    handleGenericCSVImport((data) => {
+        if (data && data.length > 0) {
+            data.forEach(row => {
+                const newCourse = {
+                    code: row['รหัสวิชา'] || '',
+                    name: row['ชื่อวิชา'] || '',
+                    credits: parseInt(row['หน่วยกิต']) || 0,
+                    type: row['ประเภท'] || 'บังคับ',
+                    instructor: row['อาจารย์ผู้สอน'] || '',
+                    schedule: row['เวลาเรียน'] || '',
+                    room: row['ห้องเรียน'] || '',
+                    seats: parseInt(row['ที่นั่งรวม']) || 30,
+                    enrolled: parseInt(row['จำนวนผู้เรียน']) || 0,
+                    status: row['สถานะ'] || 'เปิด'
+                };
+                if (newCourse.code && newCourse.name) {
+                    MOCK.courses.push(newCourse);
+                }
+            });
+            alert(`นำเข้ารายวิชาสำเร็จ ${data.length} รายการ`);
+            renderPage();
+        }
+    });
+};

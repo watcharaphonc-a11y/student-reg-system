@@ -64,20 +64,98 @@ async function bootApp() {
     }
     try {
         // Fetch all necessary data from Google Sheets API
-        const [studentsData, coursesData, enrollmentsData, paymentsData, evaluationsData] = await Promise.all([
+        const [studentsData, teachersData, usersData, coursesData, enrollmentsData, paymentsData, evaluationsData] = await Promise.all([
             fetchData('getStudents'),
+            fetchData('getTeachers'),
+            fetchData('getUsers'),
             fetchData('getCourses'),
             fetchData('getEnrollments'),
             fetchData('getPayments'),
             fetchData('getEvaluations')
         ]);
         
-        // Merge real data with mock if exists
-        if (studentsData && studentsData.length > 0) MOCK.students = studentsData;
-        if (coursesData && coursesData.length > 0) MOCK.courses = coursesData;
-        if (enrollmentsData && enrollmentsData.length > 0) MOCK.enrollments = enrollmentsData;
-        if (paymentsData && paymentsData.length > 0) MOCK.payments = paymentsData;
-        if (evaluationsData && evaluationsData.length > 0) MOCK.evaluations = evaluationsData;
+        // Map and merge real data
+        if (studentsData && studentsData.length > 0) {
+            MOCK.students = studentsData.map(s => ({
+                id: s['รหัสนักศึกษา'] || s.id,
+                studentId: s['รหัสนักศึกษา'] || s.studentId,
+                prefix: s['คำนำหน้า'] || s.prefix,
+                firstName: s['ชื่อ'] || s.firstName,
+                lastName: s['นามสกุล'] || s.lastName,
+                faculty: s['คณะ'] || s.faculty,
+                department: s['สาขาวิชา'] || s.department,
+                program: s['หลักสูตร'] || s.program,
+                year: parseInt(s['ชั้นปี'] || s.year) || 1,
+                status: s['สถานะ'] || s.status || 'กำลังศึกษา',
+                email: s['อีเมล'] || s.email,
+                phone: s['โทรศัพท์'] || s.phone,
+                gpa: parseFloat(s['GPA'] || s.gpa) || 0,
+                totalCredits: parseInt(s['หน่วยกิตสะสม'] || s.totalCredits) || 0,
+                admissionYear: s['ปีการศึกษา'] || s.admissionYear || 2568,
+                advisor: s['อาจารย์ที่ปรึกษา'] || s.advisor || '-',
+                dob: s['วันเกิด'] || s.dob || '-',
+                address: s['ที่อยู่'] || s.address || '-',
+                parentName: s['ผู้ปกครอง'] || s.parentName || '-',
+                parentPhone: s['เบอร์ผู้ปกครอง'] || s.parentPhone || '-'
+            }));
+        }
+
+        if (teachersData && teachersData.length > 0) {
+            MOCK.academicAdvisors = teachersData.map(t => ({
+                name: (t['คำนำหน้า'] || '') + (t['ชื่อ'] ? (' ' + t['ชื่อ']) : '') + (t['นามสกุล'] ? (' ' + t['นามสกุล']) : '') || t.name,
+                position: t['ตำแหน่งทางวิชาการ'] || t['ตำแหน่ง'] || t.position || 'อาจารย์',
+                expertise: t['ความเชี่ยวชาญ'] || t.expertise || '-',
+                email: t['อีเมล'] || t.email || '-',
+                phone: t['เบอร์โทร'] || t['โทรศัพท์'] || t.phone || '-',
+                studentCount: parseInt(t['นศ. ในที่ปรึกษา'] || t['นศ.ในที่ปรึกษา'] || t.studentCount) || 0,
+                faculty: t['คณะ/สังกัด'] || t['คณะ'] || t.faculty || 'คณะพยาบาลศาสตร์',
+                username: t['Username'] || t.username,
+                password: t['Password'] || t.password
+            }));
+            MOCK.thesisAdvisors = [...MOCK.academicAdvisors];
+        }
+
+        if (usersData && usersData.length > 0) MOCK.users = usersData;
+
+        if (coursesData && coursesData.length > 0) {
+            MOCK.courses = coursesData.map(c => ({
+                code: c['รหัสวิชา'] || c.code,
+                name: c['ชื่อวิชา'] || c.name,
+                credits: parseInt(c['หน่วยกิต'] || c.credits) || 0,
+                instructor: c['อาจารย์ผู้สอน'] || c.instructor || '-',
+                seats: parseInt(c['จำนวนรับ'] || c.seats) || 30,
+                enrolled: parseInt(c['ลงทะเบียนแล้ว'] || c.enrolled) || 0,
+                schedule: c['วัน-เวลาเรียน'] || c.schedule || '-',
+                room: c['ห้องเรียน'] || c.room || '-',
+                type: c['หมวดหมู่'] || c.type || 'แกน',
+                status: c['สถานะ'] || c.status || 'เปิด'
+            }));
+        }
+
+        if (enrollmentsData && enrollmentsData.length > 0) {
+            MOCK.enrollments = enrollmentsData;
+        }
+
+        if (paymentsData && paymentsData.length > 0) {
+            MOCK.payments = paymentsData.map(p => ({
+                id: p['รหัสอ้างอิง'] || p.id,
+                description: p['รายการ'] || p.description,
+                amount: parseFloat(p['จำนวนเงิน'] || p.amount) || 0,
+                dueDate: p['วันที่ครบกำหนด'] || p.dueDate,
+                paidDate: p['วันที่ชำระ'] || p.paidDate,
+                status: p['สถานะ'] || p.status,
+                type: p['ประเภท'] || p.type
+            }));
+        }
+
+        if (evaluationsData && evaluationsData.length > 0) {
+            MOCK.evaluations = evaluationsData.map(e => ({
+                courseCode: e['รหัสวิชา'] || e.courseCode,
+                score: parseFloat(e['คะแนน (1-5)'] || e.score) || 5,
+                comment: e['ความคิดเห็น'] || e.comment || '',
+                date: e['วันที่ประเมิน'] || e.date || ''
+            }));
+        }
         
         // Update current mock student reference to the last registered student if any real data exists
         if (studentsData && studentsData.length > 0) {

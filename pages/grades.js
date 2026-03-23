@@ -1,35 +1,252 @@
 // ============================
 // Grades Page
 // ============================
+
+// Utility to download CSV
+window.downloadGradeTemplate = function() {
+    const csvContent = "student_id,academic_year,semester,course_code,course_name,credits,grade\n67101001,2567,1,01005000101,ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ,3,A\n67101001,2567,1,01005000102,ทฤษฎีและแนวคิดทางการพยาบาล,2,B+";
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "term_grade_import_template.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+window.openGradeImportModal = function() {
+    const modalHtml = `
+        <div style="margin-bottom:15px;text-align:center;">
+            <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:15px;">
+                ดาวน์โหลดแบบฟอร์ม (CSV) เพื่อดูรูปแบบการนำเข้าข้อมูล
+            </p>
+            <button class="btn" style="background-color:var(--bg-secondary);" onclick="downloadGradeTemplate()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                ดาวน์โหลด Template (CSV)
+            </button>
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">ปีการศึกษา</label>
+            <select id="importYear" class="form-input">
+                <option value="2567">2567</option>
+                <option value="2568">2568</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">ภาคการศึกษา</label>
+            <select id="importSem" class="form-input">
+                <option value="1">ภาคเรียนที่ 1</option>
+                <option value="2">ภาคเรียนที่ 2</option>
+                <option value="3">ภาคฤดูร้อน</option>
+            </select>
+        </div>
+        
+        <div class="form-group" style="margin-top:20px;">
+            <label class="form-label">เลือกไฟล์ CSV</label>
+            <input type="file" id="gradeCsvFile" class="form-input" accept=".csv" />
+        </div>
+        
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:25px;">
+            <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+            <button class="btn btn-primary" onclick="processGradeImport()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                อัปโหลดและบันทึก
+            </button>
+        </div>
+    `;
+    openModal("นำเข้าผลการเรียน (Import Grades)", modalHtml);
+};
+
+window.processGradeImport = function() {
+    const fileInput = document.getElementById('gradeCsvFile');
+    const importYear = document.getElementById('importYear').value;
+    const importSem = document.getElementById('importSem').value;
+    const semesterName = `ภาคเรียนที่ ${importSem}/${importYear}`;
+
+    if (!fileInput.files.length) {
+        alert("กรุณาเลือกไฟล์ CSV");
+        return;
+    }
+    
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        // Simple CSV parse
+        const lines = text.split('\n');
+        
+        const newCourses = [];
+        let curTotalPoints = 0;
+        let curTotalCredits = 0;
+
+        for (let i = 1; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if(!line) continue;
+            
+            // Assume format: student_id,academic_year,semester,course_code,course_name,credits,grade
+            const cols = line.split(',');
+            if (cols.length >= 7) {
+                const cCode = cols[3].trim();
+                const cName = cols[4].trim();
+                const cCredits = parseInt(cols[5].trim()) || 0;
+                const cGrade = cols[6].trim();
+                
+                // Map grade to points
+                let point = 0;
+                switch(cGrade) {
+                    case 'A': point = 4.0; break;
+                    case 'B+': point = 3.5; break;
+                    case 'B': point = 3.0; break;
+                    case 'C+': point = 2.5; break;
+                    case 'C': point = 2.0; break;
+                    case 'D+': point = 1.5; break;
+                    case 'D': point = 1.0; break;
+                    case 'F': point = 0.0; break;
+                }
+                
+                newCourses.push({
+                    code: cCode,
+                    name: cName,
+                    credits: cCredits,
+                    grade: cGrade,
+                    point: point
+                });
+                
+                curTotalPoints += (point * cCredits);
+                curTotalCredits += cCredits;
+            }
+        }
+        
+        // Add or update MOCK.grades
+        if (!MOCK.grades) MOCK.grades = [];
+        
+        // Check if semester exists
+        let existingSemIndex = MOCK.grades.findIndex(s => s.semester === semesterName);
+        
+        const gpa = curTotalCredits > 0 ? (curTotalPoints / curTotalCredits) : 0;
+        
+        const newSemData = {
+            semester: semesterName,
+            gpa: gpa,
+            totalCredits: curTotalCredits,
+            courses: newCourses
+        };
+        
+        if (existingSemIndex >= 0) {
+            MOCK.grades[existingSemIndex] = newSemData;
+        } else {
+            MOCK.grades.push(newSemData);
+            // sort by semester string naive
+            MOCK.grades.sort((a,b) => b.semester.localeCompare(a.semester));
+        }
+
+        closeModal();
+        alert('นำเข้าข้อมูลสำเร็จ');
+        
+        // Re-render
+        if(typeof loadPage === 'function') loadPage('grades');
+        else document.getElementById('mainContent').innerHTML = pages.grades();
+    };
+    reader.readAsText(file);
+};
+
+window.filterGradesBySemester = function(selectEl) {
+    const selectedVal = selectEl.value;
+    const cards = document.querySelectorAll('.grade-semester-card');
+    cards.forEach(card => {
+        if (selectedVal === 'all') {
+            card.style.display = 'block';
+        } else {
+            if (card.getAttribute('data-semester') === selectedVal) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+};
+
 pages.grades = function() {
+    const st = MOCK.student || {};
+    const grades = MOCK.grades || [];
+    
+    // Recalculate global GPA from all grades for accurate summary
+    const allValidCourses = grades.flatMap(s => (s.courses || []).filter(c => c.grade));
+    const totalGradePts = allValidCourses.reduce((sum, c) => sum + (c.point * c.credits), 0);
+    const totalActiveCreds = allValidCourses.reduce((sum, c) => sum + (c.credits || 0), 0);
+    const calculatedGpa = totalActiveCreds > 0 ? (totalGradePts / totalActiveCreds) : 0;
+    
+    const requiredCredits = typeof st.requiredCredits === 'number' ? st.requiredCredits : 0;
+    const remaining = requiredCredits - totalActiveCreds;
+
     return `
     <div class="animate-in">
-        <div class="page-header">
-            <h1 class="page-title">ผลการเรียน / เกรด</h1>
-            <p class="page-subtitle">ผลการเรียนแยกตามภาคเรียน</p>
+        <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+                <h1 class="page-title">ผลการเรียน / เกรด</h1>
+                <p class="page-subtitle">ผลการเรียนแยกตามภาคเรียน</p>
+            </div>
+            ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+            <button class="btn btn-primary" onclick="openGradeImportModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                เพิ่มการนำเข้าข้อมูล
+            </button>
+            ` : ''}
         </div>
+        
         <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr))">
             <div class="stat-card animate-in animate-delay-1" style="text-align:center">
-                <div class="gpa-circle" style="width:100px;height:100px;margin-bottom:8px">
+                <div class="gpa-circle" style="width:100px;height:100px;margin-bottom:8px;margin-left:auto;margin-right:auto;">
                     <div class="gpa-circle-inner" style="width:78px;height:78px">
-                        <div class="gpa-value" style="font-size:1.4rem">${MOCK.student.gpa.toFixed(2)}</div>
+                        <div class="gpa-value" style="font-size:1.4rem;${calculatedGpa > 0 ? 'color:var(--accent-primary)' : ''}">${calculatedGpa.toFixed(2)}</div>
                         <div class="gpa-label">GPA สะสม</div>
                     </div>
                 </div>
             </div>
             <div class="stat-card animate-in animate-delay-2">
                 <div class="stat-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-                <div class="stat-value">${MOCK.student.totalCredits}</div>
+                <div class="stat-value">${totalActiveCreds}</div>
                 <div class="stat-label">หน่วยกิตสะสม</div>
             </div>
             <div class="stat-card animate-in animate-delay-3">
                 <div class="stat-icon blue"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-                <div class="stat-value">${MOCK.student.requiredCredits - MOCK.student.totalCredits}</div>
+                <div class="stat-value">${remaining >= 0 ? remaining : 0}</div>
                 <div class="stat-label">หน่วยกิตคงเหลือ</div>
             </div>
         </div>
-        ${MOCK.grades.map((sem, i) => `
-            <div class="card animate-in animate-delay-${Math.min(i+2,4)}" style="margin-bottom:18px">
+        
+        ${grades.length > 0 ? `
+            <div class="card animate-in animate-delay-1" style="margin-bottom:20px;padding:15px 20px;">
+                <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+                    <label style="font-weight:600;min-width:max-content;display:flex;align-items:center;gap:8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                        เลือกดูภาคการศึกษา:
+                    </label>
+                    <div style="max-width:300px;flex:1;">
+                        <select class="form-input" style="margin:0;" onchange="filterGradesBySemester(this)">
+                            <option value="all">แสดงทั้งหมด</option>
+                            ${grades.map(sem => `<option value="${sem.semester}">${sem.semester}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        ` : ''}
+
+        ${grades.length === 0 ? `
+            <div class="card animate-in animate-delay-2">
+                <div class="card-body" style="text-align:center; padding:40px; color:var(--text-muted);">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:12px;"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    <h3>ยังไม่มีข้อมูลผลการเรียน</h3>
+                    <p style="font-size:0.85rem;">ข้อมูลจะแสดงเมื่อมีผลการเรียนจากระบบ</p>
+                </div>
+            </div>
+        ` : ''}
+        
+        ${grades.map((sem, i) => `
+            <div class="card animate-in animate-delay-${Math.min(i+2,4)} grade-semester-card" data-semester="${sem.semester}" style="margin-bottom:18px">
                 <div class="card-header">
                     <h3 class="card-title">${sem.semester}</h3>
                     <span class="badge ${sem.gpa ? (sem.gpa >= 3.5 ? 'success' : sem.gpa >= 3.0 ? 'info' : 'warning') : 'neutral'}">
@@ -41,13 +258,13 @@ pages.grades = function() {
                         <table class="data-table">
                             <thead><tr><th>รหัสวิชา</th><th>ชื่อวิชา</th><th>หน่วยกิต</th><th>เกรด</th><th>คะแนน</th></tr></thead>
                             <tbody>
-                                ${sem.courses.map(c => `
+                                ${(sem.courses || []).map(c => `
                                     <tr>
                                         <td style="color:var(--accent-primary-hover);font-weight:600">${c.code}</td>
                                         <td>${c.name}</td>
                                         <td style="text-align:center">${c.credits}</td>
                                         <td><span class="badge ${c.grade==='A'?'success':c.grade==='B+'||c.grade==='B'?'info':c.grade?'warning':'neutral'}">${c.grade || 'รอผล'}</span></td>
-                                        <td>${c.point !== null ? c.point.toFixed(2) : '-'}</td>
+                                        <td>${c.point !== null && c.point !== undefined ? c.point.toFixed(2) : '-'}</td>
                                     </tr>
                                 `).join('')}
                             </tbody>
@@ -58,3 +275,4 @@ pages.grades = function() {
         `).join('')}
     </div>`;
 };
+

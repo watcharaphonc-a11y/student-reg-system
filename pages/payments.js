@@ -2,57 +2,88 @@
 // Payments Page
 // ============================
 pages.payments = function() {
-    const pending = MOCK.payments.filter(p => p.status === 'ค้างชำระ');
-    const paid = MOCK.payments.filter(p => p.status === 'ชำระแล้ว');
-    const totalPending = pending.reduce((s,p) => s + p.amount, 0);
-
     return `
     <div class="animate-in">
         <div class="page-header">
             <h1 class="page-title">ค่าธรรมเนียม / การชำระเงิน</h1>
             <p class="page-subtitle">จัดการค่าธรรมเนียมและตรวจสอบสถานะการชำระเงิน</p>
         </div>
-        <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-            <div class="stat-card animate-in animate-delay-1">
-                <div class="stat-icon orange"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-                <div class="stat-value" style="color:var(--danger)">฿${formatMoney(totalPending)}</div>
-                <div class="stat-label">ยอಡค้างชำระ</div>
-            </div>
-            <div class="stat-card animate-in animate-delay-2">
-                <div class="stat-icon green"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
-                <div class="stat-value" style="color:var(--success)">฿${formatMoney(paid.reduce((s,p)=>s+p.amount,0))}</div>
-                <div class="stat-label">ชำระแล้วทั้งหมด</div>
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; align-items: flex-start;">
+            <div class="card animate-in animate-delay-1" style="flex: 0 0 250px; text-align:center; padding: 20px; margin: 0;">
+            <div style="max-width: 100%; margin: 0 auto;">
+                <h3 style="margin-bottom: 15px; color: var(--text-primary); font-size: 1.1rem;">ระบบชำระเงินอิเล็กทรอนิกส์ (e-Payment)</h3>
+                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.85rem;">
+                    นักศึกษาสามารถตรวจสอบยอดค้างชำระ และทำรายการผ่านระบบ e-Payment ได้โดยตรง
+                </p>
+                <div style="background: white; padding: 15px; border-radius: var(--radius-md); display: inline-block; margin-bottom: 20px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://e-payment.pi.ac.th/login" alt="QR Code for e-Payment" style="width: 150px; height: 150px; display: block;">
+                    <p style="margin-top: 12px; font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">สแกนเพื่อเข้าสู่ระบบ</p>
+                </div>
+                <div>
+                    <a href="https://e-payment.pi.ac.th/login" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 12px; font-size: 1.1rem; gap: 10px; text-decoration: none;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                        เข้าสู่ระบบ e-Payment
+                    </a>
+                </div>
             </div>
         </div>
-        ${pending.length > 0 ? `
-        <div class="card animate-in animate-delay-2" style="margin-bottom:18px;border-color:rgba(239,68,68,0.3)">
-            <div class="card-header" style="background:var(--danger-bg)">
-                <h3 class="card-title" style="color:var(--danger)">⚠ รายการค้างชำระ</h3>
-                <button class="btn btn-primary btn-sm" onclick="openModal('ชำระเงิน','<div style=\\'text-align:center;padding:16px\\'><p style=\\'margin-bottom:16px\\'>ยอดชำระ: <strong>฿${formatMoney(totalPending)}</strong></p><div class=\\'form-group\\'><label class=\\'form-label\\'>เลือกช่องทางชำระ</label><select class=\\'form-select\\'><option>โอนผ่านธนาคาร</option><option>พร้อมเพย์</option><option>บัตรเครดิต</option><option>เคาน์เตอร์เซอร์วิส</option></select></div><button class=\\'btn btn-primary\\' onclick=\\'closeModal()\\'>ดำเนินการชำระ</button></div>')">ชำระเงิน</button>
-            </div>
+
+            <!-- Expense Table Reference -->
+            <div class="card animate-in animate-delay-4" style="flex: 1 1 500px; min-width: 0; margin: 0; overflow-x: auto;">
+            <div class="card-header"><h3 class="card-title">🧾 อัตราค่าธรรมเนียมการศึกษา หลักสูตรพยาบาลศาสตรมหาบัณฑิต</h3></div>
             <div class="card-body" style="padding:0">
                 <div class="table-wrapper">
-                    <table class="data-table">
-                        <thead><tr><th>เลขที่</th><th>รายการ</th><th>ประเภท</th><th>จำนวน (บาท)</th><th>กำหนดชำระ</th><th>สถานะ</th></tr></thead>
+                    <table class="data-table" style="font-size: 0.9rem;">
+                        <thead>
+                            <tr>
+                                <th>รายการ</th>
+                                <th style="text-align: right; min-width: 120px;">คณะพยาบาลศาสตร์<br><span style="font-size:0.8rem; font-weight:normal; word-break: break-all;">หลักสูตรพยาบาลศาสตร<wbr>มหาบัณฑิต (บาท)</span></th>
+                            </tr>
+                        </thead>
                         <tbody>
-                            ${pending.map(p => `<tr><td style="font-weight:600">${p.id}</td><td>${p.description}</td><td><span class="badge neutral">${p.type}</span></td><td style="font-weight:600">฿${formatMoney(p.amount)}</td><td>${p.dueDate}</td><td>${getStatusBadge(p.status)}</td></tr>`).join('')}
+                            <tr style="background:var(--bg-secondary); font-weight:600;"><td colspan="2">1. ค่าลงทะเบียน</td></tr>
+                            <tr><td style="padding-left: 20px;">1.1 ค่าลงทะเบียน (เหมาจ่าย) ภาคการศึกษาที่ 1 และ 2 ภาคละ</td><td style="text-align: right; font-weight:500;">30,000</td></tr>
+                            <tr><td style="padding-left: 20px;">1.2 ค่าลงทะเบียน (เหมาจ่าย) ภาคฤดูร้อน ภาคละ</td><td style="text-align: right; font-weight:500;">9,000</td></tr>
+                            
+                            <tr style="background:var(--bg-secondary); font-weight:600;"><td colspan="2">2. ค่าธรรมเนียม</td></tr>
+                            <tr><td style="padding-left: 20px;">2.1 ค่าธรรมเนียมพิเศษ (เหมาจ่าย) ภาคการศึกษาที่ 1 และ 2 ภาคละ</td><td style="text-align: right; font-weight:500;">5,000</td></tr>
+                            <tr><td style="padding-left: 20px;">2.2 ค่าธรรมเนียมการสอบประมวลผลความรู้ ครั้งละ</td><td style="text-align: right; color:var(--text-muted);">-</td></tr>
+                            <tr><td style="padding-left: 20px;">2.3 ค่าธรรมเนียมการสอบป้องกันวิทยานิพนธ์/ค้นคว้าอิสระ ครั้งละ</td><td style="text-align: right; font-weight:500;">10,000</td></tr>
+                            <tr><td style="padding-left: 20px;">2.4 ค่าขึ้นทะเบียนนักศึกษาใหม่ (ชำระแรกเข้า)</td><td style="text-align: right; font-weight:500;">1,000</td></tr>
+                            <tr><td style="padding-left: 20px;">2.5 ค่าขึ้นทะเบียนเป็นบัณฑิต</td><td style="text-align: right; font-weight:500;">2,000</td></tr>
+                            <tr><td style="padding-left: 20px;">2.6 ค่ารักษาสถานภาพนักศึกษา</td><td style="text-align: right;"></td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">- ภาคการศึกษาที่ 1 และ 2 ภาคละ</td><td style="text-align: right; font-weight:500;">3,000</td></tr>
+                            <tr>
+                                <td style="padding-left: 40px; color:var(--text-muted);">
+                                    - ภาคฤดูร้อน ภาคละ<br>
+                                    <span style="font-size:0.8rem; color:var(--text-muted);">(หมายเหตุ : นักศึกษาที่สอบป้องกันวิทยานิพนธ์/ค้นคว้าอิสระแล้วและรอเผยแพร่วิทยานิพนธ์ ไม่ต้องจ่ายค่ารักษาสถานภาพนักศึกษาในภาคฤดูร้อน)</span>
+                                </td>
+                                <td style="text-align: right; vertical-align: top; padding-top: 14px; font-weight:500;">1,500</td>
+                            </tr>
+
+                            <tr style="background:var(--bg-secondary); font-weight:600;"><td style="padding-left: 10px;">3. ค่าธรรมเนียมการเทียบโอนรายวิชา วิชาละ</td><td style="text-align: right; font-weight:500;">500</td></tr>
+
+                            <tr style="background:var(--bg-secondary); font-weight:600;"><td colspan="2">4. ค่าธรรมเนียมอื่นๆ</td></tr>
+                            <tr><td style="padding-left: 20px;">4.1 ค่าปรับลงทะเบียนเรียนล่าช้า (นับวันทำการ) วันละ <span style="font-size:0.8rem; color:var(--text-muted);">(ไม่เกิน 3,000 บาทต่อภาคการศึกษา)</span></td><td style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 20px;">4.2 ค่าปรับส่งเล่มวิทยานิพนธ์ หรือการค้นคว้าอิสระ เกินกำหนด วันละ</td><td style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 20px;">4.3 ค่าเบี้ยประกันอุบัติเหตุเป็นรายปี</td><td style="text-align: right; font-size:0.85rem; color:var(--text-muted);">นักศึกษารับผิดชอบ<br>ดำเนินการเอง</td></tr>
+                            <tr><td style="padding-left: 20px;">4.4 ค่าธรรมเนียมตรวจบทคัดย่อภาษาอังกฤษ</td><td style="text-align: right; font-weight:500;">1,000</td></tr>
+                            <tr><td style="padding-left: 20px;">4.5 ค่าธรรมเนียมเปลี่ยนแผนการศึกษา/สาขาวิชา ครั้งละ</td><td style="text-align: right; font-weight:500;">1,000</td></tr>
+                            <tr><td style="padding-left: 20px;">4.6 ค่าออกเอกสารทางการศึกษา</td><td style="text-align: right;"></td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.1 ค่าออกบัตรประจำตัวนักศึกษาทดแทนบัตรเก่า ครั้งละ</td><td style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.2 ค่าออกเอกสารหรือใบรับรองระหว่างการศึกษา</td><td style="text-align: right;"></td></tr>
+                            <tr><td style="padding-left: 60px; color:var(--text-muted);">- ภาษาไทย ฉบับละ</td><td style="text-align: right; font-weight:500;">100</td></tr>
+                            <tr><td style="padding-left: 60px; color:var(--text-muted);">- ภาษาอังกฤษ ฉบับละ</td><td style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.3 ค่าออกเอกสารหลังสำเร็จการศึกษา (ออกทดแทน) ฉบับละ</td><td style="text-align: right; font-weight:500;">100</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.4 ค่าออกเอกสารภาษาอังกฤษ หน้าละ</td><td style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 20px;">4.7 ค่าบริการจัดส่งเอกสาร หรือหนังสือสำคัญทางไปรษณีย์</td><td style="text-align: right;"></td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.7.1 การจัดส่งภายในประเทศ ครั้งละ</td><td style="text-align: right; font-weight:500;">100</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.7.2 การจัดส่งต่างประเทศ ครั้งละ</td><td style="text-align: right; font-size:0.85rem; color:var(--text-muted);">ตามอัตราที่จ่ายจริง</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
-        </div>` : ''}
-        <div class="card animate-in animate-delay-3">
-            <div class="card-header"><h3 class="card-title">ประวัติการชำระเงิน</h3></div>
-            <div class="card-body" style="padding:0">
-                <div class="table-wrapper">
-                    <table class="data-table">
-                        <thead><tr><th>เลขที่</th><th>รายการ</th><th>ประเภท</th><th>จำนวน (บาท)</th><th>วันที่ชำระ</th><th>สถานะ</th></tr></thead>
-                        <tbody>
-                            ${paid.map(p => `<tr><td style="font-weight:600">${p.id}</td><td>${p.description}</td><td><span class="badge neutral">${p.type}</span></td><td>฿${formatMoney(p.amount)}</td><td>${p.paidDate}</td><td>${getStatusBadge(p.status)}</td></tr>`).join('')}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        </div>
         </div>
     </div>`;
 };
