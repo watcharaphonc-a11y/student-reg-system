@@ -33,7 +33,10 @@ pages['student-profile'] = function() {
     const admissionYear = st.admissionYear || '-';
     const advisor = st.advisor || '-';
     const email = st.email || '-';
+    const personalEmail = st.personalEmail || '-';
     const phone = st.phone || '-';
+    const workplace = st.workplace || '-';
+    const position = st.position || '-';
     const dob = st.dob || '-';
     const address = st.address || '-';
     const parentName = st.parentName || '-';
@@ -101,8 +104,11 @@ pages['student-profile'] = function() {
                     <div class="transcript-info">
                         <div class="transcript-info-item"><span class="label">ชื่อ-สกุล (EN):</span><span>${firstNameEn} ${lastNameEn}</span></div>
                         <div class="transcript-info-item"><span class="label">วันเกิด:</span><span>${dob}</span></div>
-                        <div class="transcript-info-item"><span class="label">อีเมล:</span><span>${email}</span></div>
+                        <div class="transcript-info-item"><span class="label">อีเมลวิทยาลัย:</span><span>${email}</span></div>
+                        <div class="transcript-info-item"><span class="label">อีเมลส่วนตัว:</span><span>${personalEmail}</span></div>
                         <div class="transcript-info-item"><span class="label">โทรศัพท์:</span><span>${phone}</span></div>
+                        <div class="transcript-info-item"><span class="label">สถานที่ปฏิบัติงาน:</span><span>${workplace}</span></div>
+                        <div class="transcript-info-item"><span class="label">ตำแหน่ง:</span><span>${position}</span></div>
                         <div class="transcript-info-item"><span class="label">ที่อยู่:</span><span>${address}</span></div>
                         <div class="transcript-info-item"><span class="label">ผู้ปกครอง:</span><span>${parentName}</span></div>
                         <div class="transcript-info-item"><span class="label">เบอร์ผู้ปกครอง:</span><span>${parentPhone}</span></div>
@@ -135,7 +141,138 @@ pages['student-profile'] = function() {
                 </div>
             </div>
         </div>
+        
+        <!-- Degree Audit Section -->
+        <div class="card animate-in animate-delay-4" style="margin-top: 24px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 class="card-title">แผนการศึกษาของฉัน (My Study Plan)</h3>
+            </div>
+            <div class="card-body">
+                ${generateDegreeAuditHtml(st)}
+            </div>
+        </div>
+        
     </div>`;
+};
+
+// ============================
+// Degree Audit & Elective Helpers
+// ============================
+function generateDegreeAuditHtml(student) {
+    // Attempt to get the cohort-specific study plan
+    const planInfo = typeof window.getStudyPlanForStudent === 'function' 
+        ? window.getStudyPlanForStudent(student) 
+        : { title: 'ไม่พบข้อมูลหลักสูตร', data: [] };
+        
+    const planData = planInfo.data;
+    
+    // Collect passed courses from mock grades for audit checkmarks
+    const passedCourses = new Set();
+    if (window.MOCK && MOCK.terms) {
+        MOCK.terms.forEach(term => {
+            (term.courses || []).forEach(c => {
+                if (['A','B+','B','C+','C','P','S'].includes(c.grade)) {
+                    passedCourses.add(c.code.trim());
+                }
+            });
+        });
+    }
+
+    if (!planData || planData.length === 0) {
+        return `<div style="text-align:center; padding: 20px; color:var(--text-muted);">ไมีมีข้อมูลแผนการศึกษาสำหรับรหัสนักศึกษา/สาขาวิชานี้</div>`;
+    }
+
+    let html = `<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">`;
+    
+    planData.forEach((semData, semIndex) => {
+        html += `
+            <div class="card" style="padding: 15px; background:var(--bg-secondary); border: 1px solid var(--border-color);">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 12px; font-weight:600; border-bottom: 2px solid var(--border-color); padding-bottom: 8px;">
+                    <span style="color:var(--text-primary)">${semData.title}</span>
+                    <span style="color:var(--text-muted); font-size:0.9rem;">${semData.credits} หน่วยกิต</span>
+                </div>
+                <ul style="margin:0; padding-left: 0; list-style:none; font-size: 0.9rem; color:var(--text-secondary); line-height: 1.6;">`;
+                
+        semData.courses.forEach((courseStr, courseIndex) => {
+            // Check if student has explicitly mapped this elective slot in their profile
+            let displayCourse = courseStr;
+            const slotId = `${semIndex}-${courseIndex}`;
+            const isElectiveSlot = displayCourse.includes('วิชาเลือก');
+            
+            if (isElectiveSlot && student.electives && student.electives[slotId]) {
+                displayCourse = student.electives[slotId];
+            }
+            
+            const extractCode = displayCourse.split(' ')[0];
+            const isPassed = passedCourses.has(extractCode);
+            
+            html += `
+                <li style="margin-bottom:8px; display:flex; align-items:flex-start; gap:8px;">
+                    <div style="margin-top:2px;">
+                        ${isPassed 
+                            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success-color)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>' 
+                            : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>'}
+                    </div>
+                    <div style="flex:1;">
+                        <span style="${isPassed ? 'color:var(--text-primary); font-weight:500;' : ''}">${displayCourse}</span>
+                        ${(isElectiveSlot && !isPassed) ? `
+                            <div style="margin-top:4px;">
+                                <button class="btn btn-secondary" style="padding:2px 8px; font-size:0.75rem;" onclick="openElectiveSelectionModal(${semIndex}, ${courseIndex})">
+                                    ${student.electives && student.electives[slotId] ? 'เปลี่ยนวิชาเลือก' : 'เลือกวิชา'}
+                                </button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </li>`;
+        });
+        
+        html += `</ul></div>`;
+    });
+    
+    html += `</div>`;
+    return html;
+}
+
+window.openElectiveSelectionModal = function(semIndex, courseIndex) {
+    const slotId = `${semIndex}-${courseIndex}`;
+    
+    // Extract available electives from MOCK.courses (only where type === 'เลือก' or 'เลือกเสรี')
+    const electives = (MOCK.courses || []).filter(c => c.type && c.type.includes('เลือก'));
+    
+    let html = `
+        <div style="padding:10px;">
+            <p style="color:var(--text-muted); margin-bottom:15px;">กรุณาเลือกรายวิชาเลือกเสรีที่คุณต้องการศึกษาในภาคเรียนนี้</p>
+            <div class="form-group">
+                <label class="form-label">รายวิชาเลือก</label>
+                <select id="electiveSelect" class="form-input">
+                    <option value="">-- กรุณาเลือก --</option>
+                    ${electives.map(c => `<option value="${c.id} ${c.name} ${c.credits||'3'}(x-x-x)">[${c.id}] ${c.name}</option>`).join('')}
+                </select>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="saveElectiveSelection('${slotId}')">บันทึกวิชาเลือก</button>
+            </div>
+        </div>
+    `;
+    
+    openModal('เลือกรายวิชาเลือก (Elective)', html);
+};
+
+window.saveElectiveSelection = function(slotId) {
+    const selectEl = document.getElementById('electiveSelect');
+    if (!selectEl || !selectEl.value) {
+        alert('กรุณาเลือกรายวิชาวิชาหนึ่ง');
+        return;
+    }
+    
+    if (MOCK.student) {
+        if (!MOCK.student.electives) MOCK.student.electives = {};
+        MOCK.student.electives[slotId] = selectEl.value;
+    }
+    
+    closeModal();
+    renderPage();
 };
 
 window.exportProfileTemplate = function() {
@@ -177,13 +314,21 @@ window.openEditStudentProfile = function() {
 
     const modalHtml = `
     <div style="padding:10px;">
-        <div class="form-group">
-            <label class="form-label">เบอร์โทรศัพท์</label>
+        <div class="form-group" style="margin-bottom:15px;">
+            <label class="form-label">เบอร์โทรศัพท์ (Phone)</label>
             <input type="text" id="editPhone" class="form-input" value="${st.phone || ''}">
         </div>
-        <div class="form-group">
-            <label class="form-label">อีเมลติดต่อ</label>
-            <input type="email" id="editEmail" class="form-input" value="${st.email || ''}">
+        <div class="form-group" style="margin-bottom:15px;">
+            <label class="form-label">อีเมลส่วนตัว (Personal Email)</label>
+            <input type="email" id="editPersonalEmail" class="form-input" value="${st.personalEmail || ''}">
+        </div>
+        <div class="form-group" style="margin-bottom:15px;">
+            <label class="form-label">สถานที่ปฏิบัติงาน (Workplace)</label>
+            <input type="text" id="editWorkplace" class="form-input" value="${st.workplace || ''}">
+        </div>
+        <div class="form-group" style="margin-bottom:15px;">
+            <label class="form-label">ตำแหน่ง (Position)</label>
+            <input type="text" id="editPosition" class="form-input" value="${st.position || ''}">
         </div>
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
             <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
@@ -197,9 +342,12 @@ window.openEditStudentProfile = function() {
 window.saveStudentProfileEdit = function() {
     if (MOCK.student) {
         MOCK.student.phone = document.getElementById('editPhone').value;
-        MOCK.student.email = document.getElementById('editEmail').value;
+        MOCK.student.personalEmail = document.getElementById('editPersonalEmail').value;
+        MOCK.student.workplace = document.getElementById('editWorkplace').value;
+        MOCK.student.position = document.getElementById('editPosition').value;
         closeModal();
         renderPage();
         setTimeout(() => alert('บันทึกข้อมูลส่วนตัวเรียบร้อย (อัปเดตระบบชั่วคราว)'), 300);
     }
 };
+
