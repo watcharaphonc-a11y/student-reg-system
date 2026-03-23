@@ -49,35 +49,21 @@ pages['student-profile'] = function() {
 
     return `
     <div class="animate-in">
-        <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap: wrap; gap: 15px;">
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
             <div>
                 <h1 class="page-title">ข้อมูลนักศึกษา</h1>
                 <p class="page-subtitle">ข้อมูลส่วนตัวและข้อมูลการศึกษา</p>
             </div>
-            
-            ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
-            <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <select id="studentSelector" class="form-input" onchange="changeProfileStudent(this.value)" style="padding-right: 30px;">
-                        <option value="">-- เลือกนักศึกษาเพื่อดูข้อมูล --</option>
-                        ${(MOCK.students || []).map(s => `
-                            <option value="${s.id || s.studentId}" ${(st && (st.id === s.id || st.studentId === s.studentId)) ? 'selected' : ''}>
-                                ${s.studentId || ''} - ${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}
-                            </option>
-                        `).join('')}
-                    </select>
-                </div>
-            </div>
-            ` : ''}
-
-            <div style="display:flex; gap:10px; align-items: center;">
-                ${(window.currentUserRole === 'student') ? `
+            ${(window.currentUserRole === 'student') ? `
+            <div style="display:flex; gap:10px;">
                 <button class="btn btn-primary" onclick="openEditStudentProfile()" style="gap:6px; font-size:0.85rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     แก้ไขข้อมูล
                 </button>
-                ` : ''}
-                ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+            </div>
+            ` : ''}
+            ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+            <div style="display:flex; gap:10px;">
                 <button class="btn btn-secondary" onclick="exportProfileTemplate()" style="gap:6px; font-size:0.85rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     Template
@@ -86,8 +72,8 @@ pages['student-profile'] = function() {
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     นำเข้าข้อมูล
                 </button>
-                ` : ''}
             </div>
+            ` : ''}
         </div>
         <div class="profile-header animate-in animate-delay-1">
             <div class="profile-avatar-large">${initial}</div>
@@ -319,15 +305,6 @@ window.importProfile = function() {
     });
 };
 
-window.changeProfileStudent = function(studentId) {
-    if (!studentId) return;
-    const selected = (MOCK.students || []).find(s => (s.id || s.studentId) === studentId);
-    if (selected) {
-        MOCK.student = selected;
-        renderPage();
-    }
-};
-
 // ============================
 // Edit Profile Modal
 // ============================
@@ -373,3 +350,4 @@ window.saveStudentProfileEdit = function() {
         setTimeout(() => alert('บันทึกข้อมูลส่วนตัวเรียบร้อย (อัปเดตระบบชั่วคราว)'), 300);
     }
 };
+
