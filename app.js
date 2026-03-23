@@ -74,13 +74,14 @@ async function bootApp() {
             fetchData('getEvaluations'),
             fetchData('getDocuments')
         ]);
-        
+
         // Map and merge real data
         if (studentsData && studentsData.length > 0) {
             MOCK.students = studentsData.map(s => ({
                 ...s, // Keep all dynamic fields (e.g., 13-digit ID)
                 id: s['รหัสนักศึกษา'] || s.id || s.studentId,
                 studentId: s['รหัสนักศึกษา'] || s.studentId,
+                citizenId: s['เลขประจำตัวประชาชน'] || s.citizenId || s['ID Card'] || '',
                 prefix: s['คำนำหน้า'] || s.prefix,
                 firstName: s['ชื่อ'] || s.firstName,
                 lastName: s['นามสกุล'] || s.lastName,
@@ -179,15 +180,41 @@ async function bootApp() {
                 status: d['สถานะ'] || d.status
             }));
         }
-        
-        // Update current mock student reference to the last registered student if any real data exists
+
+        // Maintain or Update current mock references based on logged in user
         if (studentsData && studentsData.length > 0) {
-            MOCK.student = studentsData[studentsData.length - 1]; // Use latest student
+            if (window.currentUserRole === 'student' && window.currentUserData && window.currentUserData.id) {
+                const myId = String(window.currentUserData.id).trim();
+                const myName = window.currentUserData.name ? String(window.currentUserData.name).trim() : '';
+
+                let me = (MOCK.students || []).find(s =>
+                    String(s.id || '').trim() === myId ||
+                    String(s.studentId || '').trim() === myId ||
+                    String(s.citizenId || '').trim() === myId
+                );
+                
+                // Fallback name matching if ID fails (case-insensitive contains)
+                if (!me && myName) {
+                    const normMyName = myName.toLowerCase();
+                    me = (MOCK.students || []).find(s => {
+                        const sFull = String(s.name || '').toLowerCase();
+                        const sParts = String(`${s.firstName || ''} ${s.lastName || ''}`).toLowerCase();
+                        return (sFull && sFull.includes(normMyName)) || (sParts && sParts.includes(normMyName)) || normMyName.includes(sParts);
+                    });
+                }
+                
+                MOCK.student = me || null; // Force null if no match to prevent leakage
+            } else {
+                // For Admin/Staff, fallback to latest student ONLY if none selected
+                if (!MOCK.student && MOCK.students.length > 0) {
+                    MOCK.student = MOCK.students[MOCK.students.length - 1];
+                }
+            }
         }
     } catch (e) {
         console.error('Failed to load API data, using mock data fallback', e);
     }
-    
+
     if (typeof hideApiLoading === 'function') {
         hideApiLoading();
     }
@@ -195,3 +222,4 @@ async function bootApp() {
 }
 
 bootApp();
+
