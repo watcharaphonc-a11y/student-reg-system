@@ -84,10 +84,17 @@ function handleLogin(role) {
             return showError("กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก");
         }
 
-        // Find matching student by 13-digit ID searching ALL fields
+        // Find matching student by 13-digit ID or Student ID
         const idTrimmed = id.trim();
-        const studentRecord = (MOCK.students || []).find(s => Object.values(s).some(val => String(val).trim() === idTrimmed));
-        const userRecord = (MOCK.users || []).find(u => Object.values(u).some(val => String(val).trim() === idTrimmed) && u.role && (String(u.role).toLowerCase().trim() === 'student' || String(u.role).trim() === 'นักศึกษา'));
+        const studentRecord = (MOCK.students || []).find(s =>
+            String(s.id || '').trim() === idTrimmed ||
+            String(s.studentId || '').trim() === idTrimmed ||
+            String(s.citizenId || s['เลขประจำตัวประชาชน'] || '').trim() === idTrimmed
+        );
+        const userRecord = (MOCK.users || []).find(u =>
+            (String(u.id || '').trim() === idTrimmed || String(u.username || '').trim() === idTrimmed) &&
+            u.role && (String(u.role).toLowerCase().trim() === 'student' || String(u.role).trim() === 'นักศึกษา')
+        );
 
         if (studentRecord || userRecord) {
             const name = studentRecord ? ((studentRecord.firstName && studentRecord.lastName) ? studentRecord.firstName + ' ' + studentRecord.lastName : studentRecord.name || id) : (userRecord.name || id);
@@ -146,11 +153,31 @@ function performLogin(role, userData) {
     // Bind current user to MOCK globally for profile rendering
     if (role === 'student' && userData.id) {
         const idStr = String(userData.id).trim();
-        const loggedInStudent = (MOCK.students || []).find(s => Object.values(s).some(val => String(val).trim() === idStr));
+        const nameStr = userData.name ? String(userData.name).trim() : null;
+
+        let loggedInStudent = (MOCK.students || []).find(s =>
+            String(s.id || '').trim() === idStr ||
+            String(s.studentId || '').trim() === idStr ||
+            String(s.citizenId || s['เลขประจำตัวประชาชน'] || '').trim() === idStr
+        );
+
+        // Fallback: If logged in using Citizen ID but Students sheet only has Student ID, try matching by Name
+        if (!loggedInStudent && nameStr) {
+            loggedInStudent = (MOCK.students || []).find(s => {
+                const sNameStr = String(s.name || '').trim();
+                const sFirstLast = String(`${s.firstName || ''} ${s.lastName || ''}`).trim();
+                return sNameStr === nameStr || sFirstLast === nameStr; // Strict name match
+            });
+        }
+
         if (loggedInStudent) MOCK.student = loggedInStudent;
     } else if (role === 'staff' && userData.email) {
         const emailStr = String(userData.email).trim();
-        const loggedInTeacher = (MOCK.academicAdvisors || []).find(t => Object.values(t).some(val => String(val).trim() === emailStr));
+        const loggedInTeacher = (MOCK.academicAdvisors || []).find(t =>
+            String(t.email || '').trim() === emailStr ||
+            String(t.personalEmail || '').trim() === emailStr ||
+            String(t.username || '').trim() === emailStr
+        );
         if (loggedInTeacher) MOCK.teacher = loggedInTeacher;
     }
 
@@ -177,9 +204,10 @@ function performLogin(role, userData) {
     // Enforce role-based access to sidebar items
     applyRolePermissions(role);
 
-    // Force a re-render of current view (often dashboard)
+    // Force a re-render of current view
     if (typeof navigateTo === 'function') {
-        navigateTo('dashboard');
+        const landingPage = (role === 'student') ? 'student-profile' : 'dashboard';
+        navigateTo(landingPage);
     }
 
     // Inject Logout Button into header if not present
@@ -212,7 +240,6 @@ function applyRolePermissions(role) {
     if (role === 'student') {
         // Strictly allow only what was requested for Students
         const allowedIds = [
-            'nav-dashboard', // Keeping dashboard as default landing, though not explicitly in list
             'nav-student-profile',
             'nav-courses',
             'nav-study-plan',
