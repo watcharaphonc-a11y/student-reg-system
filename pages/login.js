@@ -87,8 +87,8 @@ function handleLogin(role) {
         }
 
         // Find matching student by ID or Username
-        const studentRecord = (MOCK.students || []).find(s => s.id === id || s.username === id || s.studentId === id);
-        const userRecord = (MOCK.users || []).find(u => u.username === id && (u.role === 'student' || u.role === 'นักศึกษา'));
+        const studentRecord = (MOCK.students || []).find(s => String(s.id) === id || String(s.username) === id || String(s.studentId) === id);
+        const userRecord = (MOCK.users || []).find(u => String(u.username) === id && u.role && (u.role.toLowerCase() === 'student' || u.role === 'นักศึกษา'));
 
         if (studentRecord || userRecord) {
             const name = studentRecord ? ((studentRecord.firstName && studentRecord.lastName) ? studentRecord.firstName + ' ' + studentRecord.lastName : studentRecord.name || id) : (userRecord.name || id);
@@ -108,8 +108,8 @@ function handleLogin(role) {
         }
 
         // Find matching staff by Username/Email and Password
-        const userRecord = (MOCK.users || []).find(u => u.username === email && u.password === pass);
-        const teacherRecord = (MOCK.academicAdvisors || []).find(t => t.email === email && t.password === pass);
+        const userRecord = (MOCK.users || []).find(u => String(u.username) === email && String(u.password) === pass);
+        const teacherRecord = (MOCK.academicAdvisors || []).find(t => String(t.email) === email && String(t.password) === pass);
 
         if (userRecord || teacherRecord) {
             const roleName = userRecord ? userRecord.role : (teacherRecord.position || 'บุคลากร');
@@ -126,7 +126,7 @@ function handleLogin(role) {
         }
 
         // Find matching admin by Password
-        const adminUser = (MOCK.users || []).find(u => (u.role === 'admin' || u.role === 'Super Admin') && u.password === pass);
+        const adminUser = (MOCK.users || []).find(u => u.role && (u.role.toLowerCase() === 'admin' || u.role.toLowerCase() === 'super admin') && String(u.password) === pass);
 
         if (adminUser) {
             performLogin('admin', { name: adminUser.name || 'ผู้ดูแลระบบ', roleName: 'Super Admin' });
