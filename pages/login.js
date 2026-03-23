@@ -8,10 +8,9 @@ function renderLoginUI() {
         <div class="login-card">
             <div class="login-header">
                 <div class="logo-icon" style="margin: 0 auto 15px auto; width: 56px; height: 56px; background: var(--accent-gradient); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white;">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
                 </div>
                 <h2>เข้าสู่ระบบ</h2>
-                <p class="page-subtitle">ระบบทะเบียนนักศึกษา สถาบันพระบรมราชชนก</p>
+                <p class="page-subtitle">ระบบทะเบียนนักศึกษา สถาบันพระบรมราชชนก (อัปเดตระบบ V1.2)</p>
             </div>
             
             <div class="login-tabs">
@@ -141,7 +140,19 @@ function handleLogin(role) {
 
 function performLogin(role, userData) {
     window.currentUserRole = role;
-    window.isAdmin = (role === 'admin' || role === 'staff');
+    window.currentUserData = userData;
+    window.isAdmin = (role === 'admin'); // Staff is not admin per new rules
+
+    // Bind current user to MOCK globally for profile rendering
+    if (role === 'student' && userData.id) {
+        const idStr = String(userData.id).trim();
+        const loggedInStudent = (MOCK.students || []).find(s => Object.values(s).some(val => String(val).trim() === idStr));
+        if (loggedInStudent) MOCK.student = loggedInStudent;
+    } else if (role === 'staff' && userData.email) {
+        const emailStr = String(userData.email).trim();
+        const loggedInTeacher = (MOCK.academicAdvisors || []).find(t => Object.values(t).some(val => String(val).trim() === emailStr));
+        if (loggedInTeacher) MOCK.teacher = loggedInTeacher;
+    }
 
     // Update Layout Profile Info
     const userNameEl = document.querySelector('.user-name');

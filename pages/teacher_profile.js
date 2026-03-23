@@ -2,8 +2,15 @@
 // Teacher Profile Page
 // ============================
 pages['teacher-profile'] = function() {
-    // If we have a specifically selected teacher to view
-    const teacher = MOCK.selectedTeacher || MOCK.academicAdvisors[0];
+    // If we have a specifically selected teacher to view, or default to logged-in teacher if staff
+    let teacher = MOCK.selectedTeacher;
+    if (!teacher) {
+        if (window.currentUserRole === 'staff') {
+            teacher = MOCK.teacher || MOCK.academicAdvisors[0];
+        } else {
+            teacher = MOCK.academicAdvisors[0];
+        }
+    }
 
     if (!teacher) {
         return `
@@ -28,7 +35,7 @@ pages['teacher-profile'] = function() {
                 <h1 class="page-title">ข้อมูลอาจารย์</h1>
                 <p class="page-subtitle">ข้อมูลส่วนตัวและภาระงานสอน</p>
             </div>
-            ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+            ${(window.currentUserRole === 'admin') ? `
             <div style="display:flex; gap:10px;">
                 <button class="btn btn-secondary" onclick="exportTeacherTemplate()" style="gap:6px; font-size:0.85rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -50,7 +57,7 @@ pages['teacher-profile'] = function() {
                 <div class="profile-meta">
                     <div class="profile-meta-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                        คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก
+                        ${teacher.faculty || 'คณะพยาบาลศาสตร์'}
                     </div>
                     <div class="profile-meta-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
@@ -71,7 +78,7 @@ pages['teacher-profile'] = function() {
                     <div class="transcript-info">
                         <div class="transcript-info-item"><span class="label">อีเมล:</span><span><a href="mailto:${teacher.email}">${teacher.email || '-'}</a></span></div>
                         <div class="transcript-info-item"><span class="label">โทรศัพท์:</span><span>${teacher.phone || '-'}</span></div>
-                        <div class="transcript-info-item"><span class="label">ห้องทำงาน:</span><span>ห้อง 301 อาคารพยาบาลศาสตร์</span></div>
+                        <div class="transcript-info-item"><span class="label">คณะ/สังกัด:</span><span>${teacher.faculty || '-'}</span></div>
                         <div class="transcript-info-item"><span class="label">เวลาให้คำปรึกษา:</span><span>จันทร์ 10:00 - 12:00</span></div>
                     </div>
                 </div>
@@ -93,7 +100,7 @@ pages['teacher-profile'] = function() {
         </div>
 
         <!-- Teacher List Selection (If Admin) -->
-        ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+        ${(window.currentUserRole === 'admin') ? `
         <div class="card animate-in animate-delay-4" style="margin-top:20px;">
             <div class="card-header"><h3 class="card-title">รายชื่ออาจารย์ทั้งหมด</h3></div>
             <div class="card-body" style="padding:0;">

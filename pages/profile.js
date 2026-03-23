@@ -51,6 +51,14 @@ pages['student-profile'] = function() {
                 <h1 class="page-title">ข้อมูลนักศึกษา</h1>
                 <p class="page-subtitle">ข้อมูลส่วนตัวและข้อมูลการศึกษา</p>
             </div>
+            ${(window.currentUserRole === 'student') ? `
+            <div style="display:flex; gap:10px;">
+                <button class="btn btn-primary" onclick="openEditStudentProfile()" style="gap:6px; font-size:0.85rem;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    แก้ไขข้อมูล
+                </button>
+            </div>
+            ` : ''}
             ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
             <div style="display:flex; gap:10px;">
                 <button class="btn btn-secondary" onclick="exportProfileTemplate()" style="gap:6px; font-size:0.85rem;">
@@ -158,4 +166,40 @@ window.importProfile = function() {
             renderPage();
         }
     });
+};
+
+// ============================
+// Edit Profile Modal
+// ============================
+window.openEditStudentProfile = function() {
+    const st = MOCK.student;
+    if (!st) return;
+
+    const modalHtml = `
+    <div style="padding:10px;">
+        <div class="form-group">
+            <label class="form-label">เบอร์โทรศัพท์</label>
+            <input type="text" id="editPhone" class="form-input" value="${st.phone || ''}">
+        </div>
+        <div class="form-group">
+            <label class="form-label">อีเมลติดต่อ</label>
+            <input type="email" id="editEmail" class="form-input" value="${st.email || ''}">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
+            <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+            <button class="btn btn-primary" onclick="saveStudentProfileEdit()">บันทึกข้อมูล</button>
+        </div>
+    </div>
+    `;
+    openModal('แก้ไขข้อมูลส่วนตัว', modalHtml);
+};
+
+window.saveStudentProfileEdit = function() {
+    if (MOCK.student) {
+        MOCK.student.phone = document.getElementById('editPhone').value;
+        MOCK.student.email = document.getElementById('editEmail').value;
+        closeModal();
+        renderPage();
+        setTimeout(() => alert('บันทึกข้อมูลส่วนตัวเรียบร้อย (อัปเดตระบบชั่วคราว)'), 300);
+    }
 };

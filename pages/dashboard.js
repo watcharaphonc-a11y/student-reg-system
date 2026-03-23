@@ -52,7 +52,10 @@ pages.dashboard = function() {
             </div>
         </div>
 
-        <!-- Admin Search Bar -->
+        </div>
+
+        ${(window.currentUserRole === 'admin' || window.currentUserRole === 'staff') ? `
+        <!-- Admin/Staff Search Bar -->
         <div class="admin-search-box animate-in animate-delay-1" style="margin-bottom: 25px; background: white; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
             <div style="flex: 1; position: relative; min-width: 250px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -63,7 +66,7 @@ pages.dashboard = function() {
             </button>
             <span class="badge warning" style="white-space: nowrap; font-size: 0.85rem; padding: 6px 12px; border: 1px solid var(--warning);">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: middle; margin-right: 4px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                สำหรับ Admin
+                สำหรับบุคลากร/Admin
             </span>
         </div>
 
@@ -82,7 +85,9 @@ pages.dashboard = function() {
                 </div>
             </div>
         </div>
+        ` : ''}
 
+        ${(window.currentUserRole === 'admin') ? `
         <!-- Teacher List (Full Width) -->
         <div class="card animate-in animate-delay-3">
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
@@ -98,6 +103,7 @@ pages.dashboard = function() {
                 </div>
             </div>
         </div>
+        ` : ''}
 
         <div class="grid-2">
             <div class="card animate-in animate-delay-2">
