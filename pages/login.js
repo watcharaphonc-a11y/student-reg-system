@@ -107,11 +107,11 @@ function handleLogin(role) {
             return showError("กรุณากรอกรหัสผ่าน");
         }
 
-        // Find matching staff by Username/Email and Password
+        // Find matching staff by searching ALL fields for Email and Password
         const emailTrimmed = email.trim();
         const passTrimmed = pass.trim();
-        const userRecord = (MOCK.users || []).find(u => String(u.username).trim() === emailTrimmed && String(u.password).trim() === passTrimmed);
-        const teacherRecord = (MOCK.academicAdvisors || []).find(t => String(t.email).trim() === emailTrimmed && String(t.password).trim() === passTrimmed);
+        const userRecord = (MOCK.users || []).find(u => Object.values(u).some(v => String(v).trim() === emailTrimmed) && Object.values(u).some(v => String(v).trim() === passTrimmed) && (!u.role || String(u.role).toLowerCase().trim() !== 'admin'));
+        const teacherRecord = (MOCK.academicAdvisors || []).find(t => Object.values(t).some(v => String(v).trim() === emailTrimmed) && Object.values(t).some(v => String(v).trim() === passTrimmed));
 
         if (userRecord || teacherRecord) {
             const roleName = userRecord ? userRecord.role : (teacherRecord.position || 'บุคลากร');
@@ -127,9 +127,9 @@ function handleLogin(role) {
             return showError("กรุณากรอกรหัสผ่าน");
         }
 
-        // Find matching admin by Password
+        // Find matching admin by searching ALL fields for Password
         const passTrimmed = pass.trim();
-        const adminUser = (MOCK.users || []).find(u => u.role && (String(u.role).toLowerCase().trim() === 'admin' || String(u.role).toLowerCase().trim() === 'super admin') && String(u.password).trim() === passTrimmed);
+        const adminUser = (MOCK.users || []).find(u => u.role && (String(u.role).toLowerCase().trim() === 'admin' || String(u.role).toLowerCase().trim() === 'super admin') && Object.values(u).some(v => String(v).trim() === passTrimmed));
 
         if (adminUser) {
             performLogin('admin', { name: adminUser.name || 'ผู้ดูแลระบบ', roleName: 'Admin' });
