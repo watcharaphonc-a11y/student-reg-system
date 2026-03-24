@@ -222,23 +222,24 @@ pages['documents-status'] = function () {
 
 window.selectedRefDocId = null;
 
-window.previewStudentDoc = function (docId) {
+window.previewStudentDoc = function(docId) {
     const doc = MOCK.studentDocuments.find(d => d.id === docId);
     if (!doc) return;
-
+    
     showApiLoading('กำลังเปิดเครื่องมือดูเอกสาร...');
     setTimeout(() => {
         hideApiLoading();
-
-        const modalHtml = `
-            <div style="padding:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
-                    <div>
-                        <h3 style="margin:0; color:var(--accent-primary); font-size:1.1rem;">${doc.id}</h3>
-                        <div style="font-size:0.9rem; color:var(--text-muted);">${doc.formName}</div>
-                    </div>
-                </div>
-                
+        
+        // Transform Drive URL if needed (view -> preview)
+        let previewContent = '';
+        if (doc.fileUrl) {
+            let embedUrl = doc.fileUrl;
+            if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
+                embedUrl = embedUrl.replace('/view', '/preview');
+            }
+            previewContent = `<iframe src="${embedUrl}" style="width:100%; height:500px; border:none; border-radius:var(--radius-sm);" allow="autoplay"></iframe>`;
+        } else {
+            previewContent = `
                 <div class="animate-in" style="background:#f1f5f9; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; text-align:center; min-height:400px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:15px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                     <div style="color:var(--text-primary); font-weight:500; font-size:1.1rem; margin-bottom:5px;">Preview รูปแบบจำลองเอกสาร PDF</div>
@@ -252,9 +253,22 @@ window.previewStudentDoc = function (docId) {
                         <p style="margin:0 0 8px; font-size:0.95rem;"><strong>ไฟล์ดาวน์โหลด:</strong> ${doc.attachment || 'ไม่มี'}</p>
                     </div>
                 </div>
+            `;
+        }
+
+        const modalHtml = `
+            <div style="padding:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
+                    <div>
+                        <h3 style="margin:0; color:var(--accent-primary); font-size:1.1rem;">${doc.id}</h3>
+                        <div style="font-size:0.9rem; color:var(--text-muted);">${doc.formName}</div>
+                    </div>
+                </div>
+                
+                ${previewContent}
             </div>
         `;
-        openModal('พรีวิวเอกสารคำร้อง', modalHtml, '550px');
+        openModal('พรีวิวเอกสารคำร้อง', modalHtml, '800px');
     }, 500);
 };
 
