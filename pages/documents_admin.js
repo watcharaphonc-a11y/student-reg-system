@@ -96,8 +96,7 @@ window.syncAdminDocuments = async function() {
         if (data && Array.isArray(data)) {
             // Map Sheet data to MOCK format
             MOCK.adminDocuments = data.map((row, index) => {
-                // Use a consistent ID based on the sheet data if possible, or just the index
-                const docId = 'DOC-A' + (1000 + index);
+                const docId = row['รหัสติดตาม'] || ('DOC-L' + (1000 + index));
                 return {
                     id: docId,
                     studentId: row['รหัสนักศึกษา'] || '',
@@ -264,6 +263,7 @@ window.submitSignedDoc = async function(docId) {
     try {
         const file = fileInput.files[0];
         const metadata = {
+            id: doc.id,
             studentId: doc.studentId,
             senderName: doc.senderName,
             documentType: doc.documentType || doc.formName
@@ -276,6 +276,7 @@ window.submitSignedDoc = async function(docId) {
             
             // 2. Update the status in Sheet
             const updatePayload = {
+                id: doc.id,
                 studentId: doc.studentId,
                 documentType: doc.documentType || doc.formName,
                 submitDate: doc.submitDate,
@@ -387,6 +388,7 @@ window.submitForwardDoc = async function(docId) {
     
     try {
         const payload = {
+            id: doc.id,
             studentId: doc.studentId,
             documentType: doc.documentType || doc.formName,
             submitDate: doc.submitDate,

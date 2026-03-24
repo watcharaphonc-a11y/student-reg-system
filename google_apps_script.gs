@@ -62,6 +62,7 @@ function doGet(e) {
     }
     return createResponse(data);
   } catch (err) {
+    console.error('doGet Error:', err);
     return createResponse({ status: 'error', message: err.toString() });
   }
 }
@@ -186,8 +187,45 @@ function uploadDocumentToDrive(payload) {
   
   const fileUrl = file.getUrl();
   
-  // 3. Save to Sheets
+  // 3. Save to Sheets (Check if update or new)
+  const docId = payload.id;
+  const sheet = SS.getSheetByName(SHEETS.DOCUMENTS);
+  
+  if (docId && sheet) {
+    // UPDATE existing row
+    const values = sheet.getDataRange().getValues();
+    const headers = values[0];
+    const idCol = headers.indexOf('รหัสติดตาม');
+    
+    let rowIndex = -1;
+    for (let i = 1; i < values.length; i++) {
+      if (values[i][idCol] == docId) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+    
+    if (rowIndex > 0) {
+      // Find 'ลิงก์เอกสารที่ลงนาม' column
+      const signedCol = headers.indexOf('ลิงก์เอกสารที่ลงนาม') + 1;
+      if (signedCol > 0) {
+        sheet.getRange(rowIndex, signedCol).setValue(fileUrl);
+      }
+      
+      // Update status too
+      const statusCol = headers.indexOf('สถานะ') + 1;
+      if (statusCol > 0) {
+        sheet.getRange(rowIndex, statusCol).setValue('ลงนามเรียบร้อยแล้ว');
+      }
+      
+      return createResponse({ status: 'success', id: docId, fileUrl: fileUrl, action: 'update' });
+    }
+  }
+
+  // NEW Row
+  const newId = 'DOC-' + new Date().getTime();
   appendRow(SHEETS.DOCUMENTS, {
+    'รหัสติดตาม': newId,
     'รหัสนักศึกษา': payload.studentId || '',
     'ชื่อผู้ส่ง': payload.senderName || '',
     'ประเภทเอกสาร': payload.documentType || 'ทั่วไป',
@@ -197,7 +235,7 @@ function uploadDocumentToDrive(payload) {
     'สถานะ': 'รอตรวจสอบ'
   });
   
-  return createResponse({ status: 'success', fileUrl: fileUrl });
+  return createResponse({ status: 'success', id: newId, fileUrl: fileUrl, action: 'insert' });
 }
 
 /**
@@ -211,18 +249,28 @@ function updateDocumentStatus(payload) {
   const headers = values[0];
   const rows = values.slice(1);
   
-  // Find row by studentId and document type (imperfect but better than nothing without UUID)
-  // In a real app, we should have a unique ID column
+  // Find row by ID
   let rowIndex = -1;
+  const idCol = headers.indexOf('รหัสติดตาม');
+  
   for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const sId = row[headers.indexOf('รหัสนักศึกษา')];
-    const type = row[headers.indexOf('ประเภทเอกสาร')];
-    const date = row[headers.indexOf('วันที่ส่ง')];
-    
-    if (sId == payload.studentId && type == payload.documentType && date == payload.submitDate) {
-      rowIndex = i + 2; // +1 for header, +1 for 0-based index
+    if (rows[i][idCol] == payload.id) {
+      rowIndex = i + 2;
       break;
+    }
+  }
+  
+  // Fallback to old method if ID not found (for legacy rows)
+  if (rowIndex === -1) {
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const sId = row[headers.indexOf('รหัสนักศึกษา')];
+      const type = row[headers.indexOf('ประเภทเอกสาร')];
+      
+      if (sId == payload.studentId && type == payload.documentType) {
+        rowIndex = i + 2;
+        break;
+      }
     }
   }
   
@@ -301,7 +349,7 @@ function setupInitialSheets() {
     [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
     [SHEETS.PAYMENTS]: ['รหัสนักศึกษา', 'รายการ', 'จำนวนเงิน', 'สถานะ', 'วันที่'],
     [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
-    [SHEETS.DOCUMENTS]: ['รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ']
+    [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ']
   };
 
   Object.keys(defaultHeaders).forEach(sheetName => {

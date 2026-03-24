@@ -238,7 +238,7 @@ window.syncStudentDocuments = async function() {
             const mappedDocs = data
                 .filter(row => row['รหัสนักศึกษา'] == studentId)
                 .map((row, index) => {
-                    const docId = 'DOC-S' + (1000 + index);
+                    const docId = row['รหัสติดตาม'] || ('DOC-L' + (1000 + index));
                     return {
                         id: docId,
                         formName: row['ประเภทเอกสาร'] || 'คำร้องทั่วไป',
@@ -497,7 +497,7 @@ window.submitStudentDocument = function () {
             hideApiLoading();
             if (response && response.status === 'success') {
                 // Update local MOCK for immediate UI feedback
-                const docId = 'DOC-SUB' + Math.floor(Math.random() * 9000 + 1000);
+                const docId = response.id || ('DOC-SUB' + Math.floor(Math.random() * 9000 + 1000));
                 const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
 
                 const newDoc = {
