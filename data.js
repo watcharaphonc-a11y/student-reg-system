@@ -1,5 +1,5 @@
 // ============================
-// Mock Data - ข้อมูลจำลอง
+// Data Model & State Management
 // ============================
 
 const MOCK = {
@@ -9,14 +9,14 @@ const MOCK = {
 
     // สถิติ Dashboard
     dashboardStats: {
-        totalStudents: 12847,
-        totalTeachers: 45,
-        totalCourses: 342,
-        pendingPayments: 15,
-        avgGPA: 3.21,
+        totalStudents: 0,
+        totalTeachers: 0,
+        totalCourses: 0,
+        pendingPayments: 0,
+        avgGPA: 0,
     },
 
-    // สาขาวิชา (Programs/Majors)
+    // สาขาวิชา (Programs/Majors) - Keep for form rendering
     programs: [
         { name: 'การพยาบาลผู้ใหญ่และผู้สูงอายุ' },
         { name: 'การพยาบาลเด็ก' },
@@ -32,118 +32,35 @@ const MOCK = {
     // รายวิชาที่ลงทะเบียนแล้ว (จาก API)
     enrolledCourses: [],
 
-    // ผลการเรียน
-    grades: [
-        {
-            semester: 'ภาคเรียนที่ 1/2567',
-            courses: [
-                { code: 'CPE201', name: 'การเขียนโปรแกรมเชิงวัตถุ', credits: 3, grade: 'A', point: 4.00 },
-                { code: 'CPE202', name: 'สถาปัตยกรรมคอมพิวเตอร์', credits: 3, grade: 'B+', point: 3.50 },
-                { code: 'CPE203', name: 'คณิตศาสตร์ไม่ต่อเนื่อง', credits: 3, grade: 'A', point: 4.00 },
-                { code: 'GEN103', name: 'ทักษะภาษาไทย', credits: 3, grade: 'B', point: 3.00 },
-                { code: 'GEN104', name: 'พลศึกษา', credits: 1, grade: 'A', point: 4.00 },
-            ],
-            gpa: 3.65,
-            totalCredits: 13,
-        },
-        {
-            semester: 'ภาคเรียนที่ 2/2567',
-            courses: [
-                { code: 'CPE204', name: 'การออกแบบวงจรดิจิทัล', credits: 3, grade: 'B+', point: 3.50 },
-                { code: 'CPE205', name: 'ระบบฝังตัว', credits: 3, grade: 'B', point: 3.00 },
-                { code: 'CPE206', name: 'การวิเคราะห์และออกแบบระบบ', credits: 3, grade: 'A', point: 4.00 },
-                { code: 'MATH202', name: 'สมการเชิงอนุพันธ์', credits: 3, grade: 'B+', point: 3.50 },
-                { code: 'GEN105', name: 'จิตวิทยาทั่วไป', credits: 3, grade: 'A', point: 4.00 },
-            ],
-            gpa: 3.60,
-            totalCredits: 15,
-        },
-        {
-            semester: 'ภาคเรียนที่ 1/2568',
-            courses: [
-                { code: 'CPE301', name: 'โครงสร้างข้อมูลและอัลกอริทึม', credits: 3, grade: 'A', point: 4.00 },
-                { code: 'CPE302', name: 'ระบบปฏิบัติการ', credits: 3, grade: 'B+', point: 3.50 },
-                { code: 'CPE303', name: 'เครือข่ายคอมพิวเตอร์', credits: 3, grade: null, point: null },
-                { code: 'GEN201', name: 'ภาษาอังกฤษเพื่อการสื่อสาร', credits: 3, grade: null, point: null },
-                { code: 'MATH301', name: 'สถิติวิศวกรรม', credits: 3, grade: null, point: null },
-            ],
-            gpa: null,
-            totalCredits: 15,
-        },
-    ],
+    // ผลการเรียน (จาก API)
+    grades: [],
 
-    // ตารางเรียน (แถว = เวลา, คอลัมน์ = วัน)
+    // ตารางเรียน 
     schedule: {
         timeSlots: ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00'],
         days: ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์'],
-        items: [
-            { day: 0, startSlot: 1, endSlot: 3, code: '01005000105', name: 'แนวคิดและทฤษฎีฯ', room: 'NB301', color: 1 },
-            { day: 1, startSlot: 5, endSlot: 7, code: '01005000106', name: 'ระบบสุขภาพ ภาวะผู้นำฯ', room: 'NB302', color: 2 },
-            { day: 2, startSlot: 1, endSlot: 3, code: '01005000107', name: 'วิจัยเชิงประจักษ์ฯ', room: 'NB303', color: 3 },
-            { day: 3, startSlot: 1, endSlot: 3, code: '01005000108', name: 'สถิติประยุกต์ฯ', room: 'NB304', color: 4 },
-            { day: 4, startSlot: 1, endSlot: 3, code: '0100505101', name: 'ประเมินสุขภาพฯ', room: 'NB305', color: 5 },
-            { day: 3, startSlot: 5, endSlot: 7, code: '0100505102', name: 'จิตเภสัชวิทยา', room: 'NB306', color: 6 },
-        ]
+        items: []
     },
 
     // ค่าธรรมเนียม (จาก API)
     payments: [],
 
     // ปฏิทินการศึกษา
-    calendarEvents: [
-        { date: '2025-06-20', title: 'เปิดภาคการศึกษาที่ 1/2568', type: 'register' },
-        { date: '2025-07-24', title: 'พิธีไหว้ครู', type: 'activity' },
-        { date: '2025-08-09', title: 'สอบภาษาอังกฤษของสถาบัน ครั้งที่ 1', type: 'exam' },
-        { date: '2025-10-12', title: 'วันสุดท้ายภาคการศึกษาที่ 1/2568', type: 'register' },
-        { date: '2025-10-31', title: 'เปิดภาคการศึกษาที่ 2/2568', type: 'register' },
-        { date: '2025-11-29', title: 'สอบภาษาอังกฤษของสถาบัน ครั้งที่ 2', type: 'exam' },
-        { date: '2026-02-26', title: 'วันสุดท้าย ภาคการศึกษาที่ 2/2568', type: 'register' },
-        { date: '2026-03-13', title: 'เปิดเรียนภาคฤดูร้อน 2568', type: 'register' },
-        { date: '2026-03-18', title: 'วันนี้', type: 'activity' },
-        { date: '2026-05-17', title: 'วันสุดท้ายภาคการศึกษาฤดูร้อน 2568', type: 'register' },
-        { date: '2026-06-13', title: 'นักศึกษาใหม่รายงานตัวฯ (รหัส 2569)', type: 'activity' },
-        { date: '2026-06-19', title: 'เปิดภาคการศึกษาที่ 1/2569', type: 'register' },
-        { date: '2026-07-23', title: 'พิธีไหว้ครู (ปีการศึกษา 2569)', type: 'activity' },
-        { date: '2026-10-18', title: 'วันสุดท้ายภาคการศึกษาที่ 1/2569', type: 'register' },
-        { date: '2026-10-31', title: 'เปิดภาคการศึกษาที่ 2/2569', type: 'register' },
-        { date: '2027-02-28', title: 'วันสุดท้าย ภาคการศึกษาที่ 2/2569', type: 'register' },
-        { date: '2027-03-19', title: 'เปิดเรียนภาคฤดูร้อน 2569', type: 'register' },
-        { date: '2027-05-16', title: 'วันสุดท้ายภาคการศึกษาฤดูร้อน 2569', type: 'register' },
-        { date: '2027-06-18', title: 'เปิดภาคการศึกษาที่ 1/2570', type: 'register' }
-    ],
+    calendarEvents: [],
 
     // ประกาศ
-    announcements: [
-        { id: 1, title: 'กำหนดการลงทะเบียนเรียน ภาคเรียนที่ 2/2568', content: 'นักศึกษาสามารถลงทะเบียนเรียนผ่านระบบออนไลน์ได้ตั้งแต่วันที่ 20-28 กุมภาพันธ์ 2569', date: '15 ก.พ. 2569', type: 'สำคัญ', icon: '📋' },
-        { id: 2, title: 'ประกาศผลการเรียน ภาคเรียนที่ 1/2568', content: 'ผลการเรียนภาคเรียนที่ 1/2568 จะประกาศในวันที่ 25 กุมภาพันธ์ 2569 ผ่านระบบทะเบียนออนไลน์', date: '20 ก.พ. 2569', type: 'ผลการเรียน', icon: '📊' },
-        { id: 3, title: 'กำหนดการชำระค่าเทอม ภาคเรียนที่ 2/2568', content: 'กำหนดชำระค่าเทอมภายในวันที่ 15 มกราคม 2569 หากชำระล่าช้าจะต้องเสียค่าปรับ', date: '1 ม.ค. 2569', type: 'การเงิน', icon: '💰' },
-        { id: 4, title: 'ทุนการศึกษาประจำปีการศึกษา 2568', content: 'เปิดรับสมัครทุนการศึกษาสำหรับนักศึกษาที่มีผลการเรียนดีเด่น GPA 3.50 ขึ้นไป สมัครได้ถึง 30 มีนาคม 2569', date: '1 มี.ค. 2569', type: 'ทุนการศึกษา', icon: '🎓' },
-        { id: 5, title: 'กิจกรรมปฐมนิเทศนักศึกษาฝึกงาน', content: 'นักศึกษาชั้นปีที่ 3 ที่จะออกฝึกงานในภาคฤดูร้อน กรุณาเข้าร่วมปฐมนิเทศในวันที่ 20 มีนาคม 2569', date: '10 มี.ค. 2569', type: 'กิจกรรม', icon: '📢' },
-        { id: 6, title: 'ปรับปรุงระบบทะเบียนออนไลน์', content: 'ระบบจะปิดปรับปรุงในวันที่ 25 มีนาคม 2569 เวลา 00:00-06:00 น.', date: '18 มี.ค. 2569', type: 'ระบบ', icon: '⚙️' },
-    ],
+    announcements: [],
 
     // กิจกรรมล่าสุด
-    recentActivities: [
-        { text: 'ลงทะเบียนเรียนวิชา CPE304 วิศวกรรมซอฟต์แวร์', time: '2 ชั่วโมงที่แล้ว', color: 'purple' },
-        { text: 'ชำระค่าธรรมเนียมเทคโนโลยี ภาค 1/2568', time: '1 วันที่แล้ว', color: 'green' },
-        { text: 'ตรวจสอบผลการเรียน ภาค 1/2568', time: '2 วันที่แล้ว', color: 'blue' },
-        { text: 'อัปเดตข้อมูลที่อยู่ปัจจุบัน', time: '1 สัปดาห์ที่แล้ว', color: 'orange' },
-        { text: 'ดาวน์โหลดใบแสดงผลการศึกษา', time: '2 สัปดาห์ที่แล้ว', color: 'purple' },
-    ],
+    recentActivities: [],
 
-    // GPA per semester for chart
-    gpaHistory: [
-        { semester: '1/66', gpa: 3.20 },
-        { semester: '2/66', gpa: 3.35 },
-        { semester: '1/67', gpa: 3.65 },
-        { semester: '2/67', gpa: 3.60 },
-        { semester: '1/68', gpa: 3.45 },
-    ],
+    // GPA History for chart
+    gpaHistory: [],
 
     // แบบประเมินการสอน (จาก API)
     evaluations: [],
 
-    // แผนการศึกษาคณะพยาบาลศาสตร์ 6 สาขา
+    // แผนการศึกษาคณะพยาบาลศาสตร์
     studyPlans: [
         {
             id: 'nursing-maternal',
@@ -230,27 +147,20 @@ const MOCK = {
         { id: 'PI-GST-27', name: 'PI-GST-27 แบบข้อมูลการเผยแพร่ผลงานวิทยานิพนธ์', type: 'thesis' }
     ],
 
-    // เอกสารที่นักศึกษาส่ง (Student Documents)
-    studentDocuments: [
-        { id: 'DOC-68001', formId: 'PI-GSR-01', formName: 'PI-GSR-01 คำร้องทั่วไป', status: 'อนุมัติแล้ว', submitDate: '15 ก.พ. 2568', lastUpdate: '17 ก.พ. 2568', attachment: null },
-        { id: 'DOC-68054', formId: 'PI-GST-06', formName: 'PI-GST-06 แบบขออนุมัติสอบโครงร่างวิทยานิพนธ์และแต่งตั้งคณะกรรมการสอบ', status: 'กำลังดำเนินการ', submitDate: '18 มี.ค. 2568', lastUpdate: '18 มี.ค. 2568', attachment: 'proposal_draft.pdf' }
-    ],
+    // เอกสารที่นักศึกษาส่ง (จาก API)
+    studentDocuments: [],
 
-    // เอกสารทั้งหมดที่รออนุมัติ (Admin Documents)
-    adminDocuments: [
-        { id: 'DOC-68488', studentId: '6803190306', studentName: 'นายสมชาย ใจดี', major: 'การพยาบาลผู้ใหญ่และผู้สูงอายุ', formName: 'PI-GST-02 แบบขออนุมัติหัวข้อวิทยานิพนธ์', status: 'รอคณบดีลงนาม', submitDate: '19 มี.ค. 2569', attachment: 'topic.pdf', nextStep: 'คณบดีคณะพยาบาลศาสตร์' },
-        { id: 'DOC-68054', studentId: '6801012630', studentName: 'นางสาวพิมพ์ใจ รักดี', major: 'การพยาบาลจิตเวชและสุขภาพจิต', formName: 'PI-GST-06 แบบขออนุมัติสอบโครงร่างวิทยานิพนธ์และแต่งตั้งคณะกรรมการสอบ', status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ', submitDate: '18 มี.ค. 2568', attachment: 'proposal_draft.pdf', nextStep: 'เจ้าหน้าที่งานบัณฑิตศึกษา' },
-        { id: 'DOC-68055', studentId: '6801012111', studentName: 'นายชายน้อย ใจบุญ', major: 'การบริหารทางการพยาบาล', formName: 'PI-GSR-06 คำร้องขอลาพักการศึกษา', status: 'รอประธานหลักสูตรลงนาม', submitDate: '19 มี.ค. 2568', attachment: 'medical_certificate.pdf', nextStep: 'ประธานกรรมการบริหารหลักสูตร' }
-    ],
+    // เอกสารทั้งหมดที่รออนุมัติ (จาก API)
+    adminDocuments: [],
 
-    // ข้อมูลวิทยานิพนธ์
+    // ข้อมูลวิทยานิพนธ์ (จาก API)
     thesisInfo: {
-        title: 'การพัฒนารูปแบบการดูแลสุขภาพจิตผู้ป่วยจิตเวชในชุมชน',
-        titleEn: 'Development of a Mental Health Care Model for Psychiatric Patients in the Community',
-        status: 'อยู่ระหว่างดำเนินการ'
+        title: '-',
+        titleEn: '-',
+        status: '-'
     },
 
-    // อาจารย์ที่ปรึกษาวิทยานิพนธ์ (อิงจากข้อมูลอาจารย์)
+    // อาจารย์ที่ปรึกษาวิทยานิพนธ์ (จาก API)
     thesisAdvisors: [],
 
     // อาจารย์ที่ปรึกษาด้านวิชาการ (จาก API)
@@ -259,73 +169,6 @@ const MOCK = {
     // ตารางให้คำปรึกษา
     consultationSchedule: [],
 
-    // คณะกรรมการสอบ
-    examCommittees: [
-        {
-            type: 'การสอบโครงร่างวิทยานิพนธ์ (Proposal Defense)',
-            status: 'ผ่านการสอบ',
-            date: '15 ก.พ. 2569',
-            thesisTitle: 'การพัฒนารูปแบบการดูแลสุขภาพจิตผู้ป่วยจิตเวชในชุมชน',
-            room: 'ห้องประชุม 501 อาคารพยาบาลศาสตร์',
-            time: '09:00 - 12:00 น.',
-            members: [
-                { name: 'ศ.ดร.พิชญ์ ศรีเมือง', role: 'ประธานกรรมการ', position: 'ศาสตราจารย์', affiliation: 'คณะพยาบาลศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย' },
-                { name: 'รศ.ดร.สมศรี ใจสว่าง', role: 'กรรมการ (อาจารย์ที่ปรึกษาหลัก)', position: 'รองศาสตราจารย์', affiliation: 'สถาบันพระบรมราชชนก' },
-                { name: 'ผศ.ดร.วิภาวี รักษ์สุข', role: 'กรรมการ (อาจารย์ที่ปรึกษาร่วม)', position: 'ผู้ช่วยศาสตราจารย์', affiliation: 'สถาบันพระบรมราชชนก' },
-                { name: 'รศ.ดร.สุพัตรา วงศ์ไพบูลย์', role: 'กรรมการผู้ทรงคุณวุฒิภายนอก', position: 'รองศาสตราจารย์', affiliation: 'คณะพยาบาลศาสตร์ ม.มหิดล' }
-            ]
-        },
-        {
-            type: 'การสอบป้องกันวิทยานิพนธ์ (Thesis Defense)',
-            status: 'กำลังศึกษา',
-            date: 'ยังไม่กำหนด',
-            thesisTitle: 'การพัฒนารูปแบบการดูแลสุขภาพจิตผู้ป่วยจิตเวชในชุมชน',
-            room: '',
-            time: '',
-            members: [
-                { name: 'ศ.ดร.พิชญ์ ศรีเมือง', role: 'ประธานกรรมการ', position: 'ศาสตราจารย์', affiliation: 'คณะพยาบาลศาสตร์ จุฬาลงกรณ์มหาวิทยาลัย' },
-                { name: 'รศ.ดร.สมศรี ใจสว่าง', role: 'กรรมการ (อาจารย์ที่ปรึกษาหลัก)', position: 'รองศาสตราจารย์', affiliation: 'สถาบันพระบรมราชชนก' },
-                { name: 'ผศ.ดร.วิภาวี รักษ์สุข', role: 'กรรมการ (อาจารย์ที่ปรึกษาร่วม)', position: 'ผู้ช่วยศาสตราจารย์', affiliation: 'สถาบันพระบรมราชชนก' },
-                { name: 'รศ.ดร.สุพัตรา วงศ์ไพบูลย์', role: 'กรรมการผู้ทรงคุณวุฒิภายนอก', position: 'รองศาสตราจารย์', affiliation: 'คณะพยาบาลศาสตร์ ม.มหิดล' },
-                { name: 'ผศ.ดร.เกียรติ อุดมพร', role: 'กรรมการผู้ทรงคุณวุฒิภายนอก', position: 'ผู้ช่วยศาสตราจารย์', affiliation: 'คณะสาธารณสุขศาสตร์ ม.ขอนแก่น' }
-            ]
-        }
-    ]
+    // คณะกรรมการสอบ (จาก API)
+    examCommittees: []
 };
-
-// ==========================================
-// Auto-sync Calendar Events to Announcements
-// ==========================================
-(function syncCalendarToAnnouncements() {
-    if (MOCK.calendarEvents && MOCK.calendarEvents.length > 0) {
-        const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
-
-        MOCK.announcements = MOCK.calendarEvents.map((evt, i) => {
-            let typeName = 'ระบบ';
-            let icon = '📅';
-            if (evt.type === 'register') { typeName = 'สำคัญ'; icon = '📝'; }
-            else if (evt.type === 'activity') { typeName = 'กิจกรรม'; icon = '📢'; }
-            else if (evt.type === 'exam') { typeName = 'ผลการเรียน'; icon = '📊'; }
-
-            let displayDate = evt.date;
-            try {
-                const d = new Date(evt.date);
-                if (!isNaN(d.valueOf())) {
-                    displayDate = `${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear() + 543}`;
-                }
-            } catch (e) { }
-
-            return {
-                id: i + 1,
-                title: evt.title,
-                content: `ขอแจ้งกำหนดการเรื่อง "${evt.title}" ซึ่งจะมีขึ้นตามกำหนดปฏิทินการศึกษาในวันที่ ${displayDate} ขอให้นักศึกษาและบุคลากรทุกท่านตรวจสอบและเตรียมความพร้อมตามกำหนดการดังกล่าวด้วยครับ`,
-                date: displayDate,
-                type: typeName,
-                icon: icon
-            };
-        });
-
-        // เรียงจากกิจกรรมที่กำลังจะเกิดขึ้นล่าสุด (Reverse) เพื่อให้ประกาศใหม่สุดอยู่บน
-        MOCK.announcements.reverse();
-    }
-})();

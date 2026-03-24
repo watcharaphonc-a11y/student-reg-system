@@ -39,16 +39,15 @@ pages['documents-admin'] = function() {
                                 else if (d.status.includes('ปฏิเสธ')) badgeClass = 'danger';
                                 
                                 return `
-                                <tr class="admin-doc-row" data-search="${[d.id, d.formName, d.studentName, d.studentId, d.status, (d.major || '')].join(' ').toLowerCase()}">
+                                <tr class="admin-doc-row" data-search="${[d.id, d.formName, d.senderName, d.studentId, d.status].join(' ').toLowerCase()}">
                                     <td>
                                         <div style="font-weight:600; color:var(--accent-primary)">${d.id}</div>
                                         <div style="font-size:0.85rem; margin-top:4px;">${d.formName}</div>
                                         <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">ส่งเมื่อ: ${d.submitDate}</div>
                                     </td>
                                     <td>
-                                        <div style="font-weight:600;">${d.studentName}</div>
+                                        <div style="font-weight:600;">${d.senderName}</div>
                                         <div style="font-size:0.85rem; color:var(--text-muted);">รหัส: ${d.studentId}</div>
-                                        <div style="font-size:0.85rem; color:var(--text-muted); margin-top:2px;">สาขาวิชา: ${d.major || '-'}</div>
                                     </td>
                                     <td>
                                         <span class="badge ${badgeClass}">${d.status}</span>

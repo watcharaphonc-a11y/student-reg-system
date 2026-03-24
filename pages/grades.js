@@ -181,17 +181,60 @@ window.filterGradesBySemester = function(selectEl) {
     });
 };
 
+window.gradesViewMode = 'overview'; // Default for Admin/Staff
+
+window.changeGradesViewMode = function(mode) {
+    window.gradesViewMode = mode;
+    renderPage();
+};
+
+window.selectStudentForGrades = function(studentId) {
+    const selected = (MOCK.students || []).find(s => (s.id || s.studentId) === studentId);
+    if (selected) {
+        MOCK.student = selected;
+        if (typeof window.syncActiveStudentData === 'function') {
+            window.syncActiveStudentData();
+        }
+        window.gradesViewMode = 'detail';
+        renderPage();
+    }
+};
+
 pages.grades = function() {
-    const st = MOCK.student || {};
-    const grades = MOCK.grades || [];
+    const role = window.currentUserRole;
+    
+    if (role === 'student') {
+        return renderStudentGradesDetail(MOCK.student, MOCK.grades);
+    } else {
+        // Admin or Staff
+        if (window.gradesViewMode === 'detail' && MOCK.student) {
+            return `
+                <div class="animate-in">
+                    <div style="margin-bottom: 20px;">
+                        <button class="btn btn-secondary" onclick="changeGradesViewMode('overview')" style="gap:6px;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                            กลับไปหน้าภาพรวม
+                        </button>
+                    </div>
+                    ${renderStudentGradesDetail(MOCK.student, MOCK.grades)}
+                </div>
+            `;
+        } else {
+            return renderAdminGradesOverview();
+        }
+    }
+};
+
+function renderStudentGradesDetail(st, grades) {
+    if (!st) return `<div class="card"><div class="card-body">ไม่พบข้อมูลนักศึกษา</div></div>`;
     
     // Recalculate global GPA from all grades for accurate summary
-    const allValidCourses = grades.flatMap(s => (s.courses || []).filter(c => c.grade));
-    const totalGradePts = allValidCourses.reduce((sum, c) => sum + (c.point * c.credits), 0);
+    const allValidCourses = (grades || []).flatMap(s => (s.courses || []).filter(c => c.grade));
+    const totalGradePts = allValidCourses.reduce((sum, c) => sum + (c.point * (c.credits || 0)), 0);
     const totalActiveCreds = allValidCourses.reduce((sum, c) => sum + (c.credits || 0), 0);
     const calculatedGpa = totalActiveCreds > 0 ? (totalGradePts / totalActiveCreds) : 0;
     
-    const requiredCredits = typeof st.requiredCredits === 'number' ? st.requiredCredits : 0;
+    const requiredCredits = st.requiredCredits || 0;
     const remaining = requiredCredits - totalActiveCreds;
 
     return `
@@ -199,13 +242,21 @@ pages.grades = function() {
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
                 <h1 class="page-title">ผลการเรียน / เกรด</h1>
-                <p class="page-subtitle">ผลการเรียนแยกตามภาคเรียน</p>
+                <p class="page-subtitle">แสดงข้อมูลของ: ${st.prefix || ''}${st.firstName || ''} ${st.lastName || ''} (${st.studentId || st.id})</p>
             </div>
             ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
-            <button class="btn btn-primary" onclick="openGradeImportModal()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                เพิ่มการนำเข้าข้อมูล
-            </button>
+            <div style="display:flex; gap:10px;">
+                <div style="min-width: 250px;">
+                    <select class="form-input" onchange="selectStudentForGrades(this.value)" style="margin:0;">
+                        <option value="">-- สลับนักศึกษา --</option>
+                        ${(MOCK.students || []).map(s => `<option value="${s.id}" ${s.id === st.id ? 'selected' : ''}>${s.studentId} - ${s.firstName} ${s.lastName}</option>`).join('')}
+                    </select>
+                </div>
+                <button class="btn btn-primary" onclick="openGradeImportModal()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    นำเข้าข้อมูล
+                </button>
+            </div>
             ` : ''}
         </div>
         
@@ -261,9 +312,12 @@ pages.grades = function() {
             <div class="card animate-in animate-delay-${Math.min(i+2,4)} grade-semester-card" data-semester="${sem.semester}" style="margin-bottom:18px">
                 <div class="card-header">
                     <h3 class="card-title">${sem.semester}</h3>
-                    <span class="badge ${sem.gpa ? (sem.gpa >= 3.5 ? 'success' : sem.gpa >= 3.0 ? 'info' : 'warning') : 'neutral'}">
-                        ${sem.gpa ? `GPA: ${sem.gpa.toFixed(2)}` : 'รอผลการเรียน'}
-                    </span>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <span class="badge info">${sem.totalCredits} หน่วยกิต</span>
+                        <span class="badge ${sem.gpa ? (sem.gpa >= 3.5 ? 'success' : sem.gpa >= 3.0 ? 'info' : 'warning') : 'neutral'}">
+                            ${sem.gpa ? `GPA: ${sem.gpa.toFixed(2)}` : 'รอผลการเรียน'}
+                        </span>
+                    </div>
                 </div>
                 <div class="card-body" style="padding:0">
                     <div class="table-wrapper">
@@ -286,5 +340,104 @@ pages.grades = function() {
             </div>
         `).join('')}
     </div>`;
+}
+
+function renderAdminGradesOverview() {
+    const students = MOCK.students || [];
+    const validGPAs = students.map(s => s.gpa).filter(g => g > 0);
+    const avgGPA = validGPAs.length > 0 ? (validGPAs.reduce((a,b)=>a+b, 0) / validGPAs.length) : 0;
+    const maxGPA = validGPAs.length > 0 ? Math.max(...validGPAs) : 0;
+    
+    return `
+    <div class="animate-in">
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+                <h1 class="page-title">ภาพรวมผลการเรียนนักศึกษา</h1>
+                <p class="page-subtitle">แสดงสถิติและรายชื่อนักศึกษาทั้งหมดในระบบ</p>
+            </div>
+            <button class="btn btn-primary" onclick="openGradeImportModal()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                นำเข้าข้อมูลเกรดใหม่
+            </button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card animate-in animate-delay-1">
+                <div class="stat-icon purple">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <div class="stat-value">${students.length}</div>
+                <div class="stat-label">นักศึกษาทั้งหมด</div>
+            </div>
+            <div class="stat-card animate-in animate-delay-2">
+                <div class="stat-icon blue">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                </div>
+                <div class="stat-value">${avgGPA.toFixed(2)}</div>
+                <div class="stat-label">GPA เฉลี่ยของชั้นเรียน</div>
+            </div>
+            <div class="stat-card animate-in animate-delay-3">
+                <div class="stat-icon green">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                </div>
+                <div class="stat-value">${maxGPA.toFixed(2)}</div>
+                <div class="stat-label">GPA สูงสุด</div>
+            </div>
+        </div>
+
+        <div class="card animate-in animate-delay-2" style="margin-top: 25px;">
+            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 class="card-title">รายชื่อนักศึกษาตามลำดับผลการเรียน</h3>
+                <div style="max-width: 300px;">
+                    <input type="text" class="form-input" placeholder="ค้นหาชื่อ หรือรหัสนักศึกษา..." oninput="filterGradesOverview(this.value)" style="margin:0;">
+                </div>
+            </div>
+            <div class="card-body" style="padding:0;">
+                <div class="table-wrapper" style="max-height: 500px; overflow-y: auto;">
+                    <table class="data-table" id="gradesOverviewTable">
+                        <thead>
+                            <tr>
+                                <th>รหัสนักศึกษา</th>
+                                <th>ชื่อ-นามสกุล</th>
+                                <th>สาขาวิชา</th>
+                                <th style="text-align:center;">หน่วยกิต</th>
+                                <th style="text-align:center;">GPA สะสม</th>
+                                <th style="text-align:center;">การดำเนินการ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${students.sort((a,b)=>b.gpa - a.gpa).map(st => `
+                                <tr class="grade-row" data-search="${st.studentId} ${st.firstName} ${st.lastName}">
+                                    <td style="font-weight:600; color:var(--accent-primary);">${st.studentId || st.id}</td>
+                                    <td>${st.prefix || ''}${st.firstName || ''} ${st.lastName || ''}</td>
+                                    <td>${st.department || '-'}</td>
+                                    <td style="text-align:center;">${st.totalCredits || 0}</td>
+                                    <td style="text-align:center;">
+                                        <span class="badge ${st.gpa >= 3.5 ? 'success' : st.gpa >= 3.0 ? 'info' : st.gpa > 0 ? 'warning' : 'neutral'}">
+                                            ${st.gpa ? st.gpa.toFixed(2) : '0.00'}
+                                        </span>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <button class="btn btn-secondary btn-sm" onclick="selectStudentForGrades('${st.id}')">
+                                            ดูรายละเอียดรายภาค
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+window.filterGradesOverview = function(query) {
+    const q = query.toLowerCase();
+    const rows = document.querySelectorAll('#gradesOverviewTable .grade-row');
+    rows.forEach(row => {
+        const text = row.getAttribute('data-search').toLowerCase();
+        row.style.display = text.includes(q) ? '' : 'none';
+    });
 };
 

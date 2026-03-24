@@ -324,6 +324,9 @@ window.changeProfileStudent = function(studentId) {
     const selected = (MOCK.students || []).find(s => (s.id || s.studentId) === studentId);
     if (selected) {
         MOCK.student = selected;
+        if (typeof window.syncActiveStudentData === 'function') {
+            window.syncActiveStudentData();
+        }
         renderPage();
     }
 };

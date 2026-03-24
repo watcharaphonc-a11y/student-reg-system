@@ -155,14 +155,20 @@ window.init_petitions_student = function () {
 // ============================
 // Student Documents Status Tracking Page
 // ============================
-pages['documents-status'] = function () {
+pages['documents-status'] = function() {
     const docs = MOCK.studentDocuments || [];
 
     return `
     <div class="animate-in">
-        <div class="page-header">
-            <h1 class="page-title">ติดตามสถานะเอกสาร</h1>
-            <p class="page-subtitle">ตรวจสอบสถานะการอนุมัติและประวัติการส่งคำร้องออนไลน์</p>
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+                <h1 class="page-title">ติดตามสถานะเอกสาร</h1>
+                <p class="page-subtitle">ตรวจสอบสถานะการอนุมัติและประวัติการส่งคำร้องออนไลน์</p>
+            </div>
+            <button class="btn btn-secondary" onclick="syncStudentDocuments()" style="display:flex; align-items:center; gap:8px; margin-top:10px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6m-7 13v-6h6M21 12a9 9 0 1 1-9-9c2.52 0 4.85.83 6.71 2.22"/></svg>
+                รีเฟรชข้อมูลล่าสุด
+            </button>
         </div>
 
         <div class="card animate-in animate-delay-1">
@@ -187,12 +193,12 @@ pages['documents-status'] = function () {
                         <tbody id="studentDocTableBody">
                             ${docs.length === 0 ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:40px;">ไม่มีรายการคำร้องที่เคยยื่น</td></tr>` : ''}
                             ${docs.map(d => {
-        let badgeClass = 'neutral';
-        if (d.status.includes('อนุมัติ')) badgeClass = 'success';
-        if (d.status.includes('ปฏิเสธ')) badgeClass = 'danger';
-        if (d.status.includes('รอ') || d.status.includes('กำลัง')) badgeClass = 'warning';
+                                let badgeClass = 'neutral';
+                                if (d.status.includes('อนุมัติ')) badgeClass = 'success';
+                                if (d.status.includes('ปฏิเสธ')) badgeClass = 'danger';
+                                if (d.status.includes('รอ') || d.status.includes('กำลัง')) badgeClass = 'warning';
 
-        return `
+                                return `
                                 <tr class="student-doc-row" data-search="${[d.id, d.formName, d.status].join(' ').toLowerCase()}">
                                     <td style="font-weight:700; color:var(--accent-primary)">${d.id}</td>
                                     <td>
@@ -210,7 +216,7 @@ pages['documents-status'] = function () {
                                         </div>
                                     </td>
                                 </tr>`;
-    }).join('')}
+                            }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -219,6 +225,56 @@ pages['documents-status'] = function () {
     </div>`;
 };
 
+window.syncStudentDocuments = async function() {
+    showApiLoading('กำลังโหลดข้อมูลสถานะเอกสารจาก Google Sheet...');
+    try {
+        const data = await fetchData('getDocuments');
+        if (data && Array.isArray(data)) {
+            // Filter for current student
+            const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown';
+            
+            // Map Sheet data to MOCK format
+            // Sheet headers: ['รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ']
+            const mappedDocs = data
+                .filter(row => row['รหัสนักศึกษา'] == studentId)
+                .map((row, index) => {
+                    // Create a pseudo-ID if not present (Sheet doesn't have ID column yet, using index)
+                    const docId = 'DOC-S' + (1000 + index);
+                    return {
+                        id: docId,
+                        formName: row['ประเภทเอกสาร'] || 'คำร้องทั่วไป',
+                        submitDate: row['วันที่ส่ง'] || '-',
+                        lastUpdate: row['วันที่ส่ง'] || '-',
+                        status: row['สถานะ'] || 'รอตรวจสอบ',
+                        attachment: row['ชื่อไฟล์'] || '-',
+                        fileUrl: row['ลิงก์เอกสาร'] || null
+                    };
+                });
+            
+            // Reverse to show newest first
+            MOCK.studentDocuments = mappedDocs.reverse();
+            
+            hideApiLoading();
+            renderPage(); // Redraw UI
+        } else {
+            hideApiLoading();
+            alert('ไม่สามารถดึงข้อมูลได้ หรือไม่มีข้อมูลในระบบ');
+        }
+    } catch (err) {
+        hideApiLoading();
+        console.error('Sync Error:', err);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + err.message);
+    }
+};
+
+window.init_documents_status = function() {
+    // Only fetch if we haven't fetched real data yet or if requested
+    if (!MOCK.studentDocumentsSyncDone) {
+        window.syncStudentDocuments().then(() => {
+            MOCK.studentDocumentsSyncDone = true;
+        });
+    }
+};
 
 window.selectedRefDocId = null;
 
@@ -447,7 +503,7 @@ window.submitStudentDocument = function () {
             hideApiLoading();
             if (response && response.status === 'success') {
                 // Update local MOCK for immediate UI feedback
-                const docId = 'DOC-68' + Math.floor(Math.random() * 900 + 100);
+                const docId = 'DOC-SUB' + Math.floor(Math.random() * 9000 + 1000);
                 const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
 
                 const newDoc = {
@@ -461,20 +517,8 @@ window.submitStudentDocument = function () {
                     fileUrl: response.fileUrl
                 };
 
+                if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
                 MOCK.studentDocuments.unshift(newDoc);
-
-                // Also push to Admin view
-                MOCK.adminDocuments.unshift({
-                    id: docId,
-                    studentId: metadata.studentId,
-                    studentName: metadata.senderName,
-                    major: majorId,
-                    formName: template.name,
-                    status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
-                    submitDate: today,
-                    attachment: fileName,
-                    nextStep: 'เจ้าหน้าที่งานบัณฑิตศึกษา'
-                });
 
                 alert('ส่งเอกสารสำเร็จและบันทึกข้อมูลลง Google Sheet เรียบร้อยแล้ว\nรหัสติดตาม: ' + docId);
 

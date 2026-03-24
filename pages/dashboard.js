@@ -272,6 +272,9 @@ window.viewStudentProfile = function(id) {
     const student = (MOCK.students || []).find(st => String(st.studentId || st.id) === String(id));
     if (student) {
         MOCK.student = student;
+        if (typeof window.syncActiveStudentData === 'function') {
+            window.syncActiveStudentData();
+        }
         closeModal();
         navigateTo('student-profile');
     }
