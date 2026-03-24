@@ -57,6 +57,18 @@ function doGet(e) {
       case 'getDocuments':
         data = getSheetData(SHEETS.DOCUMENTS);
         break;
+      case 'getAllData':
+        data = {
+          users: getSheetData(SHEETS.USERS),
+          students: getSheetData(SHEETS.STUDENTS),
+          teachers: getSheetData(SHEETS.TEACHERS),
+          courses: getSheetData(SHEETS.COURSES),
+          enrollments: getSheetData(SHEETS.ENROLLMENTS),
+          payments: getSheetData(SHEETS.PAYMENTS),
+          evaluations: getSheetData(SHEETS.EVALUATIONS),
+          documents: getSheetData(SHEETS.DOCUMENTS)
+        };
+        break;
       default:
         return createResponse({ status: 'error', message: 'Unknown action' });
     }
@@ -129,16 +141,41 @@ function getSheetData(sheetName) {
   const values = sheet.getDataRange().getValues();
   if (values.length < 2) return [];
   
-  const headers = values[0];
+  const headers = values[0].map(h => String(h).trim());
   const rows = values.slice(1);
   
   return rows.map(row => {
     const obj = {};
-    headers.forEach((h, i) => {
-      obj[h] = row[i];
+    headers.forEach((header, index) => {
+      obj[header] = row[index];
     });
     return obj;
   });
+}
+
+/**
+ * UTILITY: Run this once to fix missing Tracking IDs in the Documents sheet
+ */
+function fixMissingIds() {
+  const sheet = SS.getSheetByName(SHEETS.DOCUMENTS);
+  if (!sheet) return;
+  
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0].map(h => String(h).trim());
+  const idCol = headers.indexOf('รหัสติดตาม');
+  
+  if (idCol === -1) {
+    setupInitialSheets();
+    return fixMissingIds(); // Try again after setup
+  }
+  
+  for (let i = 1; i < values.length; i++) {
+    if (!values[i][idCol]) {
+      const newId = 'DOC-FIX-' + new Date().getTime() + '-' + i;
+      sheet.getRange(i + 1, idCol + 1).setValue(newId);
+    }
+  }
+  SpreadsheetApp.getUi().alert('✅ แก้ไขรหัสติดตาม (Tracking ID) เสร็จเรียบร้อยแล้ว!\n\nกรุณากลับไปที่หน้าเว็บแล้วกด REFRESH (F5) 1 ครั้งเพื่อใช้งาน');
 }
 
 /**
@@ -252,10 +289,10 @@ function updateDocumentStatus(payload) {
   if (!sheet) return createResponse({ status: 'error', message: 'Documents sheet not found' });
   
   const values = sheet.getDataRange().getValues();
-  const headers = values[0];
+  const headers = values[0].map(h => String(h).trim());
   const rows = values.slice(1);
   
-  console.log('Sheet Headers:', headers);
+  console.log('Cleaned Headers:', headers);
   
   // Find row by ID
   let rowIndex = -1;
@@ -297,8 +334,9 @@ function updateDocumentStatus(payload) {
   }
   
   if (rowIndex === -1) {
-    console.error('Document not found for payload:', payload);
-    return createResponse({ status: 'error', message: 'Document not found in Google Sheets' });
+    const debugInfo = `ID: ${payload.id}, Student: ${payload.studentId}, Type: ${payload.documentType}. Available Headers: ${headers.join(',')}`;
+    console.error('Document not found:', debugInfo);
+    return createResponse({ status: 'error', message: `ไม่พบข้อมูลเอกสารในระบบ (Document not found).\n\nรายละเอียด: ${debugInfo}\n\nคำแนะนำ: กรุณา Refresh หน้าเว็บ 1 ครั้งแล้วลองใหม่` });
   }
   
   // Update fields

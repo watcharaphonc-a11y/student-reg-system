@@ -65,20 +65,19 @@ async function bootApp() {
     }
     try {
         // Fetch all necessary data from Google Sheets API
-        // 1. Fetch Core Data
-        const [usersData, studentsData, teachersData, coursesData, enrollmentsData] = await Promise.all([
-            fetchData('getUsers'),
-            fetchData('getStudents'),
-            fetchData('getTeachers'),
-            fetchData('getCourses'),
-            fetchData('getEnrollments')
-        ]);
-        // 2. Fetch remaining data
-        const [paymentsData, evaluationsData, documentsData] = await Promise.all([
-            fetchData('getPayments'),
-            fetchData('getEvaluations'),
-            fetchData('getDocuments')
-        ]);
+        const allData = await fetchData('getAllData');
+        if (!allData || allData.status === 'error') throw new Error(allData?.message || 'Failed to fetch data');
+
+        const { 
+            users: usersData, 
+            students: studentsData, 
+            teachers: teachersData, 
+            courses: coursesData, 
+            enrollments: enrollmentsData, 
+            payments: paymentsData, 
+            evaluations: evaluationsData, 
+            documents: documentsData 
+        } = allData;
 
         // Map Students and attach Grades from Enrollments
         if (studentsData && studentsData.length > 0) {
