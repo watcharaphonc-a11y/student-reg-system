@@ -309,6 +309,10 @@ async function bootApp() {
         }
     } catch (e) {
         console.error('Failed to load API data, using mock data fallback', e);
+        // Show a more prominent warning for the user
+        if (typeof showError === 'function') {
+            showError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการตั้งค่า Apps Script');
+        }
     }
 
     if (typeof hideApiLoading === 'function') {

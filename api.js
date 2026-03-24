@@ -2,7 +2,7 @@
 // Google Sheets API Integration
 // ============================
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxD_DIFvrZjU5mCzbFWH_Nmgqgu_YMaUpybJby9Q0jYOt4_zjHeHUEdBsiNgFLpzd6O/exec;
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJl36LffRg6i3H3u7srfuiI2quI2dMFUu60k3H1Jg5dGK-9cns4nFkaIG5pVlLq0TB/exec';
 
 // Loading overlay to block UI during API calls
 function showApiLoading(message = 'กำลังโหลดข้อมูล...') {
@@ -38,7 +38,7 @@ async function fetchData(action) {
         const result = await response.json();
         return result;
     } catch (error) {
-        console.error('API Error:', error);
+        console.error(`API Error (${action}):`, error);
         return null;
     }
 }

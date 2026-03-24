@@ -328,3 +328,11 @@ function setupInitialSheets() {
     userSheet.appendRow(['admin', '999999', 'Super Admin', 'admin', 'ใช้งาน']);
   }
 }
+
+/**
+ * Helper: Create a standardized JSON response for Apps Script
+ */
+function createResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
