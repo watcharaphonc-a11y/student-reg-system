@@ -192,6 +192,9 @@ async function bootApp() {
                 role: u['Role'] || u.role,
                 status: u['Status'] || u.status || 'ใช้งาน'
             }));
+            console.log('Successfully loaded Users from Sheet:', MOCK.users);
+        } else {
+            console.warn('No users found in Google Sheets data.');
         }
 
         if (coursesData && coursesData.length > 0) {
@@ -309,10 +312,10 @@ async function bootApp() {
         }
         window.apiDataLoaded = true;
     } catch (e) {
-        console.error('Failed to load API data, using mock data fallback', e);
-        // Show a more prominent warning for the user
+        console.error('Failed to load API data:', e);
+        window.apiDataLoaded = 'error'; // Indicate error state
         if (typeof showError === 'function') {
-            showError('ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการตั้งค่า Apps Script');
+            showError('ไม่สามารถเชื่อมต่อกับ Google Sheets ได้ กรุณาตรวจสอบการตั้งค่า Apps Script และสิทธิ์การเข้าถึง');
         }
     }
 

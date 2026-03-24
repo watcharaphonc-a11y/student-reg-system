@@ -138,13 +138,25 @@ function handleLogin(role) {
             return showError("กรุณากรอกรหัสผ่าน");
         }
 
-        // Find matching admin by searching ALL fields for Password
         const passTrimmed = pass.trim();
-        const adminUser = (MOCK.users || []).find(u => u.role && (String(u.role).toLowerCase().trim() === 'admin' || String(u.role).toLowerCase().trim() === 'super admin') && Object.values(u).some(v => String(v).trim() === passTrimmed));
+        console.log('Admin Login Attempt. Entered password:', passTrimmed);
+        console.log('Validating against MOCK.users:', MOCK.users);
+
+        // Find matching admin by checking role and ANY field matching the password
+        const adminUser = (MOCK.users || []).find(u => {
+            const roleStr = String(u.role || u['Role'] || '').toLowerCase().trim();
+            const isAdmin = (roleStr === 'admin' || roleStr === 'super admin');
+            
+            // Check all values in the user object for a match with password
+            const hasMatchingPass = Object.values(u).some(v => String(v).trim() === passTrimmed);
+            
+            return isAdmin && hasMatchingPass;
+        });
 
         if (adminUser) {
             performLogin('admin', { name: adminUser.name || 'ผู้ดูแลระบบ', roleName: 'Admin' });
         } else {
+            console.error('Admin Login Failed: No matching admin record found for password:', passTrimmed);
             return showError("รหัสผ่านไม่ถูกต้อง");
         }
     }
@@ -296,10 +308,16 @@ setInterval(() => {
     const text = document.getElementById('statusText');
     const buttons = document.querySelectorAll('.login-form .btn');
     
-    if (window.apiDataLoaded) {
+    const activeStatus = window.apiDataLoaded;
+    
+    if (activeStatus === true) {
         if (dot) dot.style.background = '#10b981'; // Success Green
         if (text) text.textContent = 'เชื่อมต่อกับ Google Sheets แล้ว';
         buttons.forEach(b => b.disabled = false);
+    } else if (activeStatus === 'error') {
+        if (dot) dot.style.background = '#ef4444'; // Error Red
+        if (text) text.textContent = 'การเชื่อมต่อผิดพลาด (ดูที่ Console)';
+        buttons.forEach(b => b.disabled = true);
     } else {
         if (dot) dot.style.background = '#f59e0b'; // Warning Amber
         if (text) text.textContent = 'กำลังรอข้อมูลจาก Google Sheets...';
