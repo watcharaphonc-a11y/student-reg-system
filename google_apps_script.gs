@@ -175,7 +175,7 @@ function fixMissingIds() {
       sheet.getRange(i + 1, idCol + 1).setValue(newId);
     }
   }
-  SpreadsheetApp.getUi().alert('Fixed all missing Tracking IDs!');
+  SpreadsheetApp.getUi().alert('✅ แก้ไขรหัสติดตาม (Tracking ID) เสร็จเรียบร้อยแล้ว!\n\nกรุณากลับไปที่หน้าเว็บแล้วกด REFRESH (F5) 1 ครั้งเพื่อใช้งาน');
 }
 
 /**
@@ -334,8 +334,9 @@ function updateDocumentStatus(payload) {
   }
   
   if (rowIndex === -1) {
-    console.error('Document not found for payload:', payload);
-    return createResponse({ status: 'error', message: 'Document not found in Google Sheets' });
+    const debugInfo = `ID: ${payload.id}, Student: ${payload.studentId}, Type: ${payload.documentType}. Available Headers: ${headers.join(',')}`;
+    console.error('Document not found:', debugInfo);
+    return createResponse({ status: 'error', message: `ไม่พบข้อมูลเอกสารในระบบ (Document not found).\n\nรายละเอียด: ${debugInfo}\n\nคำแนะนำ: กรุณา Refresh หน้าเว็บ 1 ครั้งแล้วลองใหม่` });
   }
   
   // Update fields
