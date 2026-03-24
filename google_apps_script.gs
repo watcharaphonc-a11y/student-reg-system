@@ -105,6 +105,8 @@ function doPost(e) {
         return uploadDocumentToDrive(payload);
       case 'updateDocumentStatus':
         return updateDocumentStatus(payload);
+      case 'importGrades':
+        return importGradesBatch(payload);
       default:
         return createResponse({ status: 'error', message: 'Unknown POST action' });
     }
@@ -248,6 +250,46 @@ function updateDocumentStatus(payload) {
 }
 
 /**
+ * Helper: Import Grades in Batch
+ */
+function importGradesBatch(payload) {
+  const sheet = SS.getSheetByName(SHEETS.ENROLLMENTS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Enrollments sheet not found' });
+  
+  const data = payload.grades; // Array of objects mapping to headers
+  if (!data || !Array.isArray(data)) return createResponse({ status: 'error', message: 'Invalid grades data' });
+  
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  
+  data.forEach(item => {
+    // Basic update/append logic: Find if student+course+semester+year exists
+    const values = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+    
+    // We start from 1 to skip header
+    for (let i = 1; i < values.length; i++) {
+        const row = values[i];
+        if (row[headers.indexOf('รหัสนักศึกษา')] == item['รหัสนักศึกษา'] && 
+            row[headers.indexOf('รหัสวิชา')] == item['รหัสวิชา'] &&
+            row[headers.indexOf('ภาคเรียน')] == item['ภาคเรียน'] &&
+            row[headers.indexOf('ปีการศึกษา')] == item['ปีการศึกษา']) {
+          rowIndex = i + 1;
+          break;
+        }
+    }
+    
+    const rowValues = headers.map(h => item[h] || '');
+    if (rowIndex > 0) {
+      sheet.getRange(rowIndex, 1, 1, headers.length).setValues([rowValues]);
+    } else {
+      sheet.appendRow(rowValues);
+    }
+  });
+  
+  return createResponse({ status: 'success', count: data.length });
+}
+
+/**
  * Run this once to initialize all sheets
  */
 function setupInitialSheets() {
@@ -256,7 +298,7 @@ function setupInitialSheets() {
     [SHEETS.STUDENTS]: ['คำนำหน้า','ชื่อ (ไทย)','นามสกุล (ไทย)','ชื่อ (EN)','นามสกุล (EN)','เลขบัตรประชาชน','รหัสนักศึกษา','วันเกิด (YYYY-MM-DD)','เพศ','อีเมล','E-mail ของสถาบัน','เบอร์โทร','สาขาวิชา','ปีการศึกษาที่เข้า','ที่อยู่','Username','Password'],
     [SHEETS.TEACHERS]: ['คำนำหน้า','ชื่อ','นามสกุล','ตำแหน่งทางวิชาการ','ความเชี่ยวชาญ','อีเมล','เบอร์โทร','คณะ/สังกัด','นศ. ในกำกับ','Username','Password'],
     [SHEETS.COURSES]: ['รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'กลุ่ม', 'อาจารย์ผู้สอน'],
-    [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
+    [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
     [SHEETS.PAYMENTS]: ['รหัสนักศึกษา', 'รายการ', 'จำนวนเงิน', 'สถานะ', 'วันที่'],
     [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
     [SHEETS.DOCUMENTS]: ['รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ']

@@ -54,12 +54,12 @@ window.processGradeImport = function() {
     
     const file = fileInput.files[0];
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = async function(e) {
+        showApiLoading('กำลังประมวลผลและบันทึกข้อมูลเกรดลง Google Sheet...');
         const text = e.target.result;
         const lines = text.split('\n');
         
-        // Group by student_id
-        const studentGradesMap = {};
+        const gradesToUpload = [];
 
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
@@ -75,92 +75,48 @@ window.processGradeImport = function() {
                 const creditsRaw = cols[5].trim();
                 const cGrade = cols[6].trim();
                 
-                // Parse credits like "3(3-0-6)" -> 3
-                const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
-                
-                const semName = `ภาคเรียนที่ ${sem}/${aYear}`;
-                
-                // Map grade to points
-                let point = 0;
-                switch(cGrade) {
-                    case 'A': point = 4.0; break;
-                    case 'B+': point = 3.5; break;
-                    case 'B': point = 3.0; break;
-                    case 'C+': point = 2.5; break;
-                    case 'C': point = 2.0; break;
-                    case 'D+': point = 1.5; break;
-                    case 'D': point = 1.0; break;
-                    case 'F': point = 0.0; break;
-                }
-                
-                if (!studentGradesMap[sId]) studentGradesMap[sId] = {};
-                if (!studentGradesMap[sId][semName]) {
-                    studentGradesMap[sId][semName] = { 
-                        semester: semName, 
-                        courses: [], 
-                        totalPoints: 0, 
-                        totalCredits: 0 
-                    };
-                }
-                
-                studentGradesMap[sId][semName].courses.push({
-                    code: cCode,
-                    name: cName,
-                    credits: cCredits,
-                    grade: cGrade,
-                    point: point
+                // Add to upload array (Matching GAS Enrollments headers)
+                gradesToUpload.push({
+                    'รหัสนักศึกษา': sId,
+                    'รหัสวิชา': cCode,
+                    'ชื่อวิชา': cName,
+                    'หน่วยกิต': creditsRaw, // Keep raw string for credits
+                    'ภาคเรียน': sem,
+                    'ปีการศึกษา': aYear,
+                    'เกรด': cGrade
                 });
-                
-                studentGradesMap[sId][semName].totalPoints += (point * cCredits);
-                studentGradesMap[sId][semName].totalCredits += cCredits;
             }
         }
         
-        // Update MOCK database
-        let updatedCount = 0;
-        Object.keys(studentGradesMap).forEach(sId => {
-            const student = (MOCK.students || []).find(s => 
-                String(s.id || '').trim() === sId || 
-                String(s.studentId || '').trim() === sId
-            );
-            
-            if (student) {
-                if (!student.grades) student.grades = [];
-                
-                const sSemList = studentGradesMap[sId];
-                Object.keys(sSemList).forEach(semName => {
-                    const data = sSemList[semName];
-                    const gpa = data.totalCredits > 0 ? (data.totalPoints / data.totalCredits) : 0;
-                    
-                    const newSemData = {
-                        semester: semName,
-                        gpa: gpa,
-                        totalCredits: data.totalCredits,
-                        courses: data.courses
-                    };
-                    
-                    const existingIdx = student.grades.findIndex(g => g.semester === semName);
-                    if (existingIdx >= 0) {
-                        student.grades[existingIdx] = newSemData;
-                    } else {
-                        student.grades.push(newSemData);
-                    }
-                });
-                
-                // Sort student grades
-                student.grades.sort((a,b) => b.semester.localeCompare(a.semester));
-                
-                // If this is the currently viewed student, sync to MOCK.grades
-                if (MOCK.student && (MOCK.student.id === student.id || MOCK.student.studentId === student.studentId)) {
-                    MOCK.grades = student.grades;
-                }
-                updatedCount++;
-            }
-        });
+        if (gradesToUpload.length === 0) {
+            hideApiLoading();
+            alert('ไม่พบข้อมูลในไฟล์ หรือรูปแบบไฟล์ไม่ถูกต้อง');
+            return;
+        }
 
-        closeModal();
-        alert(`นำเข้าข้อมูลสำเร็จ (อัปเดตนักศึกษา ${updatedCount} คน)`);
-        renderPage();
+        try {
+            const result = await postData('importGrades', { grades: gradesToUpload });
+            hideApiLoading();
+            
+            if (result && result.status === 'success') {
+                closeModal();
+                alert(`นำเข้าข้อมูลสำเร็จ (บันทึกลง Sheet ทั้งหมด ${result.count} รายการ)`);
+                
+                // Trigger global sync to refresh all data
+                if (typeof window.syncActiveStudentData === 'function') {
+                    await window.syncActiveStudentData();
+                } else {
+                    location.reload(); // Fallback if sync is not available yet
+                }
+                renderPage();
+            } else {
+                alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + (result ? result.message : 'Unknown Error'));
+            }
+        } catch (err) {
+            hideApiLoading();
+            console.error('Import Error:', err);
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + err.message);
+        }
     };
     reader.readAsText(file);
 };

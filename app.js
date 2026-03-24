@@ -64,39 +64,77 @@ async function bootApp() {
     }
     try {
         // Fetch all necessary data from Google Sheets API
-        const [studentsData, teachersData, usersData, coursesData, enrollmentsData, paymentsData, evaluationsData, documentsData] = await Promise.all([
+        // 1. Fetch Core Data
+        const [usersData, studentsData, teachersData, coursesData, enrollmentsData] = await Promise.all([
+            fetchData('getUsers'),
             fetchData('getStudents'),
             fetchData('getTeachers'),
-            fetchData('getUsers'),
             fetchData('getCourses'),
-            fetchData('getEnrollments'),
+            fetchData('getEnrollments')
+        ]);
+        // 2. Fetch remaining data
+        const [paymentsData, evaluationsData, documentsData] = await Promise.all([
             fetchData('getPayments'),
             fetchData('getEvaluations'),
             fetchData('getDocuments')
         ]);
 
-        // Map and merge real data
+        // Map Students and attach Grades from Enrollments
         if (studentsData && studentsData.length > 0) {
             MOCK.students = studentsData.map(s => {
                 const sId = String(s['รหัสนักศึกษา'] || s.studentId || s.id || '').trim();
                 
-                // Calculate basic stats for this student from enrollments
-                let sTotalPoints = 0;
-                let sTotalCredits = 0;
-                if (MOCK.enrollments) {
-                    MOCK.enrollments
-                        .filter(e => String(e['รหัสนักศึกษา'] || e.studentId).trim() === sId)
-                        .filter(e => e['เกรด'] && String(e['เกรด']).trim() !== '')
-                        .forEach(e => {
-                            const point = gradeToPoint(e['เกรด']);
-                            const courseCode = e['รหัสวิชา'] || e.courseCode;
-                            const course = MOCK.courses ? MOCK.courses.find(c => c.code === courseCode) : null;
-                            const creditsRaw = e['หน่วยกิต'] || (course ? course.credits : 0);
-                            const credits = parseInt(creditsRaw) || 0;
-                            sTotalPoints += (point * credits);
-                            sTotalCredits += credits;
-                        });
-                }
+                // Find enrollments for this student
+                const studentEnrollments = (enrollmentsData || []).filter(e => String(e['รหัสนักศึกษา'] || e.studentId).trim() === sId);
+                
+                // Group enrollments into student.grades format
+                const gradesMap = {};
+                studentEnrollments.forEach(e => {
+                    const semName = `ภาคเรียนที่ ${e['ภาคเรียน']}/${e['ปีการศึกษา']}`;
+                    const cGrade = String(e['เกรด'] || '').trim();
+                    const creditsRaw = String(e['หน่วยกิต'] || '0');
+                    const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
+                    
+                    let point = 0;
+                    switch(cGrade) {
+                        case 'A': point = 4.0; break;
+                        case 'B+': point = 3.5; break;
+                        case 'B': point = 3.0; break;
+                        case 'C+': point = 2.5; break;
+                        case 'C': point = 2.0; break;
+                        case 'D+': point = 1.5; break;
+                        case 'D': point = 1.0; break;
+                        case 'F': point = 0.0; break;
+                    }
+                    
+                    if (!gradesMap[semName]) {
+                        gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
+                    }
+                    
+                    gradesMap[semName].courses.push({
+                        code: e['รหัสวิชา'],
+                        name: e['ชื่อวิชา'],
+                        credits: cCredits,
+                        grade: cGrade,
+                        point: point
+                    });
+                    
+                    gradesMap[semName].totalCredits += cCredits;
+                    gradesMap[semName].totalPoints += (point * cCredits);
+                });
+                
+                const finalGrades = Object.values(gradesMap).map(g => ({
+                    semester: g.semester,
+                    totalCredits: g.totalCredits,
+                    gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
+                    courses: g.courses
+                })).sort((a,b) => b.semester.localeCompare(a.semester));
+
+                // Overall Stats
+                const allCourses = finalGrades.flatMap(g => g.courses);
+                const overallCredits = allCourses.reduce((sum, c) => sum + c.credits, 0);
+                const overallPoints = allCourses.reduce((sum, c) => sum + (c.point * c.credits), 0);
+                const overallGpa = overallCredits > 0 ? (overallPoints / overallCredits) : 0;
 
                 return {
                     id: sId || s['เลขประจำตัวประชาชน'] || s['เลขบัตรประชาชน'] || s.id,
@@ -121,9 +159,10 @@ async function bootApp() {
                     address: s['ที่อยู่'] || s.address || '-',
                     parentName: s['ผู้ปกครอง'] || s.parentName || '-',
                     parentPhone: s['เบอร์ผู้ปกครอง'] || s.parentPhone || '-',
-                    gpa: sTotalCredits > 0 ? (sTotalPoints / sTotalCredits) : (parseFloat(s['GPA']) || 0),
-                    totalCredits: sTotalCredits > 0 ? sTotalCredits : (parseInt(s['หน่วยกิตสะสม']) || 0),
-                    requiredCredits: parseInt(s['หน่วยกิตที่ต้องเรียน']) || s.requiredCredits || 132
+                    gpa: overallGpa,
+                    totalCredits: overallCredits,
+                    requiredCredits: parseInt(s['หน่วยกิตที่ต้องเรียน']) || s.requiredCredits || 132,
+                    grades: finalGrades
                 };
             });
         }
@@ -169,9 +208,10 @@ async function bootApp() {
             }));
         }
 
-        if (enrollmentsData && enrollmentsData.length > 0) {
-            MOCK.enrollments = enrollmentsData;
-        }
+        // MOCK.enrollments is now handled within student mapping in bootApp
+        // if (enrollmentsData && enrollmentsData.length > 0) {
+        //     MOCK.enrollments = enrollmentsData;
+        // }
 
         if (paymentsData && paymentsData.length > 0) {
             MOCK.payments = paymentsData.map(p => ({
@@ -277,96 +317,105 @@ async function bootApp() {
     renderPage();
 }
 
-window.syncActiveStudentData = function() {
+window.syncActiveStudentData = async function() {
     if (!MOCK.student) return;
-
-    const studentId = String(MOCK.student.studentId || MOCK.student.id).trim();
-
-    // 1. Filter enrollments & courses
-    if (MOCK.enrollments && MOCK.courses) {
-        const myEnrollments = MOCK.enrollments.filter(e => 
-            String(e['รหัสนักศึกษา'] || e.studentId).trim() === studentId
-        );
+    
+    // Refresh student data from Google Sheets
+    showApiLoading('กำลังอัปเดตข้อมูลนักศึกษา...');
+    try {
+        const [enrollments, payments, documents] = await Promise.all([
+            fetchData('getEnrollments'),
+            fetchData('getPayments'),
+            fetchData('getDocuments')
+        ]);
         
-        MOCK.enrolledCourses = myEnrollments.map(e => {
-            const courseCode = e['รหัสวิชา'] || e.courseCode;
-            const course = MOCK.courses.find(c => c.code === courseCode);
-            return {
-                code: courseCode,
-                name: course ? course.name : (e['ชื่อวิชา'] || '-'),
-                credits: course ? course.credits : parseInt(e['หน่วยกิต'] || 0),
-                instructor: course ? course.instructor : (e['อาจารย์'] || '-'),
-                schedule: course ? course.schedule : (e['เวลาเรียน'] || '-'),
-                room: course ? course.room : (e['ห้องเรียน'] || '-')
-            };
-        });
+        const sId = String(MOCK.student.studentId || MOCK.student.id || '').trim();
 
-        // 2. Group grades by semester
-        const gradesBySem = {};
-        myEnrollments
-            .filter(e => e['เกรด'] && String(e['เกรด']).trim() !== '')
-            .forEach(e => {
-                const semName = `${e['ภาคเรียน'] || '1'}/${e['ปีการศึกษา'] || '2568'}`;
-                const courseCode = e['รหัสวิชา'] || e.courseCode;
-                const course = MOCK.courses.find(c => c.code === courseCode);
-                
-                if (!gradesBySem[semName]) {
-                    gradesBySem[semName] = { 
-                        semester: semName, 
-                        courses: [],
-                        totalPoints: 0,
-                        totalCredits: 0,
-                        gpa: 0
-                    };
-                }
-                
-                const point = gradeToPoint(e['เกรด']);
-                const credits = course ? course.credits : parseInt(e['หน่วยกิต'] || 0);
-                
-                gradesBySem[semName].courses.push({
-                    code: courseCode,
-                    name: course ? course.name : (e['ชื่อวิชา'] || '-'),
-                    credits: credits,
-                    grade: e['เกรด'],
-                    point: point
-                });
-                
-                gradesBySem[semName].totalPoints += (point * credits);
-                gradesBySem[semName].totalCredits += credits;
+        // 1. Sync Grades
+        const studentEnrollments = (enrollments || []).filter(e => String(e['รหัสนักศึกษา'] || e.studentId || '').trim() === sId);
+        const gradesMap = {};
+        studentEnrollments.forEach(e => {
+            const semName = `ภาคเรียนที่ ${e['ภาคเรียน']}/${e['ปีการศึกษา']}`;
+            const cGrade = String(e['เกรด'] || '').trim();
+            const creditsRaw = String(e['หน่วยกิต'] || '0');
+            const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
+            
+            let point = 0;
+            switch(cGrade) {
+                case 'A': point = 4.0; break;
+                case 'B+': point = 3.5; break;
+                case 'B': point = 3.0; break;
+                case 'C+': point = 2.5; break;
+                case 'C': point = 2.0; break;
+                case 'D+': point = 1.5; break;
+                case 'D': point = 1.0; break;
+                case 'F': point = 0.0; break;
+            }
+            
+            if (!gradesMap[semName]) {
+                gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
+            }
+            
+            gradesMap[semName].courses.push({
+                code: e['รหัสวิชา'],
+                name: e['ชื่อวิชา'],
+                credits: cCredits,
+                grade: cGrade,
+                point: point
             });
-
-        MOCK.grades = Object.values(gradesBySem).map(sem => ({
-            ...sem,
-            gpa: sem.totalCredits > 0 ? (sem.totalPoints / sem.totalCredits) : 0
-        })).sort((a, b) => b.semester.localeCompare(a.semester));
-
-        // 3. GPA History
-        MOCK.gpaHistory = MOCK.grades.map(g => ({
+            
+            gradesMap[semName].totalCredits += cCredits;
+            gradesMap[semName].totalPoints += (point * cCredits);
+        });
+        
+        MOCK.grades = Object.values(gradesMap).map(g => ({
             semester: g.semester,
-            gpa: g.gpa
-        })).reverse();
-    }
+            totalCredits: g.totalCredits,
+            gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
+            courses: g.courses
+        })).sort((a,b) => b.semester.localeCompare(a.semester));
 
-    // 4. Filter payments
-    if (MOCK.payments && MOCK.payments.length > 0) {
-        MOCK.payments = MOCK.payments.filter(p => 
-            String(p['รหัสนักศึกษา'] || p.studentId).trim() === studentId
-        );
-    }
+        // Update student object stats
+        const allCourses = MOCK.grades.flatMap(g => g.courses);
+        MOCK.student.totalCredits = allCourses.reduce((sum, c) => sum + c.credits, 0);
+        const overallPoints = allCourses.reduce((sum, c) => sum + (c.point * c.credits), 0);
+        MOCK.student.gpa = MOCK.student.totalCredits > 0 ? (overallPoints / MOCK.student.totalCredits) : 0;
+        MOCK.student.grades = MOCK.grades;
 
-    // 5. Filter documents
-    if (MOCK.documents && MOCK.documents.length > 0) {
-        MOCK.studentDocuments = MOCK.documents
-            .filter(d => String(d.studentId).trim() === studentId)
-            .map((d, index) => ({
-                id: 'DOC-S' + (1000 + index),
-                formName: d.documentType,
-                submitDate: d.date,
-                lastUpdate: d.date,
-                status: d.status,
-                attachment: d.fileName,
-                fileUrl: d.fileUrl
-            }));
+        // 2. Sync Payments
+        if (payments && payments.length > 0) {
+            MOCK.studentPayments = payments
+                .filter(p => String(p['รหัสนักศึกษา'] || p.studentId || '').trim() === sId)
+                .map(p => ({
+                    id: p['รหัสอ้างอิง'] || p.id,
+                    description: p['รายการ'] || p.description,
+                    amount: parseFloat(p['จำนวนเงิน'] || p.amount) || 0,
+                    status: p['สถานะ'] || p.status,
+                    date: p['วันที่'] || p.paidDate || p.dueDate
+                }));
+        }
+
+        // 3. Sync Documents
+        if (documents && documents.length > 0) {
+            MOCK.studentDocuments = documents
+                .filter(d => String(d['รหัสนักศึกษา'] || d.studentId || '').trim() === sId)
+                .map((d, index) => ({
+                    id: 'DOC-S' + (1000 + index),
+                    formName: d['ประเภทเอกสาร'] || d.documentType,
+                    submitDate: d['วันที่ส่ง'] || d.date,
+                    lastUpdate: d['วันที่ส่ง'] || d.date,
+                    status: d['สถานะ'] || d.status,
+                    attachment: d['ชื่อไฟล์'] || d.fileName,
+                    fileUrl: d['ลิงก์เอกสาร'] || d.fileUrl,
+                    signedFileUrl: d['ลิงก์เอกสารที่ลงนาม'] || d.signedFileUrl,
+                    note: d['หมายเหตุ'] || d.note
+                }));
+        }
+    } catch (err) {
+        console.error('Sync student data failed:', err);
+    } finally {
+        hideApiLoading();
+        renderPage();
     }
 };
 
