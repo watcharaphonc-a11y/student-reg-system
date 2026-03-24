@@ -60,9 +60,10 @@ function doGet(e) {
       default:
         return createResponse({ status: 'error', message: 'Unknown action' });
     }
+    console.log(`Action ${action} completed successfully`);
     return createResponse(data);
   } catch (err) {
-    console.error('doGet Error:', err);
+    console.error(`doGet Error (${action}):`, err);
     return createResponse({ status: 'error', message: err.toString() });
   }
 }
@@ -218,13 +219,15 @@ function uploadDocumentToDrive(payload) {
         sheet.getRange(rowIndex, statusCol).setValue('ลงนามเรียบร้อยแล้ว');
       }
       
-      return createResponse({ status: 'success', id: docId, fileUrl: fileUrl, action: 'update' });
+    return createResponse({ status: 'success', id: docId, fileUrl: fileUrl, action: 'update' });
+    } else {
+      console.warn(`uploadDocumentToDrive: docId ${docId} provided but not found in sheet.`);
     }
   }
 
   // NEW Row
   const newId = 'DOC-' + new Date().getTime();
-  appendRow(SHEETS.DOCUMENTS, {
+  const newRowPayload = {
     'รหัสติดตาม': newId,
     'รหัสนักศึกษา': payload.studentId || '',
     'ชื่อผู้ส่ง': payload.senderName || '',
@@ -233,7 +236,9 @@ function uploadDocumentToDrive(payload) {
     'ลิงก์เอกสาร': fileUrl,
     'วันที่ส่ง': new Date().toLocaleString('th-TH'),
     'สถานะ': 'รอตรวจสอบ'
-  });
+  };
+  console.log('Inserting new document row:', newRowPayload);
+  appendRow(SHEETS.DOCUMENTS, newRowPayload);
   
   return createResponse({ status: 'success', id: newId, fileUrl: fileUrl, action: 'insert' });
 }
@@ -242,6 +247,7 @@ function uploadDocumentToDrive(payload) {
  * Helper: Update Document Status in Sheets
  */
 function updateDocumentStatus(payload) {
+  console.log('updateDocumentStatus payload:', payload);
   const sheet = SS.getSheetByName(SHEETS.DOCUMENTS);
   if (!sheet) return createResponse({ status: 'error', message: 'Documents sheet not found' });
   
@@ -249,32 +255,51 @@ function updateDocumentStatus(payload) {
   const headers = values[0];
   const rows = values.slice(1);
   
+  console.log('Sheet Headers:', headers);
+  
   // Find row by ID
   let rowIndex = -1;
   const idCol = headers.indexOf('รหัสติดตาม');
   
-  for (let i = 0; i < rows.length; i++) {
-    if (rows[i][idCol] == payload.id) {
-      rowIndex = i + 2;
-      break;
-    }
-  }
-  
-  // Fallback to old method if ID not found (for legacy rows)
-  if (rowIndex === -1) {
+  if (idCol !== -1 && payload.id) {
     for (let i = 0; i < rows.length; i++) {
-      const row = rows[i];
-      const sId = row[headers.indexOf('รหัสนักศึกษา')];
-      const type = row[headers.indexOf('ประเภทเอกสาร')];
-      
-      if (sId == payload.studentId && type == payload.documentType) {
-        rowIndex = i + 2;
-        break;
-      }
+        // Use loose equality and trim to match strings/numbers
+        if (String(rows[i][idCol]).trim() == String(payload.id).trim()) {
+          rowIndex = i + 2;
+          console.log(`Match found by ID at row ${rowIndex}`);
+          break;
+        }
     }
   }
   
-  if (rowIndex === -1) return createResponse({ status: 'error', message: 'Document not found' });
+  // Fallback to studentId + documentType if ID not found
+  if (rowIndex === -1) {
+    console.log('ID match failed, attempting fallback match...');
+    const sIdCol = headers.indexOf('รหัสนักศึกษา');
+    const typeCol = headers.indexOf('ประเภทเอกสาร');
+    
+    if (sIdCol !== -1 && typeCol !== -1) {
+        // Use studentId and documentName to find. 
+        // We look for the MOST RECENT row (bottom-up) to avoid duplicates
+        for (let i = rows.length - 1; i >= 0; i--) {
+          const sId = String(rows[i][sIdCol]).trim();
+          const type = String(rows[i][typeCol]).trim();
+          const targetSId = String(payload.studentId).trim();
+          const targetType = String(payload.documentType).trim();
+          
+          if (sId == targetSId && type == targetType) {
+            rowIndex = i + 2;
+            console.log(`Match found by fallback at row ${rowIndex}`);
+            break;
+          }
+        }
+    }
+  }
+  
+  if (rowIndex === -1) {
+    console.error('Document not found for payload:', payload);
+    return createResponse({ status: 'error', message: 'Document not found in Google Sheets' });
+  }
   
   // Update fields
   const updateMap = {
