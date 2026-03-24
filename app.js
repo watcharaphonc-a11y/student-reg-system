@@ -201,18 +201,21 @@ async function bootApp() {
                 documentType: d['ประเภทเอกสาร'] || d.documentType,
                 fileName: d['ชื่อไฟล์'] || d.fileName,
                 fileUrl: d['ลิงก์เอกสาร'] || d.fileUrl,
+                signedFileUrl: d['ลิงก์เอกสารที่ลงนาม'] || d.signedFileUrl,
                 date: d['วันที่ส่ง'] || d.date,
-                status: d['สถานะ'] || d.status
+                status: d['สถานะ'] || d.status,
+                nextStep: d['ผู้รับผิดชอบถัดไป'] || d.nextStep,
+                note: d['หมายเหตุ'] || d.note
             }));
 
             // Sync for Admin view
-            MOCK.adminDocuments = MOCK.documents.map(d => ({
+            MOCK.adminDocuments = MOCK.documents.map((d, index) => ({
                 ...d,
-                id: 'DOC-' + Math.floor(Math.random() * 90000 + 10000), // Temporary ID if missing
+                id: 'DOC-A' + (1000 + index),
                 formName: d.documentType,
                 submitDate: d.date,
                 attachment: d.fileName
-            }));
+            })).reverse();
         }
 
         // Calculate Dashboard Stats from Real Data

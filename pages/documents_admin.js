@@ -80,13 +80,62 @@ pages['documents-admin'] = function() {
     </div>`;
 };
 
-// Global action handlers for admin docs
 window.downloadAdminDoc = function(docId) {
-    showApiLoading('กำลังดาวน์โหลดเอกสาร...');
-    setTimeout(() => {
+    const doc = MOCK.adminDocuments.find(d => d.id === docId);
+    if (doc && doc.fileUrl) {
+        window.open(doc.fileUrl, '_blank');
+    } else {
+        alert('ไม่พบลิงก์สำหรับดาวน์โหลดเอกสารนี้');
+    }
+};
+
+window.syncAdminDocuments = async function() {
+    showApiLoading('กำลังโหลดข้อมูลเอกสารจาก Google Sheet...');
+    try {
+        const data = await fetchData('getDocuments');
+        if (data && Array.isArray(data)) {
+            // Map Sheet data to MOCK format
+            MOCK.adminDocuments = data.map((row, index) => {
+                // Use a consistent ID based on the sheet data if possible, or just the index
+                const docId = 'DOC-A' + (1000 + index);
+                return {
+                    id: docId,
+                    studentId: row['รหัสนักศึกษา'] || '',
+                    senderName: row['ชื่อผู้ส่ง'] || '',
+                    studentName: row['ชื่อผู้ส่ง'] || '', // Fallback
+                    formName: row['ประเภทเอกสาร'] || 'คำร้องทั่วไป',
+                    documentType: row['ประเภทเอกสาร'] || 'คำร้องทั่วไป',
+                    submitDate: row['วันที่ส่ง'] || '-',
+                    status: row['สถานะ'] || 'รอตรวจสอบ',
+                    nextStep: row['ผู้รับผิดชอบถัดไป'] || null,
+                    attachment: row['ชื่อไฟล์'] || '-',
+                    fileUrl: row['ลิงก์เอกสาร'] || null,
+                    signedFileUrl: row['ลิงก์เอกสารที่ลงนาม'] || null,
+                    note: row['หมายเหตุ'] || ''
+                };
+            });
+            
+            // Reverse to show newest first
+            MOCK.adminDocuments = MOCK.adminDocuments.reverse();
+            
+            hideApiLoading();
+            renderPage(); 
+        } else {
+            hideApiLoading();
+            alert('ไม่สามารถดึงข้อมูลได้ หรือไม่มีข้อมูลในระบบ');
+        }
+    } catch (err) {
         hideApiLoading();
-        alert('ดาวน์โหลดเอกสารรหัส ' + docId + ' เรียบร้อยแล้ว (จำลอง)');
-    }, 600);
+        console.error('Sync Error:', err);
+    }
+};
+
+window.init_documents_admin = function() {
+    if (!MOCK.adminDocsSyncDone) {
+        window.syncAdminDocuments().then(() => {
+            MOCK.adminDocsSyncDone = true;
+        });
+    }
 };
 
 window.openUploadSignedModal = function(docId) {
@@ -154,6 +203,25 @@ window.previewAdminDoc = function(docId) {
     setTimeout(() => {
         hideApiLoading();
         
+        let previewContent = '';
+        const displayUrl = doc.signedFileUrl || doc.fileUrl;
+
+        if (displayUrl) {
+            let embedUrl = displayUrl;
+            if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
+                embedUrl = embedUrl.replace('/view', '/preview');
+            }
+            previewContent = `<iframe src="${embedUrl}" style="width:100%; height:550px; border:none; border-radius:var(--radius-sm);" allow="autoplay"></iframe>`;
+        } else {
+            previewContent = `
+                <div class="animate-in" style="background:#f1f5f9; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; text-align:center; min-height:450px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:15px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <div style="color:var(--text-primary); font-weight:500; font-size:1.1rem; margin-bottom:5px;">ไม่พบไฟล์เอกสาร</div>
+                    <div style="color:var(--text-muted); font-size:0.9rem;">(เอกสารนี้อาจถูกส่งก่อนที่จะมีการอัปเกรดระบบจัดเก็บไฟล์)</div>
+                </div>
+            `;
+        }
+
         const modalHtml = `
             <div style="padding:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
@@ -161,52 +229,81 @@ window.previewAdminDoc = function(docId) {
                         <h3 style="margin:0; color:var(--accent-primary); font-size:1.1rem;">${doc.id}</h3>
                         <div style="font-size:0.9rem; color:var(--text-muted);">${doc.formName}</div>
                     </div>
-                    <button class="btn btn-primary btn-sm" onclick="downloadAdminDoc('${doc.id}')">
+                    ${doc.fileUrl ? `
+                    <button class="btn btn-primary btn-sm" onclick="window.open('${doc.fileUrl}', '_blank')">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        ดาวน์โหลดไฟล์ต้นฉบับ
-                    </button>
+                        เปิดไฟล์ต้นฉบับ
+                    </button>` : ''}
                 </div>
                 
-                <div class="animate-in" style="background:#f1f5f9; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; text-align:center; min-height:400px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:15px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    <div style="color:var(--text-primary); font-weight:500; font-size:1.1rem; margin-bottom:5px;">Preview รูปแบบจำลองเอกสาร PDF</div>
-                    <div style="color:var(--text-muted); font-size:0.9rem;">(ในระบบจริงจะแสดงหน้าตัวอย่างเอกสารอย่างละเอียดในส่วนนี้)</div>
-                    
-                    <div style="margin-top:20px; padding:15px; background:white; text-align:left; border-radius:var(--radius-sm); border:1px solid #e2e8f0; width:100%; max-width:400px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                        <p style="margin:0 0 8px; font-size:0.9rem; color:var(--text-muted); border-bottom:1px solid var(--border-color); padding-bottom:6px;">สรุปข้อมูลในเอกสาร</p>
-                        <p style="margin:0 0 4px; font-size:0.95rem;"><strong>ชื่อนักศึกษา:</strong> ${doc.studentName}</p>
-                        <p style="margin:0 0 4px; font-size:0.95rem;"><strong>รหัส:</strong> ${doc.studentId}</p>
-                        <p style="margin:0 0 4px; font-size:0.95rem;"><strong>วันที่ส่ง:</strong> ${doc.submitDate}</p>
-                    </div>
+                ${previewContent}
+
+                <div style="margin-top:15px; padding:15px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
+                    <p style="margin:0 0 4px; font-size:0.95rem;"><strong>ชื่อนักศึกษา:</strong> ${doc.senderName}</p>
+                    <p style="margin:0 0 4px; font-size:0.95rem;"><strong>รหัส:</strong> ${doc.studentId}</p>
+                    <p style="margin:0 0 0; font-size:0.95rem;"><strong>วันที่ส่ง:</strong> ${doc.submitDate}</p>
                 </div>
             </div>
         `;
-        // Use a slightly larger modal for preview
-        openModal('พรีวิวเอกสารคำร้อง', modalHtml, '550px');
+        openModal('พรีวิวเอกสารคำร้อง', modalHtml, '850px');
     }, 600);
 };
 
-window.submitSignedDoc = function(docId) {
+window.submitSignedDoc = async function(docId) {
     const fileInput = document.getElementById('signedFile');
     if (!fileInput.files || fileInput.files.length === 0) {
         alert('กรุณาเลือกไฟล์ก่อนอัปโหลด');
         return;
     }
     
-    showApiLoading('กำลังอัปโหลดและบันทึกข้อมูล...');
+    const doc = MOCK.adminDocuments.find(d => d.id === docId);
+    if (!doc) return;
+
+    showApiLoading('กำลังอัปโหลดไฟล์ที่ลงนามและบันทึกข้อมูล...');
     
-    setTimeout(() => {
-        const doc = MOCK.adminDocuments.find(d => d.id === docId);
-        if (doc) {
-            doc.attachment = fileInput.files[0].name;
-            // Note: In real app, we would update status here too
+    try {
+        const file = fileInput.files[0];
+        const metadata = {
+            studentId: doc.studentId,
+            senderName: doc.senderName,
+            documentType: doc.documentType || doc.formName
+        };
+
+        // 1. Upload the signed file
+        const uploadRes = await window.uploadFile(file, metadata);
+        if (uploadRes && uploadRes.status === 'success') {
+            const signedUrl = uploadRes.fileUrl;
+            
+            // 2. Update the status in Sheet
+            const updatePayload = {
+                studentId: doc.studentId,
+                documentType: doc.documentType || doc.formName,
+                submitDate: doc.submitDate,
+                status: 'ลงนามเรียบร้อยแล้ว',
+                signedFileUrl: signedUrl,
+                note: 'อัปโหลดเอกสารลงนามแล้วโดยผู้ดูแลระบบ'
+            };
+
+            const updateRes = await postData('updateDocumentStatus', updatePayload);
+            
+            hideApiLoading();
+            if (updateRes && updateRes.status === 'success') {
+                closeModal();
+                alert('อัปโหลดไฟล์ลงนามและอัปเดตข้อมูลสำเร็จ');
+                MOCK.adminDocsSyncDone = false; // Trigger re-sync
+                renderPage();
+            } else {
+                alert('อัปโหลดไฟล์สำเร็จ แต่ไม่สามารถอัปเดตสถานะใน Sheet ได้: ' + (updateRes ? updateRes.message : 'Unknown'));
+            }
+        } else {
+            hideApiLoading();
+            alert('ไม่สามารถอัปโหลดไฟล์ขึ้น Google Drive ได้: ' + (uploadRes ? uploadRes.message : 'Unknown'));
         }
-        
+    } catch (err) {
         hideApiLoading();
-        closeModal();
-        alert('อัปโหลดไฟล์ลงนามสำเร็จ');
-        renderPage();
-    }, 800);
+        console.error('Upload Signed Doc Error:', err);
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
 };
 
 window.forwardAdminDoc = function(docId) {
@@ -277,32 +374,43 @@ window.forwardAdminDoc = function(docId) {
     openModal('ส่งต่อ/เปลี่ยนสถานะเอกสาร', modalHtml);
 };
 
-window.submitForwardDoc = function(docId) {
+window.submitForwardDoc = async function(docId) {
     const select = document.getElementById('newStatusStep');
     const newStatus = select.options[select.selectedIndex].text;
     const nextPerson = document.getElementById('nextPersonSelect').value;
+    const note = document.getElementById('forwardNote').value;
     
-    showApiLoading('กำลังบันทึกและส่งต่อ...');
+    const doc = MOCK.adminDocuments.find(d => d.id === docId);
+    if (!doc) return;
+
+    showApiLoading('กำลังบันทึกข้อมูลลง Google Sheet...');
     
-    setTimeout(() => {
-        const adminDoc = MOCK.adminDocuments.find(d => d.id === docId);
-        if (adminDoc) {
-            adminDoc.status = newStatus;
-            adminDoc.nextStep = nextPerson || null;
-        }
-        
-        // Also update student side if it exists
-        const stuDoc = MOCK.studentDocuments.find(d => d.id === docId);
-        if (stuDoc) {
-            stuDoc.status = newStatus;
-            stuDoc.lastUpdate = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-        }
-        
+    try {
+        const payload = {
+            studentId: doc.studentId,
+            documentType: doc.documentType || doc.formName,
+            submitDate: doc.submitDate,
+            status: newStatus,
+            nextStep: nextPerson,
+            note: note
+        };
+
+        const result = await postData('updateDocumentStatus', payload);
         hideApiLoading();
-        closeModal();
-        alert('อัปเดตสถานะเอกสารสำเร็จ');
-        renderPage();
-    }, 600);
+
+        if (result && result.status === 'success') {
+            closeModal();
+            alert('อัปเดตสถานะและส่งต่อเอกสารสำเร็จ');
+            MOCK.adminDocsSyncDone = false; // Trigger re-sync
+            renderPage();
+        } else {
+            alert('ไม่สามารถอัปเดตสถานะใน Sheet ได้: ' + (result ? result.message : 'Unknown error'));
+        }
+    } catch (err) {
+        hideApiLoading();
+        console.error('Forward Doc Error:', err);
+        alert('เกิดข้อผิดพลาด: ' + err.message);
+    }
 };
 
 window.searchAdminDocs = function() {

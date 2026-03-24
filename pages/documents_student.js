@@ -238,7 +238,6 @@ window.syncStudentDocuments = async function() {
             const mappedDocs = data
                 .filter(row => row['รหัสนักศึกษา'] == studentId)
                 .map((row, index) => {
-                    // Create a pseudo-ID if not present (Sheet doesn't have ID column yet, using index)
                     const docId = 'DOC-S' + (1000 + index);
                     return {
                         id: docId,
@@ -247,7 +246,9 @@ window.syncStudentDocuments = async function() {
                         lastUpdate: row['วันที่ส่ง'] || '-',
                         status: row['สถานะ'] || 'รอตรวจสอบ',
                         attachment: row['ชื่อไฟล์'] || '-',
-                        fileUrl: row['ลิงก์เอกสาร'] || null
+                        fileUrl: row['ลิงก์เอกสาร'] || null,
+                        signedFileUrl: row['ลิงก์เอกสารที่ลงนาม'] || null,
+                        note: row['หมายเหตุ'] || ''
                     };
                 });
             
@@ -286,10 +287,11 @@ window.previewStudentDoc = function(docId) {
     setTimeout(() => {
         hideApiLoading();
         
-        // Transform Drive URL if needed (view -> preview)
         let previewContent = '';
-        if (doc.fileUrl) {
-            let embedUrl = doc.fileUrl;
+        const displayUrl = doc.signedFileUrl || doc.fileUrl;
+
+        if (displayUrl) {
+            let embedUrl = displayUrl;
             if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
                 embedUrl = embedUrl.replace('/view', '/preview');
             }
@@ -297,17 +299,9 @@ window.previewStudentDoc = function(docId) {
         } else {
             previewContent = `
                 <div class="animate-in" style="background:#f1f5f9; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; text-align:center; min-height:400px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:15px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                    <div style="color:var(--text-primary); font-weight:500; font-size:1.1rem; margin-bottom:5px;">Preview รูปแบบจำลองเอกสาร PDF</div>
-                    <div style="color:var(--text-muted); font-size:0.9rem;">(เนื้อหาเอกสารจะแสดงที่นี่)</div>
-                    
-                    <div style="margin-top:20px; padding:15px; background:white; text-align:left; border-radius:var(--radius-sm); border:1px solid #e2e8f0; width:100%; max-width:400px; box-shadow:0 2px 4px rgba(0,0,0,0.05);">
-                        <p style="margin:0 0 8px; font-size:0.9rem; color:var(--text-muted); border-bottom:1px solid var(--border-color); padding-bottom:6px;">สรุปข้อมูลในเอกสาร</p>
-                        <p style="margin:0 0 8px; font-size:0.95rem;"><strong>สถานะ:</strong> ${doc.status}</p>
-                        <p style="margin:0 0 8px; font-size:0.95rem;"><strong>วันที่ยื่น:</strong> ${doc.submitDate}</p>
-                        <p style="margin:0 0 8px; font-size:0.95rem;"><strong>อัปเดตล่าสุด:</strong> ${doc.lastUpdate}</p>
-                        <p style="margin:0 0 8px; font-size:0.95rem;"><strong>ไฟล์ดาวน์โหลด:</strong> ${doc.attachment || 'ไม่มี'}</p>
-                    </div>
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:15px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    <div style="color:var(--text-primary); font-weight:500; font-size:1.1rem; margin-bottom:5px;">ไม่พบไฟล์เอกสาร</div>
+                    <div style="color:var(--text-muted); font-size:0.9rem;">(เอกสารนี้อาจถูกส่งก่อนที่จะมีการอัปเกรดระบบจัดเก็บไฟล์)</div>
                 </div>
             `;
         }

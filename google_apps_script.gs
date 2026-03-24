@@ -103,6 +103,8 @@ function doPost(e) {
         break;
       case 'uploadDocument':
         return uploadDocumentToDrive(payload);
+      case 'updateDocumentStatus':
+        return updateDocumentStatus(payload);
       default:
         return createResponse({ status: 'error', message: 'Unknown POST action' });
     }
@@ -197,11 +199,52 @@ function uploadDocumentToDrive(payload) {
 }
 
 /**
- * Helper: Create JSON Output
+ * Helper: Update Document Status in Sheets
  */
-function createResponse(data) {
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+function updateDocumentStatus(payload) {
+  const sheet = SS.getSheetByName(SHEETS.DOCUMENTS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Documents sheet not found' });
+  
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0];
+  const rows = values.slice(1);
+  
+  // Find row by studentId and document type (imperfect but better than nothing without UUID)
+  // In a real app, we should have a unique ID column
+  let rowIndex = -1;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const sId = row[headers.indexOf('รหัสนักศึกษา')];
+    const type = row[headers.indexOf('ประเภทเอกสาร')];
+    const date = row[headers.indexOf('วันที่ส่ง')];
+    
+    if (sId == payload.studentId && type == payload.documentType && date == payload.submitDate) {
+      rowIndex = i + 2; // +1 for header, +1 for 0-based index
+      break;
+    }
+  }
+  
+  if (rowIndex === -1) return createResponse({ status: 'error', message: 'Document not found' });
+  
+  // Update fields
+  const updateMap = {
+    'สถานะ': payload.status,
+    'ผู้รับผิดชอบถัดไป': payload.nextStep,
+    'หมายเหตุ': payload.note
+  };
+  
+  if (payload.signedFileUrl) {
+    updateMap['ลิงก์เอกสารที่ลงนาม'] = payload.signedFileUrl;
+  }
+  
+  Object.keys(updateMap).forEach(headerName => {
+    const colIndex = headers.indexOf(headerName) + 1;
+    if (colIndex > 0) {
+      sheet.getRange(rowIndex, colIndex).setValue(updateMap[headerName]);
+    }
+  });
+  
+  return createResponse({ status: 'success' });
 }
 
 /**
@@ -216,7 +259,7 @@ function setupInitialSheets() {
     [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
     [SHEETS.PAYMENTS]: ['รหัสนักศึกษา', 'รายการ', 'จำนวนเงิน', 'สถานะ', 'วันที่'],
     [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
-    [SHEETS.DOCUMENTS]: ['รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ']
+    [SHEETS.DOCUMENTS]: ['รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ']
   };
 
   Object.keys(defaultHeaders).forEach(sheetName => {
@@ -224,6 +267,16 @@ function setupInitialSheets() {
     if (!sheet) {
       sheet = SS.insertSheet(sheetName);
       sheet.appendRow(defaultHeaders[sheetName]);
+    } else {
+      // Check if we need to add missing columns to Documents sheet
+      if (sheetName === SHEETS.DOCUMENTS) {
+        const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        defaultHeaders[sheetName].forEach(h => {
+          if (currentHeaders.indexOf(h) === -1) {
+            sheet.getRange(1, sheet.getLastColumn() + 1).setValue(h);
+          }
+        });
+      }
     }
   });
 
