@@ -4,7 +4,8 @@
 
 // Utility to download CSV
 window.downloadGradeTemplate = function() {
-    const csvContent = "student_id,academic_year,semester,course_code,course_name,credits,grade\n67101001,2567,1,01005000101,ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ,3,A\n67101001,2567,1,01005000102,ทฤษฎีและแนวคิดทางการพยาบาล,2,B+";
+    // Headers matching the user's provided image
+    const csvContent = "student_id,academic_year,semester,course_code,course_name,credits,grade\n65100502001,2565,2,100500101,ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ,3(3-0-6),A\n65100502001,2565,2,100500102,ทฤษฎีและแนวคิดทางการพยาบาล,2(2-0-4),A\n65100502004,2565,2,100500101,ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ,3(3-0-6),A";
     const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -28,24 +29,8 @@ window.openGradeImportModal = function() {
             </button>
         </div>
         
-        <div class="form-group">
-            <label class="form-label">ปีการศึกษา</label>
-            <select id="importYear" class="form-input">
-                <option value="2567">2567</option>
-                <option value="2568">2568</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label class="form-label">ภาคการศึกษา</label>
-            <select id="importSem" class="form-input">
-                <option value="1">ภาคเรียนที่ 1</option>
-                <option value="2">ภาคเรียนที่ 2</option>
-                <option value="3">ภาคฤดูร้อน</option>
-            </select>
-        </div>
-        
         <div class="form-group" style="margin-top:20px;">
-            <label class="form-label">เลือกไฟล์ CSV</label>
+            <label class="form-label">เลือกไฟล์ CSV ที่ต้องการนำเข้า</label>
             <input type="file" id="gradeCsvFile" class="form-input" accept=".csv" />
         </div>
         
@@ -62,10 +47,6 @@ window.openGradeImportModal = function() {
 
 window.processGradeImport = function() {
     const fileInput = document.getElementById('gradeCsvFile');
-    const importYear = document.getElementById('importYear').value;
-    const importSem = document.getElementById('importSem').value;
-    const semesterName = `ภาคเรียนที่ ${importSem}/${importYear}`;
-
     if (!fileInput.files.length) {
         alert("กรุณาเลือกไฟล์ CSV");
         return;
@@ -75,24 +56,29 @@ window.processGradeImport = function() {
     const reader = new FileReader();
     reader.onload = function(e) {
         const text = e.target.result;
-        // Simple CSV parse
         const lines = text.split('\n');
         
-        const newCourses = [];
-        let curTotalPoints = 0;
-        let curTotalCredits = 0;
+        // Group by student_id
+        const studentGradesMap = {};
 
         for (let i = 1; i < lines.length; i++) {
             const line = lines[i].trim();
             if(!line) continue;
             
-            // Assume format: student_id,academic_year,semester,course_code,course_name,credits,grade
             const cols = line.split(',');
             if (cols.length >= 7) {
+                const sId = cols[0].trim();
+                const aYear = cols[1].trim();
+                const sem = cols[2].trim();
                 const cCode = cols[3].trim();
                 const cName = cols[4].trim();
-                const cCredits = parseInt(cols[5].trim()) || 0;
+                const creditsRaw = cols[5].trim();
                 const cGrade = cols[6].trim();
+                
+                // Parse credits like "3(3-0-6)" -> 3
+                const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
+                
+                const semName = `ภาคเรียนที่ ${sem}/${aYear}`;
                 
                 // Map grade to points
                 let point = 0;
@@ -107,7 +93,17 @@ window.processGradeImport = function() {
                     case 'F': point = 0.0; break;
                 }
                 
-                newCourses.push({
+                if (!studentGradesMap[sId]) studentGradesMap[sId] = {};
+                if (!studentGradesMap[sId][semName]) {
+                    studentGradesMap[sId][semName] = { 
+                        semester: semName, 
+                        courses: [], 
+                        totalPoints: 0, 
+                        totalCredits: 0 
+                    };
+                }
+                
+                studentGradesMap[sId][semName].courses.push({
                     code: cCode,
                     name: cName,
                     credits: cCredits,
@@ -115,40 +111,56 @@ window.processGradeImport = function() {
                     point: point
                 });
                 
-                curTotalPoints += (point * cCredits);
-                curTotalCredits += cCredits;
+                studentGradesMap[sId][semName].totalPoints += (point * cCredits);
+                studentGradesMap[sId][semName].totalCredits += cCredits;
             }
         }
         
-        // Add or update MOCK.grades
-        if (!MOCK.grades) MOCK.grades = [];
-        
-        // Check if semester exists
-        let existingSemIndex = MOCK.grades.findIndex(s => s.semester === semesterName);
-        
-        const gpa = curTotalCredits > 0 ? (curTotalPoints / curTotalCredits) : 0;
-        
-        const newSemData = {
-            semester: semesterName,
-            gpa: gpa,
-            totalCredits: curTotalCredits,
-            courses: newCourses
-        };
-        
-        if (existingSemIndex >= 0) {
-            MOCK.grades[existingSemIndex] = newSemData;
-        } else {
-            MOCK.grades.push(newSemData);
-            // sort by semester string naive
-            MOCK.grades.sort((a,b) => b.semester.localeCompare(a.semester));
-        }
+        // Update MOCK database
+        let updatedCount = 0;
+        Object.keys(studentGradesMap).forEach(sId => {
+            const student = (MOCK.students || []).find(s => 
+                String(s.id || '').trim() === sId || 
+                String(s.studentId || '').trim() === sId
+            );
+            
+            if (student) {
+                if (!student.grades) student.grades = [];
+                
+                const sSemList = studentGradesMap[sId];
+                Object.keys(sSemList).forEach(semName => {
+                    const data = sSemList[semName];
+                    const gpa = data.totalCredits > 0 ? (data.totalPoints / data.totalCredits) : 0;
+                    
+                    const newSemData = {
+                        semester: semName,
+                        gpa: gpa,
+                        totalCredits: data.totalCredits,
+                        courses: data.courses
+                    };
+                    
+                    const existingIdx = student.grades.findIndex(g => g.semester === semName);
+                    if (existingIdx >= 0) {
+                        student.grades[existingIdx] = newSemData;
+                    } else {
+                        student.grades.push(newSemData);
+                    }
+                });
+                
+                // Sort student grades
+                student.grades.sort((a,b) => b.semester.localeCompare(a.semester));
+                
+                // If this is the currently viewed student, sync to MOCK.grades
+                if (MOCK.student && (MOCK.student.id === student.id || MOCK.student.studentId === student.studentId)) {
+                    MOCK.grades = student.grades;
+                }
+                updatedCount++;
+            }
+        });
 
         closeModal();
-        alert('นำเข้าข้อมูลสำเร็จ');
-        
-        // Re-render
-        if(typeof loadPage === 'function') loadPage('grades');
-        else document.getElementById('mainContent').innerHTML = pages.grades();
+        alert(`นำเข้าข้อมูลสำเร็จ (อัปเดตนักศึกษา ${updatedCount} คน)`);
+        renderPage();
     };
     reader.readAsText(file);
 };

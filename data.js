@@ -20,7 +20,7 @@ const MOCK = {
     programs: [
         { name: 'การพยาบาลผู้ใหญ่และผู้สูงอายุ' },
         { name: 'การพยาบาลเด็ก' },
-        { name: 'การพยาบาลมารดา ทารก และการผดุงครรภ์' },
+        { name: 'การผดุงครรภ์' },
         { name: 'การพยาบาลจิตเวชและสุขภาพจิต' },
         { name: 'การพยาบาลอนามัยชุมชน' },
         { name: 'การบริหารทางการพยาบาล' }
@@ -139,50 +139,50 @@ const MOCK = {
         { semester: '2/67', gpa: 3.60 },
         { semester: '1/68', gpa: 3.45 },
     ],
-    
+
     // แบบประเมินการสอน (จาก API)
     evaluations: [],
 
     // แผนการศึกษาคณะพยาบาลศาสตร์ 6 สาขา
     studyPlans: [
-        { 
-            id: 'nursing-maternal', 
-            name: 'สาขาวิชาการผดุงครรภ์ (ป.โท)', 
+        {
+            id: 'nursing-maternal',
+            name: 'สาขาวิชาการผดุงครรภ์ (ป.โท)',
             icon: '👩‍👧‍👦',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นการวิเคราะห์ วิจัย และปฏิบัติการผดุงครรภ์ขั้นสูง ทั้งในภาวะปกติและเสี่ยงสูง',
             color: 'var(--accent-primary)'
         },
-        { 
-            id: 'nursing-pediatric', 
-            name: 'สาขาวิชาการพยาบาลเด็ก (ป.โท)', 
+        {
+            id: 'nursing-pediatric',
+            name: 'สาขาวิชาการพยาบาลเด็ก (ป.โท)',
             icon: '👶',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นการวิเคราะห์ ปฏิบัติการพยาบาลขั้นสูง และทำวิจัยเพื่อสุขภาพเด็ก',
             color: 'var(--success)'
         },
-        { 
-            id: 'nursing-adult', 
-            name: 'สาขาวิชาการพยาบาลผู้ใหญ่และผู้สูงอายุ (ป.โท)', 
+        {
+            id: 'nursing-adult',
+            name: 'สาขาวิชาการพยาบาลผู้ใหญ่และผู้สูงอายุ (ป.โท)',
             icon: '🧓',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นการวิจัยเชิงประจักษ์ ปฏิบัติการพยาบาลขั้นสูงสำหรับผู้ใหญ่และผู้สูงอายุ',
             color: 'var(--warning)'
         },
-        { 
-            id: 'nursing-mental', 
-            name: 'สาขาวิชาการพยาบาลจิตเวชและสุขภาพจิต (ป.โท)', 
+        {
+            id: 'nursing-mental',
+            name: 'สาขาวิชาการพยาบาลจิตเวชและสุขภาพจิต (ป.โท)',
             icon: '🧠',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นวิทยาเขตบำบัด จิตเภสัชวิทยา และการพยาบาลจิตเวชฉุกเฉิน',
             color: 'var(--danger-color)'
         },
-        { 
-            id: 'nursing-community', 
-            name: 'สาขาวิชาการพยาบาลเวชปฏิบัติชุมชน (ป.โท)', 
+        {
+            id: 'nursing-community',
+            name: 'สาขาวิชาการพยาบาลเวชปฏิบัติชุมชน (ป.โท)',
             icon: '🏡',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นการวิเคราะห์และพัฒนาระบบสุขภาพชุมชน การรักษาโรคเบื้องต้น',
             color: '#10b981'
         },
-        { 
-            id: 'nursing-admin', 
-            name: 'สาขาวิชาการบริหารทางการพยาบาล (ป.โท)', 
+        {
+            id: 'nursing-admin',
+            name: 'สาขาวิชาการบริหารทางการพยาบาล (ป.โท)',
             icon: '🏢',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นสร้างภาวะผู้นำ การจัดการคุณภาพองค์กร และกลยุทธ์สาธารณสุข',
             color: '#8b5cf6'
@@ -292,3 +292,40 @@ const MOCK = {
         }
     ]
 };
+
+// ==========================================
+// Auto-sync Calendar Events to Announcements
+// ==========================================
+(function syncCalendarToAnnouncements() {
+    if (MOCK.calendarEvents && MOCK.calendarEvents.length > 0) {
+        const thaiMonths = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+
+        MOCK.announcements = MOCK.calendarEvents.map((evt, i) => {
+            let typeName = 'ระบบ';
+            let icon = '📅';
+            if (evt.type === 'register') { typeName = 'สำคัญ'; icon = '📝'; }
+            else if (evt.type === 'activity') { typeName = 'กิจกรรม'; icon = '📢'; }
+            else if (evt.type === 'exam') { typeName = 'ผลการเรียน'; icon = '📊'; }
+
+            let displayDate = evt.date;
+            try {
+                const d = new Date(evt.date);
+                if (!isNaN(d.valueOf())) {
+                    displayDate = `${d.getDate()} ${thaiMonths[d.getMonth()]} ${d.getFullYear() + 543}`;
+                }
+            } catch (e) { }
+
+            return {
+                id: i + 1,
+                title: evt.title,
+                content: `ขอแจ้งกำหนดการเรื่อง "${evt.title}" ซึ่งจะมีขึ้นตามกำหนดปฏิทินการศึกษาในวันที่ ${displayDate} ขอให้นักศึกษาและบุคลากรทุกท่านตรวจสอบและเตรียมความพร้อมตามกำหนดการดังกล่าวด้วยครับ`,
+                date: displayDate,
+                type: typeName,
+                icon: icon
+            };
+        });
+
+        // เรียงจากกิจกรรมที่กำลังจะเกิดขึ้นล่าสุด (Reverse) เพื่อให้ประกาศใหม่สุดอยู่บน
+        MOCK.announcements.reverse();
+    }
+})();
