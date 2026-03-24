@@ -4,9 +4,9 @@
 // ============================
 // Student Petitions Page (Submission Form)
 // ============================
-pages['petitions-student'] = function() {
+pages['petitions-student'] = function () {
     const templates = MOCK.documentTemplates || [];
-    
+
     return `
     <div class="animate-in">
         <div class="page-header">
@@ -71,15 +71,15 @@ pages['petitions-student'] = function() {
                     </div>
                     <div class="form-group">
                         <label class="form-label">สาขาวิชา <span style="color:var(--danger-color)">*</span></label>
-                        <select class="form-select" id="docMajor" style="height:45px;">
+                        <select class="form-select" id="docMajor" style="height:45px;" onchange="updateGenerationField()">
                             <option value="">-- กรุณาเลือกสาขาวิชา --</option>
                             ${MOCK.programs ? MOCK.programs.map(p => `<option value="${p.name}" ${MOCK.student && MOCK.student.department && MOCK.student.department.includes(p.name) ? 'selected' : ''}>${p.name}</option>`).join('') : ''}
                         </select>
                     </div>
 
-                    <div class="form-group">
+                    <div class="form-group" id="generationFieldContainer">
                         <label class="form-label">รุ่นที่</label>
-                        <input type="text" class="form-input" style="height:45px;" placeholder="เช่น 15">
+                        <input type="text" id="docGeneration" class="form-input" style="height:45px;" placeholder="เช่น 15">
                     </div>
                     <div></div> <!-- Spacer -->
 
@@ -115,10 +115,47 @@ pages['petitions-student'] = function() {
     </div>`;
 };
 
+window.updateGenerationField = function () {
+    const major = document.getElementById('docMajor')?.value || '';
+    const container = document.getElementById('generationFieldContainer');
+    if (!container) return;
+
+    const targetMajors = [
+        'การพยาบาลผู้ใหญ่และผู้สูงอายุ',
+        'การพยาบาลเวชปฏิบัติชุมชน',
+        'สาขาวิชาการพยาบาลเวชปฏิบัติชุมชน (ป.โท)'
+    ];
+
+    const isTarget = targetMajors.some(t => major.includes(t));
+
+    if (isTarget) {
+        container.innerHTML = `
+            <label class="form-label">รุ่นที่ <span style="color:var(--danger-color)">*</span></label>
+            <select id="docGeneration" class="form-select" style="height:45px;">
+                <option value="">-- เลือกรุ่นที่ --</option>
+                <option value="รุ่นที่ 1 (รหัส 65)">รุ่นที่ 1 (รหัส 65)</option>
+                <option value="รุ่นที่ 2 (รหัส 66)">รุ่นที่ 2 (รหัส 66)</option>
+                <option value="รุ่นที่ 3 (รหัส 67)">รุ่นที่ 3 (รหัส 67)</option>
+                <option value="รุ่นที่ 4 (รหัส 68)">รุ่นที่ 4 (รหัส 68)</option>
+                <option value="รุ่นที่ 5 (รหัส 69)">รุ่นที่ 5 (รหัส 69)</option>
+            </select>
+        `;
+    } else {
+        container.innerHTML = `
+            <label class="form-label">รุ่นที่</label>
+            <input type="text" id="docGeneration" class="form-input" style="height:45px;" placeholder="เช่น 15">
+        `;
+    }
+};
+
+window.init_petitions_student = function () {
+    window.updateGenerationField();
+};
+
 // ============================
 // Student Documents Status Tracking Page
 // ============================
-pages['documents-status'] = function() {
+pages['documents-status'] = function () {
     const docs = MOCK.studentDocuments || [];
 
     return `
@@ -150,12 +187,12 @@ pages['documents-status'] = function() {
                         <tbody id="studentDocTableBody">
                             ${docs.length === 0 ? `<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:40px;">ไม่มีรายการคำร้องที่เคยยื่น</td></tr>` : ''}
                             ${docs.map(d => {
-                                let badgeClass = 'neutral';
-                                if (d.status.includes('อนุมัติ')) badgeClass = 'success';
-                                if (d.status.includes('ปฏิเสธ')) badgeClass = 'danger';
-                                if (d.status.includes('รอ') || d.status.includes('กำลัง')) badgeClass = 'warning';
-                                
-                                return `
+        let badgeClass = 'neutral';
+        if (d.status.includes('อนุมัติ')) badgeClass = 'success';
+        if (d.status.includes('ปฏิเสธ')) badgeClass = 'danger';
+        if (d.status.includes('รอ') || d.status.includes('กำลัง')) badgeClass = 'warning';
+
+        return `
                                 <tr class="student-doc-row" data-search="${[d.id, d.formName, d.status].join(' ').toLowerCase()}">
                                     <td style="font-weight:700; color:var(--accent-primary)">${d.id}</td>
                                     <td>
@@ -173,7 +210,7 @@ pages['documents-status'] = function() {
                                         </div>
                                     </td>
                                 </tr>`;
-                            }).join('')}
+    }).join('')}
                         </tbody>
                     </table>
                 </div>
@@ -185,14 +222,14 @@ pages['documents-status'] = function() {
 
 window.selectedRefDocId = null;
 
-window.previewStudentDoc = function(docId) {
+window.previewStudentDoc = function (docId) {
     const doc = MOCK.studentDocuments.find(d => d.id === docId);
     if (!doc) return;
-    
+
     showApiLoading('กำลังเปิดเครื่องมือดูเอกสาร...');
     setTimeout(() => {
         hideApiLoading();
-        
+
         const modalHtml = `
             <div style="padding:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
@@ -222,13 +259,13 @@ window.previewStudentDoc = function(docId) {
 };
 
 // Auto search on typing
-document.getElementById('refDocSearch')?.addEventListener('input', window.searchRefDocs); 
+document.getElementById('refDocSearch')?.addEventListener('input', window.searchRefDocs);
 
-window.searchStudentDocs = function() {
+window.searchStudentDocs = function () {
     const query = document.getElementById('studentDocQuery').value.toLowerCase();
     const rows = document.querySelectorAll('.student-doc-row');
     let hasVisibleRows = false;
-    
+
     rows.forEach(row => {
         const searchData = row.getAttribute('data-search') || '';
         if (searchData.includes(query)) {
@@ -257,27 +294,27 @@ window.searchStudentDocs = function() {
     }
 };
 
-window.searchRefDocs = function() {
+window.searchRefDocs = function () {
     const query = document.getElementById('refDocSearch').value.toLowerCase();
     const resultsContainer = document.getElementById('refDocResults');
     const docs = MOCK.studentDocuments || [];
-    
+
     const emptyState = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:8px;"><path d="M22 13V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8"></path><polyline points="22 7 12 13 2 7"></polyline><line x1="16" y1="21" x2="22" y2="15"></line><line x1="16" y1="15" x2="22" y2="21"></line></svg><br>ไม่พบเอกสารที่ตรงกัน`;
-    
+
     if (!query) {
         resultsContainer.innerHTML = emptyState;
         return;
     }
-    
-    const matched = docs.filter(d => 
-        (d.id && d.id.toLowerCase().includes(query)) || 
+
+    const matched = docs.filter(d =>
+        (d.id && d.id.toLowerCase().includes(query)) ||
         (d.formName && d.formName.toLowerCase().includes(query))
     );
-    
+
     if (matched.length === 0) {
         resultsContainer.innerHTML = emptyState;
     } else {
-        resultsContainer.innerHTML = `<div style="display:flex; flex-direction:column; gap:8px;">` + 
+        resultsContainer.innerHTML = `<div style="display:flex; flex-direction:column; gap:8px;">` +
             matched.map(d => `
                 <div style="padding:10px; border:1px solid var(--border-color); border-radius:var(--radius-sm); cursor:pointer; text-align:left; background:var(--bg-primary); transition:all 0.2s;" onclick="selectRefDoc('${d.id}', '${d.formName}')" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-color)'">
                     <div style="font-weight:600; color:var(--accent-primary); font-size:0.9rem;">${d.id} <span style="color:var(--text-muted); font-weight:normal; font-size:0.8rem; margin-left:8px;">${d.submitDate}</span></div>
@@ -287,41 +324,41 @@ window.searchRefDocs = function() {
     }
 };
 
-window.selectRefDoc = function(id, name) {
+window.selectRefDoc = function (id, name) {
     window.selectedRefDocId = id;
     document.getElementById('refDocSearch').value = id + ' - ' + name;
     document.getElementById('refDocResults').innerHTML = `<div style="color:var(--success); font-size:0.9rem; font-weight:500;">✅ เลือกเอกสารอ้างอิง: ${id} แล้ว</div>`;
 };
 
-window.selectDocType = function(type) {
+window.selectDocType = function (type) {
     const lblNew = document.getElementById('lblDocNew');
     const lblRevise = document.getElementById('lblDocRevise');
     const refGroup = document.getElementById('refDocGroup');
-    
+
     // We can use a simple hack for rgb colors if the CSS variable is not raw RGB
     const activeBg = 'rgba(239, 68, 68, 0.05)'; // Using red theme color roughly
     const activeBorder = 'var(--accent-primary)';
-    
+
     if (type === 'new') {
         lblNew.style.background = activeBg;
         lblNew.style.borderColor = activeBorder;
         lblRevise.style.background = 'transparent';
         lblRevise.style.borderColor = 'var(--border-color)';
-        if(refGroup) refGroup.style.display = 'none';
+        if (refGroup) refGroup.style.display = 'none';
         window.selectedRefDocId = null;
     } else {
         lblRevise.style.background = activeBg;
         lblRevise.style.borderColor = activeBorder;
         lblNew.style.background = 'transparent';
         lblNew.style.borderColor = 'var(--border-color)';
-        if(refGroup) {
+        if (refGroup) {
             refGroup.style.display = 'block';
             window.searchRefDocs();
         }
     }
 };
 
-window.updateDocFileName = function(input) {
+window.updateDocFileName = function (input) {
     const display = document.getElementById('fileNameDisplay');
     if (input.files && input.files.length > 0) {
         display.textContent = input.files[0].name;
@@ -334,17 +371,18 @@ window.updateDocFileName = function(input) {
     }
 };
 
-window.toggleAttachmentReq = function() {
+window.toggleAttachmentReq = function () {
     // Just a UI helper, could be used to toggle required star if data had it
 };
 
-window.submitStudentDocument = function() {
+window.submitStudentDocument = function () {
     const formId = document.getElementById('docTemplateForm').value;
     const majorId = document.getElementById('docMajor').value;
     const fileInput = document.getElementById('docFile');
     const noteRaw = document.getElementById('docNote').value;
     const docType = document.querySelector('input[name="docType"]:checked').value;
-    
+    const generation = document.getElementById('docGeneration').value;
+
     if (!formId) {
         alert('กรุณาเลือกแบบฟอร์มคำร้อง');
         return;
@@ -353,64 +391,91 @@ window.submitStudentDocument = function() {
         alert('กรุณาเลือกสาขาวิชา');
         return;
     }
+
+    const targetMajors = ['การพยาบาลผู้ใหญ่และผู้สูงอายุ', 'การพยาบาลเวชปฏิบัติชุมชน'];
+    if (targetMajors.some(t => majorId.includes(t)) && !generation) {
+        alert('กรุณาเลือกรุ่นที่');
+        return;
+    }
+
     if (!fileInput.files || fileInput.files.length === 0) {
         alert('กรุณาแนบไฟล์เอกสาร');
         return;
     }
-    
+
     let note = noteRaw;
+    if (generation) {
+        note = `[รุ่นที่: ${generation}] ` + note;
+    }
     if (docType === 'revise' && window.selectedRefDocId) {
-        note = `[แก้ไขอ้างอิง ${window.selectedRefDocId}] ` + noteRaw;
+        note = `[แก้ไขอ้างอิง ${window.selectedRefDocId}] ` + note;
     }
     const template = MOCK.documentTemplates.find(t => t.id === formId);
     if (!template) return;
 
-    let fileName = null;
-    if (fileInput.files && fileInput.files.length > 0) {
-        fileName = fileInput.files[0].name;
-    } else {
-        alert('กรุณาแนบไฟล์เอกสารในระบบ');
-        return;
-    }
+    const file = fileInput.files[0];
+    const fileName = file.name;
 
-    showApiLoading('กำลังส่งเอกสารเข้าระบบ...');
-    
-    setTimeout(() => {
-        // Generate mock ID
-        const docId = 'DOC-68' + Math.floor(Math.random() * 900 + 100);
-        const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-        
-        const newDoc = {
-            id: docId,
-            formId: formId,
-            formName: template.name,
-            status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
-            submitDate: today,
-            lastUpdate: today,
-            attachment: fileName
-        };
-        
-        MOCK.studentDocuments.unshift(newDoc);
-        
-        // Also push to Admin view
-        MOCK.adminDocuments.unshift({
-            id: docId,
-            studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
-            studentName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
-            major: majorId,
-            formName: template.name,
-            status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
-            submitDate: today,
-            attachment: fileName,
-            nextStep: 'เจ้าหน้าที่งานบัณฑิตศึกษา'
+    showApiLoading('กำลังส่งเอกสารและบันทึกข้อมูลลง Google Sheet...');
+
+    // Prepare metadata for API
+    const metadata = {
+        studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
+        senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
+        documentType: template.name,
+        major: majorId,
+        note: note
+    };
+
+    // Use the uploadFile tool from api.js which handles base64 and POST to Google Apps Script
+    window.uploadFile(file, metadata)
+        .then(response => {
+            hideApiLoading();
+            if (response && response.status === 'success') {
+                // Update local MOCK for immediate UI feedback
+                const docId = 'DOC-68' + Math.floor(Math.random() * 900 + 100);
+                const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+
+                const newDoc = {
+                    id: docId,
+                    formId: formId,
+                    formName: template.name,
+                    status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
+                    submitDate: today,
+                    lastUpdate: today,
+                    attachment: fileName,
+                    fileUrl: response.fileUrl
+                };
+
+                MOCK.studentDocuments.unshift(newDoc);
+
+                // Also push to Admin view
+                MOCK.adminDocuments.unshift({
+                    id: docId,
+                    studentId: metadata.studentId,
+                    studentName: metadata.senderName,
+                    major: majorId,
+                    formName: template.name,
+                    status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
+                    submitDate: today,
+                    attachment: fileName,
+                    nextStep: 'เจ้าหน้าที่งานบัณฑิตศึกษา'
+                });
+
+                alert('ส่งเอกสารสำเร็จและบันทึกข้อมูลลง Google Sheet เรียบร้อยแล้ว\nรหัสติดตาม: ' + docId);
+
+                if (typeof navigateTo === 'function') {
+                    navigateTo('documents-status');
+                } else {
+                    renderPage();
+                }
+            } else {
+                alert('เกิดข้อผิดพลาดในการส่งเอกสาร: ' + (response ? response.message : 'Unknown error'));
+            }
+        })
+        .catch(err => {
+            hideApiLoading();
+            console.error('Upload Error:', err);
+            alert('ไม่สามารถเชื่อมต่อกับ Google Sheets API ได้: ' + err.message);
         });
-
-        hideApiLoading();
-        alert('ส่งเอกสารสำเร็จ รหัสติดตาม: ' + docId);
-        if (typeof navigateTo === 'function') {
-            navigateTo('documents-status');
-        } else {
-            renderPage();
-        }
-    }, 800);
 };
