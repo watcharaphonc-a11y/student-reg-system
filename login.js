@@ -24,7 +24,7 @@ function renderLoginUI() {
             <div class="login-form" id="loginFormStudent">
                 <div class="form-group">
                     <label class="form-label">เลขประจำตัวประชาชน (13 หลัก)</label>
-                    <input type="text" id="studentIdInput" class="form-input" placeholder="เลขบัตรประชาชน 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    <input type="text" id="studentIdInput" class="form-input" placeholder="เลขบัตรประชาชน 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onkeydown="if(event.key === 'Enter') handleLogin('student')">
                 </div>
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('student')">เข้าสู่ระบบ</button>
             </div>
@@ -32,11 +32,11 @@ function renderLoginUI() {
             <div class="login-form" id="loginFormStaff" style="display: none;">
                 <div class="form-group">
                     <label class="form-label">อีเมลสถาบัน</label>
-                    <input type="email" id="staffEmailInput" class="form-input" placeholder="email@pi.ac.th">
+                    <input type="email" id="staffEmailInput" class="form-input" placeholder="email@pi.ac.th" onkeydown="if(event.key === 'Enter') handleLogin('staff')">
                 </div>
                 <div class="form-group">
                     <label class="form-label">รหัสผ่าน (6 หลัก)</label>
-                    <input type="password" id="staffPassInput" class="form-input" placeholder="ตัวเลข 6 หลัก" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    <input type="password" id="staffPassInput" class="form-input" placeholder="ตัวเลข 6 หลัก" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onkeydown="if(event.key === 'Enter') handleLogin('staff')">
                 </div>
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('staff')">เข้าสู่ระบบ</button>
             </div>
@@ -44,7 +44,7 @@ function renderLoginUI() {
             <div class="login-form" id="loginFormAdmin" style="display: none;">
                 <div class="form-group">
                     <label class="form-label">รหัสผ่าน Admin (6 หลัก)</label>
-                    <input type="password" id="adminPassInput" class="form-input" placeholder="ตัวเลข 6 หลัก" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                    <input type="password" id="adminPassInput" class="form-input" placeholder="ตัวเลข 6 หลัก" maxlength="6" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onkeydown="if(event.key === 'Enter') handleLogin('admin')">
                 </div>
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('admin')">เข้าสู่ระบบ</button>
             </div>
