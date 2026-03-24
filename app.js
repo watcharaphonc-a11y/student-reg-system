@@ -4,6 +4,7 @@
 // ============================
 
 let currentPage = 'dashboard';
+window.apiDataLoaded = false;
 
 // DOM Elements
 const contentArea = document.getElementById('contentArea');
@@ -300,13 +301,13 @@ async function bootApp() {
                 MOCK.student = me || null; // Force null if no match to prevent leakage
                 syncActiveStudentData();
             } else {
-                // For Admin/Staff, fallback to latest student ONLY if none selected
-                if (!MOCK.student && MOCK.students.length > 0) {
-                    MOCK.student = MOCK.students[MOCK.students.length - 1];
-                }
+                // Admin/Staff - No auto-selection of mock students.
+                // Reset active student context to ensure we only see real data selected by admin
+                MOCK.student = null;
                 syncActiveStudentData();
             }
         }
+        window.apiDataLoaded = true;
     } catch (e) {
         console.error('Failed to load API data, using mock data fallback', e);
         // Show a more prominent warning for the user

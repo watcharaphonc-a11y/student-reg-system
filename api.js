@@ -2,7 +2,7 @@
 // Google Sheets API Integration
 // ============================
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJl36LffRg6i3H3u7srfuiI2quI2dMFUu60k3H1Jg5dGK-9cns4nFkaIG5pVlLq0TB/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwJl36LffRg6i3H3u7srfuiI2quI2dMFUu60k3H1Jg5dGK-9cns4nFkaIG5pVlLq0TB/exec'.trim();
 
 // Loading overlay to block UI during API calls
 function showApiLoading(message = 'กำลังโหลดข้อมูล...') {
@@ -33,8 +33,21 @@ function hideApiLoading() {
 // Fetch Data (GET)
 // parameters: action (e.g. 'getStudents', 'getCourses')
 async function fetchData(action) {
+    if (!SCRIPT_URL || SCRIPT_URL.includes('your-script-url')) {
+        console.error('API Error: SCRIPT_URL is not configured correctly in api.js');
+        return null;
+    }
     try {
-        const response = await fetch(`${SCRIPT_URL}?action=${action}`);
+        const url = `${SCRIPT_URL}?action=${action}`;
+        console.log(`Fetching from: ${url}`);
+        const response = await fetch(url, {
+            method: 'GET',
+            mode: 'cors',
+            cache: 'no-cache'
+        });
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         const result = await response.json();
         return result;
     } catch (error) {

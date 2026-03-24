@@ -48,6 +48,11 @@ function renderLoginUI() {
                 </div>
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('admin')">เข้าสู่ระบบ</button>
             </div>
+            
+            <div id="connectionStatus" style="text-align: center; margin-top: 15px; font-size: 0.85rem; color: var(--text-secondary);">
+                <span class="status-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; margin-right: 6px;"></span>
+                <span id="statusText">กำลังตรวจสอบการเชื่อมต่อ...</span>
+            </div>
 
         </div>
     </div>
@@ -284,3 +289,20 @@ function applyRolePermissions(role) {
 
 // Ensure Login UI kicks off on script load
 renderLoginUI();
+
+// Update connection status dot periodically
+setInterval(() => {
+    const dot = document.querySelector('.status-dot');
+    const text = document.getElementById('statusText');
+    const buttons = document.querySelectorAll('.login-form .btn');
+    
+    if (window.apiDataLoaded) {
+        if (dot) dot.style.background = '#10b981'; // Success Green
+        if (text) text.textContent = 'เชื่อมต่อกับ Google Sheets แล้ว';
+        buttons.forEach(b => b.disabled = false);
+    } else {
+        if (dot) dot.style.background = '#f59e0b'; // Warning Amber
+        if (text) text.textContent = 'กำลังรอข้อมูลจาก Google Sheets...';
+        buttons.forEach(b => b.disabled = true);
+    }
+}, 1000);
