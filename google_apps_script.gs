@@ -1,422 +1,330 @@
-// ============================
-// Main Application Controller
-// (loaded AFTER core.js, data.js, and page scripts)
-// ============================
+/**
+ * Google Apps Script for Student Registration System
+ * 
+ * Instructions:
+ * 1. Open your Google Sheet.
+ * 2. Go to Extensions > Apps Script.
+ * 3. Delete any code and paste this code.
+ * 4. Click 'Save' and then 'Deploy' > 'New Deployment'.
+ * 5. Choose 'Web App', set 'Execute as: Me' and 'Who has access: Anyone'.
+ * 6. Copy the Web App URL and paste it into Script_URL / api.js in your project.
+ */
 
-let currentPage = 'dashboard';
+const SS = SpreadsheetApp.getActiveSpreadsheet();
 
-// DOM Elements
-const contentArea = document.getElementById('contentArea');
-const sidebar = document.getElementById('sidebar');
-const sidebarToggle = document.getElementById('sidebarToggle');
-const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-const modalCloseBtn = document.getElementById('modalClose');
-
-// ====== Navigation ======
-document.querySelectorAll('.nav-item').forEach(item => {
-    item.addEventListener('click', (e) => {
-        e.preventDefault();
-        const page = item.dataset.page;
-        if (page) navigateTo(page);
-    });
-});
-
-function navigateTo(page) {
-    currentPage = page;
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    const activeNav = document.querySelector(`[data-page="${page}"]`);
-    if (activeNav) activeNav.classList.add('active');
-    renderPage();
-    sidebar.classList.remove('mobile-open');
-}
-
-function renderPage() {
-    if (pages[currentPage]) {
-        contentArea.innerHTML = pages[currentPage]();
-        contentArea.scrollTop = 0;
-        // Initialize page-specific JS
-        const initFn = window['init_' + currentPage.replace(/-/g, '_')];
-        if (initFn) initFn();
-    } else {
-        contentArea.innerHTML = `
-            <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <h3>ไม่พบหน้านี้</h3>
-                <p>กรุณาเลือกเมนูจาก Sidebar</p>
-            </div>`;
-    }
-}
-
-// ====== Sidebar Toggle ======
-sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
-mobileMenuBtn.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
-
-// ====== Modal close button ======
-modalCloseBtn.addEventListener('click', closeModal);
-document.getElementById('modalOverlay').addEventListener('click', (e) => {
-    if (e.target === document.getElementById('modalOverlay')) closeModal();
-});
-
-// ====== Boot ======
-async function bootApp() {
-    if (typeof showApiLoading === 'function') {
-        showApiLoading('กำลังโหลดข้อมูลเบื้องต้น...');
-    }
-    try {
-        // Fetch all necessary data from Google Sheets API
-        // 1. Fetch Core Data
-        const [usersData, studentsData, teachersData, coursesData, enrollmentsData] = await Promise.all([
-            fetchData('getUsers'),
-            fetchData('getStudents'),
-            fetchData('getTeachers'),
-            fetchData('getCourses'),
-            fetchData('getEnrollments')
-        ]);
-        // 2. Fetch remaining data
-        const [paymentsData, evaluationsData, documentsData] = await Promise.all([
-            fetchData('getPayments'),
-            fetchData('getEvaluations'),
-            fetchData('getDocuments')
-        ]);
-
-        // Map Students and attach Grades from Enrollments
-        if (studentsData && studentsData.length > 0) {
-            MOCK.students = studentsData.map(s => {
-                const sId = String(s['รหัสนักศึกษา'] || s.studentId || s.id || '').trim();
-                
-                // Find enrollments for this student
-                const studentEnrollments = (enrollmentsData || []).filter(e => String(e['รหัสนักศึกษา'] || e.studentId).trim() === sId);
-                
-                // Group enrollments into student.grades format
-                const gradesMap = {};
-                studentEnrollments.forEach(e => {
-                    const semName = `ภาคเรียนที่ ${e['ภาคเรียน']}/${e['ปีการศึกษา']}`;
-                    const cGrade = String(e['เกรด'] || '').trim();
-                    const creditsRaw = String(e['หน่วยกิต'] || '0');
-                    const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
-                    
-                    let point = 0;
-                    switch(cGrade) {
-                        case 'A': point = 4.0; break;
-                        case 'B+': point = 3.5; break;
-                        case 'B': point = 3.0; break;
-                        case 'C+': point = 2.5; break;
-                        case 'C': point = 2.0; break;
-                        case 'D+': point = 1.5; break;
-                        case 'D': point = 1.0; break;
-                        case 'F': point = 0.0; break;
-                    }
-                    
-                    if (!gradesMap[semName]) {
-                        gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
-                    }
-                    
-                    gradesMap[semName].courses.push({
-                        code: e['รหัสวิชา'],
-                        name: e['ชื่อวิชา'],
-                        credits: cCredits,
-                        grade: cGrade,
-                        point: point
-                    });
-                    
-                    gradesMap[semName].totalCredits += cCredits;
-                    gradesMap[semName].totalPoints += (point * cCredits);
-                });
-                
-                const finalGrades = Object.values(gradesMap).map(g => ({
-                    semester: g.semester,
-                    totalCredits: g.totalCredits,
-                    gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
-                    courses: g.courses
-                })).sort((a,b) => b.semester.localeCompare(a.semester));
-
-                // Overall Stats
-                const allCourses = finalGrades.flatMap(g => g.courses);
-                const overallCredits = allCourses.reduce((sum, c) => sum + c.credits, 0);
-                const overallPoints = allCourses.reduce((sum, c) => sum + (c.point * c.credits), 0);
-                const overallGpa = overallCredits > 0 ? (overallPoints / overallCredits) : 0;
-
-                return {
-                    id: sId || s['เลขประจำตัวประชาชน'] || s['เลขบัตรประชาชน'] || s.id,
-                    studentId: sId,
-                    citizenId: s['เลขประจำตัวประชาชน'] || s.citizenId || '',
-                    prefix: s['คำนำหน้า'] || s.prefix,
-                    firstName: s['ชื่อ'] || s.firstName,
-                    lastName: s['นามสกุล'] || s.lastName,
-                    faculty: s['คณะ'] || s.faculty,
-                    department: s['สาขาวิชา'] || s.department,
-                    program: s['หลักสูตร'] || s.program,
-                    year: parseInt(s['ชั้นปี'] || s.year) || 1,
-                    status: s['สถานะ'] || s.status || 'กำลังศึกษา',
-                    admissionYear: s['ปีการศึกษา'] || s['ปีที่เข้าศึกษา'] || s.admissionYear,
-                    advisor: s['อาจารย์ที่ปรึกษา'] || s.advisor || '-',
-                    email: s['อีเมล'] || s.email || '-',
-                    personalEmail: s['อีเมลส่วนตัว'] || s.personalEmail || '-',
-                    phone: s['โทรศัพท์'] || s.phone || '-',
-                    workplace: s['สถานที่ปฏิบัติงาน'] || s.workplace || '-',
-                    position: s['ตำแหน่ง'] || s.position || '-',
-                    dob: s['วันเกิด'] || s.dob || '-',
-                    address: s['ที่อยู่'] || s.address || '-',
-                    parentName: s['ผู้ปกครอง'] || s.parentName || '-',
-                    parentPhone: s['เบอร์ผู้ปกครอง'] || s.parentPhone || '-',
-                    gpa: overallGpa,
-                    totalCredits: overallCredits,
-                    requiredCredits: parseInt(s['หน่วยกิตที่ต้องเรียน']) || s.requiredCredits || 132,
-                    grades: finalGrades
-                };
-            });
-        }
-
-        if (teachersData && teachersData.length > 0) {
-            MOCK.academicAdvisors = teachersData.map(t => ({
-                name: (t['คำนำหน้า'] || '') + (t['ชื่อ'] ? (' ' + t['ชื่อ']) : '') + (t['นามสกุล'] ? (' ' + t['นามสกุล']) : '') || t.name,
-                position: t['ตำแหน่งทางวิชาการ'] || t['ตำแหน่ง'] || t.position || 'อาจารย์',
-                expertise: t['ความเชี่ยวชาญ'] || t.expertise || '-',
-                email: t['อีเมล'] || t.email || '-',
-                phone: t['เบอร์โทร'] || t['โทรศัพท์'] || t.phone || '-',
-                studentCount: parseInt(t['นศ. ในที่ปรึกษา'] || t['นศ.ในที่ปรึกษา'] || t.studentCount) || 0,
-                faculty: t['คณะ/สังกัด'] || t['คณะ'] || t.faculty || 'คณะพยาบาลศาสตร์',
-                username: t['Username'] || t.username,
-                password: t['Password'] || t.password
-            }));
-            MOCK.thesisAdvisors = [...MOCK.academicAdvisors];
-        }
-
-        if (usersData && usersData.length > 0) {
-            MOCK.users = usersData.map(u => ({
-                ...u, // Keep all dynamic fields
-                username: u['Username'] || u.username,
-                password: u['Password'] || u.password,
-                name: u['Name'] || u.name,
-                role: u['Role'] || u.role,
-                status: u['Status'] || u.status || 'ใช้งาน'
-            }));
-        }
-
-        if (coursesData && coursesData.length > 0) {
-            MOCK.courses = coursesData.map(c => ({
-                code: c['รหัสวิชา'] || c.code,
-                name: c['ชื่อวิชา'] || c.name,
-                credits: parseInt(c['หน่วยกิต'] || c.credits) || 0,
-                instructor: c['อาจารย์ผู้สอน'] || c.instructor || '-',
-                seats: parseInt(c['จำนวนรับ'] || c.seats) || 30,
-                enrolled: parseInt(c['ลงทะเบียนแล้ว'] || c.enrolled) || 0,
-                schedule: c['วัน-เวลาเรียน'] || c.schedule || '-',
-                room: c['ห้องเรียน'] || c.room || '-',
-                type: c['หมวดหมู่'] || c.type || 'แกน',
-                status: c['สถานะ'] || c.status || 'เปิด'
-            }));
-        }
-
-        // MOCK.enrollments is now handled within student mapping in bootApp
-        // if (enrollmentsData && enrollmentsData.length > 0) {
-        //     MOCK.enrollments = enrollmentsData;
-        // }
-
-        if (paymentsData && paymentsData.length > 0) {
-            MOCK.payments = paymentsData.map(p => ({
-                id: p['รหัสอ้างอิง'] || p.id,
-                description: p['รายการ'] || p.description,
-                amount: parseFloat(p['จำนวนเงิน'] || p.amount) || 0,
-                dueDate: p['วันที่ครบกำหนด'] || p.dueDate,
-                paidDate: p['วันที่ชำระ'] || p.paidDate,
-                status: p['สถานะ'] || p.status,
-                type: p['ประเภท'] || p.type
-            }));
-        }
-
-        if (evaluationsData && evaluationsData.length > 0) {
-            MOCK.evaluations = evaluationsData.map(e => ({
-                courseCode: e['รหัสวิชา'] || e.courseCode,
-                score: parseFloat(e['คะแนน (1-5)'] || e.score) || 5,
-                comment: e['ความคิดเห็น'] || e.comment || '',
-                date: e['วันที่ประเมิน'] || e.date || ''
-            }));
-        }
-
-        if (documentsData && documentsData.length > 0) {
-            MOCK.documents = documentsData.map(d => ({
-                studentId: d['รหัสนักศึกษา'] || d.studentId,
-                senderName: d['ชื่อผู้ส่ง'] || d.senderName,
-                documentType: d['ประเภทเอกสาร'] || d.documentType,
-                fileName: d['ชื่อไฟล์'] || d.fileName,
-                fileUrl: d['ลิงก์เอกสาร'] || d.fileUrl,
-                signedFileUrl: d['ลิงก์เอกสารที่ลงนาม'] || d.signedFileUrl,
-                date: d['วันที่ส่ง'] || d.date,
-                status: d['สถานะ'] || d.status,
-                nextStep: d['ผู้รับผิดชอบถัดไป'] || d.nextStep,
-                note: d['หมายเหตุ'] || d.note
-            }));
-
-            // Sync for Admin view
-            MOCK.adminDocuments = MOCK.documents.map((d, index) => ({
-                ...d,
-                id: 'DOC-A' + (1000 + index),
-                formName: d.documentType,
-                submitDate: d.date,
-                attachment: d.fileName
-            })).reverse();
-        }
-
-        // Calculate Dashboard Stats from Real Data
-        MOCK.dashboardStats = {
-            totalStudents: MOCK.students ? MOCK.students.length : 0,
-            totalTeachers: MOCK.academicAdvisors ? MOCK.academicAdvisors.length : 0,
-            totalCourses: MOCK.courses ? MOCK.courses.length : 0,
-            pendingPayments: MOCK.payments ? MOCK.payments.filter(p => p.status === 'ค้างชำระ').length : 0,
-            avgGPA: 0
-        };
-
-        if (MOCK.students && MOCK.students.length > 0) {
-            const studentsWithGPA = MOCK.students.filter(s => s.gpa > 0);
-            if (studentsWithGPA.length > 0) {
-                const totalGPA = studentsWithGPA.reduce((acc, s) => acc + s.gpa, 0);
-                MOCK.dashboardStats.avgGPA = (totalGPA / studentsWithGPA.length).toFixed(2);
-            }
-        }
-
-        // Maintain or Update current mock references based on logged in user
-        if (studentsData && studentsData.length > 0) {
-            if (window.currentUserRole === 'student' && window.currentUserData && window.currentUserData.id) {
-                const myId = String(window.currentUserData.id).trim();
-                const myName = window.currentUserData.name ? String(window.currentUserData.name).trim() : '';
-
-                let me = (MOCK.students || []).find(s =>
-                    String(s.id || '').trim() === myId ||
-                    String(s.studentId || '').trim() === myId ||
-                    String(s.citizenId || '').trim() === myId
-                );
-                
-                // Fallback name matching if ID fails (case-insensitive contains)
-                if (!me && myName) {
-                    const normMyName = myName.toLowerCase();
-                    me = (MOCK.students || []).find(s => {
-                        const sFull = String(s.name || '').toLowerCase();
-                        const sParts = String(`${s.firstName || ''} ${s.lastName || ''}`).toLowerCase();
-                        return (sFull && sFull.includes(normMyName)) || (sParts && sParts.includes(normMyName)) || normMyName.includes(sParts);
-                    });
-                }
-                
-                MOCK.student = me || null; // Force null if no match to prevent leakage
-                syncActiveStudentData();
-            } else {
-                // For Admin/Staff, fallback to latest student ONLY if none selected
-                if (!MOCK.student && MOCK.students.length > 0) {
-                    MOCK.student = MOCK.students[MOCK.students.length - 1];
-                }
-                syncActiveStudentData();
-            }
-        }
-    } catch (e) {
-        console.error('Failed to load API data, using mock data fallback', e);
-    }
-
-    if (typeof hideApiLoading === 'function') {
-        hideApiLoading();
-    }
-    renderPage();
-}
-
-window.syncActiveStudentData = async function() {
-    if (!MOCK.student) return;
-    
-    // Refresh student data from Google Sheets
-    showApiLoading('กำลังอัปเดตข้อมูลนักศึกษา...');
-    try {
-        const [enrollments, payments, documents] = await Promise.all([
-            fetchData('getEnrollments'),
-            fetchData('getPayments'),
-            fetchData('getDocuments')
-        ]);
-        
-        const sId = String(MOCK.student.studentId || MOCK.student.id || '').trim();
-
-        // 1. Sync Grades
-        const studentEnrollments = (enrollments || []).filter(e => String(e['รหัสนักศึกษา'] || e.studentId || '').trim() === sId);
-        const gradesMap = {};
-        studentEnrollments.forEach(e => {
-            const semName = `ภาคเรียนที่ ${e['ภาคเรียน']}/${e['ปีการศึกษา']}`;
-            const cGrade = String(e['เกรด'] || '').trim();
-            const creditsRaw = String(e['หน่วยกิต'] || '0');
-            const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
-            
-            let point = 0;
-            switch(cGrade) {
-                case 'A': point = 4.0; break;
-                case 'B+': point = 3.5; break;
-                case 'B': point = 3.0; break;
-                case 'C+': point = 2.5; break;
-                case 'C': point = 2.0; break;
-                case 'D+': point = 1.5; break;
-                case 'D': point = 1.0; break;
-                case 'F': point = 0.0; break;
-            }
-            
-            if (!gradesMap[semName]) {
-                gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
-            }
-            
-            gradesMap[semName].courses.push({
-                code: e['รหัสวิชา'],
-                name: e['ชื่อวิชา'],
-                credits: cCredits,
-                grade: cGrade,
-                point: point
-            });
-            
-            gradesMap[semName].totalCredits += cCredits;
-            gradesMap[semName].totalPoints += (point * cCredits);
-        });
-        
-        MOCK.grades = Object.values(gradesMap).map(g => ({
-            semester: g.semester,
-            totalCredits: g.totalCredits,
-            gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
-            courses: g.courses
-        })).sort((a,b) => b.semester.localeCompare(a.semester));
-
-        // Update student object stats
-        const allCourses = MOCK.grades.flatMap(g => g.courses);
-        MOCK.student.totalCredits = allCourses.reduce((sum, c) => sum + c.credits, 0);
-        const overallPoints = allCourses.reduce((sum, c) => sum + (c.point * c.credits), 0);
-        MOCK.student.gpa = MOCK.student.totalCredits > 0 ? (overallPoints / MOCK.student.totalCredits) : 0;
-        MOCK.student.grades = MOCK.grades;
-
-        // 2. Sync Payments
-        if (payments && payments.length > 0) {
-            MOCK.studentPayments = payments
-                .filter(p => String(p['รหัสนักศึกษา'] || p.studentId || '').trim() === sId)
-                .map(p => ({
-                    id: p['รหัสอ้างอิง'] || p.id,
-                    description: p['รายการ'] || p.description,
-                    amount: parseFloat(p['จำนวนเงิน'] || p.amount) || 0,
-                    status: p['สถานะ'] || p.status,
-                    date: p['วันที่'] || p.paidDate || p.dueDate
-                }));
-        }
-
-        // 3. Sync Documents
-        if (documents && documents.length > 0) {
-            MOCK.studentDocuments = documents
-                .filter(d => String(d['รหัสนักศึกษา'] || d.studentId || '').trim() === sId)
-                .map((d, index) => ({
-                    id: 'DOC-S' + (1000 + index),
-                    formName: d['ประเภทเอกสาร'] || d.documentType,
-                    submitDate: d['วันที่ส่ง'] || d.date,
-                    lastUpdate: d['วันที่ส่ง'] || d.date,
-                    status: d['สถานะ'] || d.status,
-                    attachment: d['ชื่อไฟล์'] || d.fileName,
-                    fileUrl: d['ลิงก์เอกสาร'] || d.fileUrl,
-                    signedFileUrl: d['ลิงก์เอกสารที่ลงนาม'] || d.signedFileUrl,
-                    note: d['หมายเหตุ'] || d.note
-                }));
-        }
-    } catch (err) {
-        console.error('Sync student data failed:', err);
-    } finally {
-        hideApiLoading();
-        renderPage();
-    }
+// Configure Sheet Names
+const SHEETS = {
+  USERS: 'Users',
+  STUDENTS: 'Students',
+  TEACHERS: 'Teachers',
+  COURSES: 'Courses',
+  ENROLLMENTS: 'Enrollments',
+  PAYMENTS: 'Payments',
+  EVALUATIONS: 'Evaluations',
+  DOCUMENTS: 'Documents'
 };
 
-bootApp();
+/**
+ * Handle GET Requests
+ */
+function doGet(e) {
+  const action = e.parameter.action;
+  let data = [];
+  
+  try {
+    switch (action) {
+      case 'getUsers':
+        data = getSheetData(SHEETS.USERS);
+        break;
+      case 'getStudents':
+        data = getSheetData(SHEETS.STUDENTS);
+        break;
+      case 'getTeachers':
+        data = getSheetData(SHEETS.TEACHERS);
+        break;
+      case 'getCourses':
+        data = getSheetData(SHEETS.COURSES);
+        break;
+      case 'getEnrollments':
+        data = getSheetData(SHEETS.ENROLLMENTS);
+        break;
+      case 'getPayments':
+        data = getSheetData(SHEETS.PAYMENTS);
+        break;
+      case 'getEvaluations':
+        data = getSheetData(SHEETS.EVALUATIONS);
+        break;
+      case 'getDocuments':
+        data = getSheetData(SHEETS.DOCUMENTS);
+        break;
+      default:
+        return createResponse({ status: 'error', message: 'Unknown action' });
+    }
+    return createResponse(data);
+  } catch (err) {
+    return createResponse({ status: 'error', message: err.toString() });
+  }
+}
+
+/**
+ * Handle POST Requests
+ */
+function doPost(e) {
+  try {
+    const request = JSON.parse(e.postData.contents);
+    const action = request.action;
+    const payload = request.payload;
+    
+    switch (action) {
+      case 'registerStudent':
+        appendRow(SHEETS.STUDENTS, payload);
+        // Also add to Users sheet for login
+        appendRow(SHEETS.USERS, {
+          Username: payload.username || payload.studentId || payload.idCard,
+          Password: payload.password || '123456',
+          Name: payload.name || (payload.firstName + ' ' + payload.lastName),
+          Role: 'student',
+          Status: 'ใช้งาน'
+        });
+        break;
+      case 'registerTeacher':
+        appendRow(SHEETS.TEACHERS, payload);
+        // Also add to Users sheet for login
+        appendRow(SHEETS.USERS, {
+          Username: payload.username || payload.email,
+          Password: payload.password || '111111',
+          Name: payload.name || (payload.firstName + ' ' + payload.lastName),
+          Role: 'staff',
+          Status: 'ใช้งาน'
+        });
+        break;
+      case 'registerCourse':
+        appendRow(SHEETS.COURSES, payload);
+        break;
+      case 'uploadDocument':
+        return uploadDocumentToDrive(payload);
+      case 'updateDocumentStatus':
+        return updateDocumentStatus(payload);
+      case 'importGrades':
+        return importGradesBatch(payload);
+      default:
+        return createResponse({ status: 'error', message: 'Unknown POST action' });
+    }
+    
+    return createResponse({ status: 'success' });
+  } catch (err) {
+    return createResponse({ status: 'error', message: err.toString() });
+  }
+}
+
+/**
+ * Helper: Get data from sheet as JSON
+ */
+function getSheetData(sheetName) {
+  const sheet = SS.getSheetByName(sheetName);
+  if (!sheet) return [];
+  
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return [];
+  
+  const headers = values[0];
+  const rows = values.slice(1);
+  
+  return rows.map(row => {
+    const obj = {};
+    headers.forEach((h, i) => {
+      obj[h] = row[i];
+    });
+    return obj;
+  });
+}
+
+/**
+ * Helper: Append a new row to a sheet
+ */
+function appendRow(sheetName, payload) {
+  let sheet = SS.getSheetByName(sheetName);
+  
+  // Create sheet if not exists
+  if (!sheet) {
+    sheet = SS.insertSheet(sheetName);
+    const headers = Object.keys(payload);
+    sheet.appendRow(headers);
+  }
+  
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const newRow = headers.map(h => payload[h] || '');
+  
+  sheet.appendRow(newRow);
+}
+
+/**
+ * Helper: Upload Base64 File to Google Drive
+ */
+function uploadDocumentToDrive(payload) {
+  // 1. Get or Create Folder for Documents
+  let folder;
+  const folderName = "Student_Documents";
+  const folders = DriveApp.getFoldersByName(folderName);
+  if (folders.hasNext()) {
+    folder = folders.next();
+  } else {
+    folder = DriveApp.createFolder(folderName);
+  }
+  
+  // 2. Decode and create file
+  let data = payload.base64Data;
+  if (data && data.indexOf(',') > -1) {
+    data = data.split(',')[1];
+  }
+  
+  const blob = Utilities.newBlob(Utilities.base64Decode(data), payload.mimeType || 'application/pdf', payload.fileName || 'document.pdf');
+  const file = folder.createFile(blob);
+  
+  // Set sharing to anyone with the link can view
+  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  
+  const fileUrl = file.getUrl();
+  
+  // 3. Save to Sheets
+  appendRow(SHEETS.DOCUMENTS, {
+    'รหัสนักศึกษา': payload.studentId || '',
+    'ชื่อผู้ส่ง': payload.senderName || '',
+    'ประเภทเอกสาร': payload.documentType || 'ทั่วไป',
+    'ชื่อไฟล์': payload.fileName || '',
+    'ลิงก์เอกสาร': fileUrl,
+    'วันที่ส่ง': new Date().toLocaleString('th-TH'),
+    'สถานะ': 'รอตรวจสอบ'
+  });
+  
+  return createResponse({ status: 'success', fileUrl: fileUrl });
+}
+
+/**
+ * Helper: Update Document Status in Sheets
+ */
+function updateDocumentStatus(payload) {
+  const sheet = SS.getSheetByName(SHEETS.DOCUMENTS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Documents sheet not found' });
+  
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0];
+  const rows = values.slice(1);
+  
+  // Find row by studentId and document type (imperfect but better than nothing without UUID)
+  // In a real app, we should have a unique ID column
+  let rowIndex = -1;
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const sId = row[headers.indexOf('รหัสนักศึกษา')];
+    const type = row[headers.indexOf('ประเภทเอกสาร')];
+    const date = row[headers.indexOf('วันที่ส่ง')];
+    
+    if (sId == payload.studentId && type == payload.documentType && date == payload.submitDate) {
+      rowIndex = i + 2; // +1 for header, +1 for 0-based index
+      break;
+    }
+  }
+  
+  if (rowIndex === -1) return createResponse({ status: 'error', message: 'Document not found' });
+  
+  // Update fields
+  const updateMap = {
+    'สถานะ': payload.status,
+    'ผู้รับผิดชอบถัดไป': payload.nextStep,
+    'หมายเหตุ': payload.note
+  };
+  
+  if (payload.signedFileUrl) {
+    updateMap['ลิงก์เอกสารที่ลงนาม'] = payload.signedFileUrl;
+  }
+  
+  Object.keys(updateMap).forEach(headerName => {
+    const colIndex = headers.indexOf(headerName) + 1;
+    if (colIndex > 0) {
+      sheet.getRange(rowIndex, colIndex).setValue(updateMap[headerName]);
+    }
+  });
+  
+  return createResponse({ status: 'success' });
+}
+
+/**
+ * Helper: Import Grades in Batch
+ */
+function importGradesBatch(payload) {
+  const sheet = SS.getSheetByName(SHEETS.ENROLLMENTS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Enrollments sheet not found' });
+  
+  const data = payload.grades; // Array of objects mapping to headers
+  if (!data || !Array.isArray(data)) return createResponse({ status: 'error', message: 'Invalid grades data' });
+  
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  
+  data.forEach(item => {
+    // Basic update/append logic: Find if student+course+semester+year exists
+    const values = sheet.getDataRange().getValues();
+    let rowIndex = -1;
+    
+    // We start from 1 to skip header
+    for (let i = 1; i < values.length; i++) {
+        const row = values[i];
+        if (row[headers.indexOf('รหัสนักศึกษา')] == item['รหัสนักศึกษา'] && 
+            row[headers.indexOf('รหัสวิชา')] == item['รหัสวิชา'] &&
+            row[headers.indexOf('ภาคเรียน')] == item['ภาคเรียน'] &&
+            row[headers.indexOf('ปีการศึกษา')] == item['ปีการศึกษา']) {
+          rowIndex = i + 1;
+          break;
+        }
+    }
+    
+    const rowValues = headers.map(h => item[h] || '');
+    if (rowIndex > 0) {
+      sheet.getRange(rowIndex, 1, 1, headers.length).setValues([rowValues]);
+    } else {
+      sheet.appendRow(rowValues);
+    }
+  });
+  
+  return createResponse({ status: 'success', count: data.length });
+}
+
+/**
+ * Run this once to initialize all sheets
+ */
+function setupInitialSheets() {
+  const defaultHeaders = {
+    [SHEETS.USERS]: ['Username', 'Password', 'Name', 'Role', 'Status'],
+    [SHEETS.STUDENTS]: ['คำนำหน้า','ชื่อ (ไทย)','นามสกุล (ไทย)','ชื่อ (EN)','นามสกุล (EN)','เลขบัตรประชาชน','รหัสนักศึกษา','วันเกิด (YYYY-MM-DD)','เพศ','อีเมล','E-mail ของสถาบัน','เบอร์โทร','สาขาวิชา','ปีการศึกษาที่เข้า','ที่อยู่','Username','Password'],
+    [SHEETS.TEACHERS]: ['คำนำหน้า','ชื่อ','นามสกุล','ตำแหน่งทางวิชาการ','ความเชี่ยวชาญ','อีเมล','เบอร์โทร','คณะ/สังกัด','นศ. ในกำกับ','Username','Password'],
+    [SHEETS.COURSES]: ['รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'กลุ่ม', 'อาจารย์ผู้สอน'],
+    [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
+    [SHEETS.PAYMENTS]: ['รหัสนักศึกษา', 'รายการ', 'จำนวนเงิน', 'สถานะ', 'วันที่'],
+    [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
+    [SHEETS.DOCUMENTS]: ['รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ']
+  };
+
+  Object.keys(defaultHeaders).forEach(sheetName => {
+    let sheet = SS.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = SS.insertSheet(sheetName);
+      sheet.appendRow(defaultHeaders[sheetName]);
+    } else {
+      // Check if we need to add missing columns to Documents sheet
+      if (sheetName === SHEETS.DOCUMENTS) {
+        const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+        defaultHeaders[sheetName].forEach(h => {
+          if (currentHeaders.indexOf(h) === -1) {
+            sheet.getRange(1, sheet.getLastColumn() + 1).setValue(h);
+          }
+        });
+      }
+    }
+  });
+
+  // Add a sample admin if Users sheet was just created
+  const userSheet = SS.getSheetByName(SHEETS.USERS);
+  if (userSheet.getLastRow() === 1) {
+    userSheet.appendRow(['admin', '999999', 'Super Admin', 'admin', 'ใช้งาน']);
+  }
+}
