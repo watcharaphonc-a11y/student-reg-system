@@ -13,7 +13,8 @@ function getPlanIdFromDept(deptName) {
     return 'generic';
 }
 
-function getStudyPlanCoursesData(planId) {
+function getStudyPlanCoursesData(planId, admissionYear) {
+    const is2565Cohort = String(admissionYear) === '2565';
     let mockPlanData = [];
     if (planId === 'nursing-pediatric') {
         mockPlanData = [
@@ -24,13 +25,23 @@ function getStudyPlanCoursesData(planId) {
             { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 3, courses: ['01005000117 วิทยานิพนธ์ (Thesis) 3 (0-9-3)'] }
         ];
     } else if (planId === 'nursing-community') {
-        mockPlanData = [
-            { year: 1, sem: 1, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 1', credits: 11, courses: ['01005000101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาลฯ 3 (3-0-6)', '01005000102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '0100505105 การประเมินสุขภาพขั้นสูงและเภสัชวิทยาสำหรับการรักษาโรคเบื้องต้น 2 (1-2-3)', '0100505106 การพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัวฯ 2 (2-0-4)', '0100505107 การพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการสุขภาพชุมชน 2 (2-0-4)'] },
-            { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 10, courses: ['01005000103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '01005000104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '01005000108 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัวฯ 3 (0-9-3)', 'xxxxxxxxxxx วิชาเลือก 3 (3-0-6)'] },
-            { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 3, courses: ['0100505109 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการฯ 3 (0-9-3)'] },
-            { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 6, courses: ['01005000117 วิทยานิพนธ์ (Thesis) 6 (0-18-6)'] },
-            { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 6, courses: ['01005000117 วิทยานิพนธ์ (Thesis) 6 (0-18-6)'] }
-        ];
+        if (is2565Cohort) {
+            mockPlanData = [
+                { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 11, courses: ['01005000101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาลฯ 3 (3-0-6)', '01005000102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '0100505105 การประเมินสุขภาพขั้นสูงและเภสัชวิทยาสำหรับการรักษาโรคเบื้องต้น 2 (1-2-3)', '0100505106 การพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัวฯ 2 (2-0-4)', '0100505107 การพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการสุขภาพชุมชน 2 (2-0-4)'] },
+                { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 3', credits: 5, courses: ['01005000104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '0100505109 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการฯ 3 (0-9-3)'] },
+                { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 8, courses: ['01005000103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '01005000108 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัวฯ 3 (0-9-3)', 'xxxxxxxxxxx วิชาเลือก 3 (3-0-6)'] },
+                { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 6, courses: ['01005000117 วิทยานิพนธ์ (Thesis) 6 (0-18-6)'] },
+                { year: 3, sem: 1, title: 'ชั้นปีที่ 3 ภาคการศึกษาที่ 1', credits: 6, courses: ['01005000117 วิทยานิพนธ์ (Thesis) 6 (0-18-6)'] }
+            ];
+        } else {
+            mockPlanData = [
+                { year: 1, sem: 1, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 1', credits: 11, courses: ['01005000101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาลฯ 3 (3-0-6)', '01005000102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '0100505105 การประเมินสุขภาพขั้นสูงและเภสัชวิทยาสำหรับการรักษาโรคเบื้องต้น 2 (1-2-3)', '0100505106 การพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัวฯ 2 (2-0-4)', '0100505107 การพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการสุขภาพชุมชน 2 (2-0-4)'] },
+                { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 10, courses: ['01005000103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '01005000104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '01005000108 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัวฯ 3 (0-9-3)', 'xxxxxxxxxxx วิชาเลือก 3 (3-0-6)'] },
+                { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 3, courses: ['0100505109 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการฯ 3 (0-9-3)'] },
+                { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 6, courses: ['01005000117 วิทยานิพนธ์ (Thesis) 6 (0-18-6)'] },
+                { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 6, courses: ['01005000117 วิทยานิพนธ์ (Thesis) 6 (0-18-6)'] }
+            ];
+        }
     } else if (planId === 'nursing-maternal') {
         mockPlanData = [
             { year: 1, sem: 1, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 1', credits: 12, courses: ['01005000101 แนวคิดและทฤษฎีทางการพยาบาล 2 (2-0-4)', '01005000102 ระบบสุขภาพ ภาวะผู้นำ กฎหมายและจริยธรรมฯ 2 (2-0-4)', '01005000103 วิจัยและการใช้หลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '01005000104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '0100502105 พยาธิสรีรวิทยาและเภสัชวิทยาทางการผดุงครรภ์ 2 (2-0-4)', '01005000116 วิทยานิพนธ์ (Thesis) 2 (0-6-2)'] },
@@ -56,12 +67,22 @@ function getStudyPlanCoursesData(planId) {
             { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 3, courses: ['01005000117 วิทยานิพนธ์ (Thesis) 3 (0-9-3)'] }
         ];
     } else if (planId === 'nursing-adult') {
-        mockPlanData = [
-            { year: 1, sem: 1, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 1', credits: 11, courses: ['01005000101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ 3 (3-0-6)', '01005000102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '0100504105 พยาธิสรีรวิทยาและเภสัชวิทยาทางการพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)', '0100504106 การพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)'] },
-            { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 10, courses: ['01005000103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '01005000104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '0100504107 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 1 3 (0-9-3)', 'xxxxxxxxx วิชาเลือก 3 (3-0-6)'] },
-            { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 3, courses: ['0100504108 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 2 3 (0-9-3)'] },
-            { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1 และ 2', credits: 12, courses: ['01005001217 วิทยานิพนธ์ (Thesis) 12 (0-36-12)'] }
-        ];
+        if (is2565Cohort) {
+            mockPlanData = [
+                { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 11, courses: ['01005000101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ 3 (3-0-6)', '01005000102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '0100504105 พยาธิสรีรวิทยาและเภสัชวิทยาทางการพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)', '0100504106 การพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)'] },
+                { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 3', credits: 5, courses: ['01005000104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '0100504107 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 1 3 (0-9-3)'] },
+                { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 8, courses: ['01005000103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '010050xxxx การเรียนการสอนทางการพยาบาล/การวิจัยเชิงคุณภาพ 3 (3-0-6)', '0100504108 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 2 3 (0-9-3)'] },
+                { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 6, courses: ['01005001217 วิทยานิพนธ์ 6 (0-18-6)'] },
+                { year: 3, sem: 1, title: 'ชั้นปีที่ 3 ภาคการศึกษาที่ 1', credits: 6, courses: ['01005001217 วิทยานิพนธ์ 6 (0-18-6)'] }
+            ];
+        } else {
+            mockPlanData = [
+                { year: 1, sem: 1, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 1', credits: 11, courses: ['01005000101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ 3 (3-0-6)', '01005000102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '0100504105 พยาธิสรีรวิทยาและเภสัชวิทยาทางการพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)', '0100504106 การพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)'] },
+                { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 10, courses: ['01005000103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '01005000104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '0100504107 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 1 3 (0-9-3)', 'xxxxxxxxx วิชาเลือก 3 (3-0-6)'] },
+                { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 3, courses: ['0100504108 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 2 3 (0-9-3)'] },
+                { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1 และ 2', credits: 12, courses: ['01005001217 วิทยานิพนธ์ (Thesis) 12 (0-36-12)'] }
+            ];
+        }
     } else {
         mockPlanData = [
             { year: 1, sem: 1, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 1', credits: 19, courses: ['GEN101 หมวดวิชาศึกษาทั่วไป 1 3 (3-0)', 'ANA101 กายวิภาคศาสตร์และสรีรวิทยา 1 3 (3-0)', 'NUR101 การพยาบาลพื้นฐาน 1 3 (3-0)'] },
@@ -99,38 +120,73 @@ pages.transcript = function() {
     const departmentName = st.department || '';
 
     const planId = getPlanIdFromDept(departmentName);
-    const mockPlanData = getStudyPlanCoursesData(planId);
+    const mockPlanData = getStudyPlanCoursesData(planId, admissionYear);
+
+    const usedGradeIndices = new Set();
+    const resolvedPlan = mockPlanData.map(sem => {
+        return {
+            ...sem,
+            resolvedCourses: sem.courses.map(courseStr => {
+                const parsed = parseCourseString(courseStr);
+                const isElective = parsed.name.includes('วิชาเลือก') || (parsed.code || '').includes('xxxx');
+                let matchedIdx = -1;
+                
+                if (!isElective) {
+                    const cCode = parsed.code || '';
+                    const cName = parsed.name || '';
+                    const cleanCode = String(cCode).replace(/[^Aa-zZ0-9]/g, '');
+                    const cleanCodeSuffix = cleanCode.substring(Math.max(0, cleanCode.length - 5));
+                    
+                    matchedIdx = gradesFlat.findIndex((g, idx) => {
+                        if (!g || !g.code || usedGradeIndices.has(idx)) return false;
+                        const gCodeClean = String(g.code).replace(/[^Aa-zZ0-9]/g, '');
+                        const gName = String(g.name || '').toLowerCase();
+                        const curName = String(cName).toLowerCase();
+                        return gCodeClean.endsWith(cleanCodeSuffix) || (curName && gName && (curName.includes(gName) || gName.includes(curName)));
+                    });
+                    
+                    if (matchedIdx !== -1) usedGradeIndices.add(matchedIdx);
+                }
+                return { parsed, isElective, matchedIdx };
+            })
+        };
+    });
+
+    // Pass 2: Match electives
+    resolvedPlan.forEach(sem => {
+        sem.resolvedCourses.forEach(entry => {
+            if (entry.isElective) {
+                const matchedIdx = gradesFlat.findIndex((g, idx) => !usedGradeIndices.has(idx) && g.grade);
+                if (matchedIdx !== -1) {
+                    usedGradeIndices.add(matchedIdx);
+                    entry.matchedIdx = matchedIdx;
+                    const g = gradesFlat[matchedIdx];
+                    entry.parsed.code = g.code || entry.parsed.code;
+                    entry.parsed.name = g.name || entry.parsed.name;
+                    entry.parsed.credits = g.credits || entry.parsed.credits;
+                }
+            }
+        });
+    });
 
     let totalPoints = 0;
     let totalCredits = 0;
     let semesterHtmlRows = '';
 
-    mockPlanData.forEach(semPlan => {
+    resolvedPlan.forEach(semPlan => {
         let semCredits = 0;
         let semPoints = 0;
         let hasGradesInSem = false;
-        
         let coursesHtml = '';
 
-        semPlan.courses.forEach(courseStr => {
-            const parsed = parseCourseString(courseStr);
+        semPlan.resolvedCourses.forEach(entry => {
+            const { parsed, matchedIdx } = entry;
             const cCode = parsed.code || '-';
-            const cName = parsed.name || courseStr;
+            const cName = parsed.name || '-';
             const cCred = parsed.credits || '-';
             const cFormat = parsed.format || '';
 
-            // Map grade
-            const cleanCode = String(cCode || '').replace(/[^Aa-zZ0-9]/g, '');
-            const cleanCodeSuffix = cleanCode.substring(cleanCode.length > 5 ? cleanCode.length - 5 : 0);
-            
-            const matchingGrade = gradesFlat.find(g => {
-                if (!g || !g.code) return false;
-                const gCodeClean = String(g.code).replace(/[^Aa-zZ0-9]/g, '');
-                const gName = String(g.name || '').toLowerCase();
-                const curName = String(cName || '').toLowerCase();
-                return gCodeClean.endsWith(cleanCodeSuffix) || curName.includes(gName) || (gName && gName.includes(curName));
-            });
-
+            const matchingGrade = matchedIdx !== -1 ? gradesFlat[matchedIdx] : null;
             const gradeVal = matchingGrade ? matchingGrade.grade : '';
             const gradePoint = matchingGrade ? (matchingGrade.point || 0) : 0;
 
@@ -212,7 +268,7 @@ pages.transcript = function() {
                 <div>รายงานผลการเรียนนักศึกษารายปีการศึกษา</div>
                 <div>หลักสูตร${studentProgram}</div>
                 <div>${departmentName}</div>
-                <div>รุ่นที่ 1 ปีการศึกษา ${admissionYear}</div>
+                <div>ปีการศึกษา ${admissionYear}</div>
                 <div style="margin-top:10px;">รหัสนักศึกษา ${studentId} ชื่อ-สกุลนักศึกษา ${studentPrefix}${studentFirstName} ${studentLastName}</div>
             </div>
             
