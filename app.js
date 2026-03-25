@@ -514,9 +514,9 @@ window.syncActiveStudentData = async function () {
 
             const isThesis = courseName.includes('วิทยานิพนธ์') || 
                              courseName.toLowerCase().includes('thesis') ||
-                             courseCode.startsWith('1005002') || // Logic from common nursing codes
-                             courseCode.startsWith('1005003') ||
-                             courseCode.startsWith('1005004');
+                             String(courseCode).startsWith('1005002') || 
+                             String(courseCode).startsWith('1005003') ||
+                             String(courseCode).startsWith('1005004');
             
             const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(cGrade.toUpperCase());
 
