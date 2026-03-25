@@ -85,7 +85,8 @@ function parseCourseString(str) {
 
 pages.transcript = function() {
     const st = MOCK.student || {};
-    const gradesFlat = (MOCK.grades || []).flatMap(s => s.courses || []);
+    const studentGrades = st.grades || MOCK.grades || [];
+    const gradesFlat = studentGrades.flatMap(s => s.courses || []);
     
     // Fallbacks
     const studentId = st.id || st.studentId || st.student_id || '---------';
