@@ -1,6 +1,7 @@
 // ============================
 // Student Profile Page
 // ============================
+pages['student-profile'] = function() {
     const isAdmin = (window.currentUserRole === 'staff' || window.currentUserRole === 'admin');
     const st = MOCK.student;
 
