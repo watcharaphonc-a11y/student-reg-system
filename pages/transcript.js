@@ -134,21 +134,30 @@ pages.transcript = function() {
                 if (!isElective) {
                     const cCode = parsed.code || '';
                     const cName = parsed.name || '';
-                    const cleanCode = String(cCode).replace(/[^Aa-zZ0-9]/g, '');
+                    const cleanCName = String(cName).replace(/[^A-Za-z0-9ก-๙]/g, '').toLowerCase();
+                    const cleanCode = String(cCode).replace(/[^0-9]/g, '');
                     const cleanCodeSuffix = cleanCode.substring(Math.max(0, cleanCode.length - 5));
-                    const cleanCName = String(cName).replace(/ฯ/g, '').trim().toLowerCase();
 
                     matchedIdx = gradesFlat.findIndex((g, idx) => {
-                        if (!g || !g.code || usedGradeIndices.has(idx)) return false;
-                        const gCodeClean = String(g.code).replace(/[^Aa-zZ0-9]/g, '');
-                        const gNameClean = String(g.name || '').replace(/ฯ/g, '').trim().toLowerCase();
-                        return gCodeClean.endsWith(cleanCodeSuffix) || (cleanCName && gNameClean && (gNameClean.includes(cleanCName) || cleanCName.includes(gNameClean)));
+                        if (!g || usedGradeIndices.has(idx)) return false;
+                        const gCodeClean = String(g.code || '').replace(/[^0-9]/g, '');
+                        const gNameClean = String(g.name || '').replace(/[^A-Za-z0-9ก-๙]/g, '').toLowerCase();
+                        
+                        // Priority 1: Code match
+                        if (gCodeClean && cleanCode && gCodeClean.includes(cleanCode)) return true;
+                        
+                        // Priority 2: Suffix match
+                        if (gCodeClean && cleanCodeSuffix && gCodeClean.endsWith(cleanCodeSuffix)) return true;
+                        
+                        // Priority 3: Fuzzy name match
+                        if (cleanCName && gNameClean && (gNameClean.includes(cleanCName) || cleanCName.includes(gNameClean))) return true;
+                        
+                        return false;
                     });
                     
                     if (matchedIdx !== -1) {
                         usedGradeIndices.add(matchedIdx);
                         const g = gradesFlat[matchedIdx];
-                        // Override with full name from sheet
                         parsed.name = g.name || parsed.name;
                     }
                 }
