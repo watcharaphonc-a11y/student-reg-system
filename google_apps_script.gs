@@ -21,7 +21,8 @@ const SHEETS = {
   ENROLLMENTS: 'Enrollments',
   PAYMENTS: 'Payments',
   EVALUATIONS: 'Evaluations',
-  DOCUMENTS: 'Documents'
+  DOCUMENTS: 'Documents',
+  ANNOUNCEMENTS: 'Announcements'
 };
 
 /**
@@ -54,8 +55,8 @@ function doGet(e) {
       case 'getEvaluations':
         data = getSheetData(SHEETS.EVALUATIONS);
         break;
-      case 'getDocuments':
-        data = getSheetData(SHEETS.DOCUMENTS);
+      case 'getAnnouncements':
+        data = getSheetData(SHEETS.ANNOUNCEMENTS);
         break;
       case 'getAllData':
         data = {
@@ -66,7 +67,8 @@ function doGet(e) {
           enrollments: getSheetData(SHEETS.ENROLLMENTS),
           payments: getSheetData(SHEETS.PAYMENTS),
           evaluations: getSheetData(SHEETS.EVALUATIONS),
-          documents: getSheetData(SHEETS.DOCUMENTS)
+          documents: getSheetData(SHEETS.DOCUMENTS),
+          announcements: getSheetData(SHEETS.ANNOUNCEMENTS)
         };
         break;
       default:
@@ -121,6 +123,8 @@ function doPost(e) {
         return updateDocumentStatus(payload);
       case 'importGrades':
         return importGradesBatch(payload);
+      case 'postAnnouncement':
+        return postAnnouncement(payload);
       default:
         return createResponse({ status: 'error', message: 'Unknown POST action' });
     }
@@ -401,6 +405,31 @@ function importGradesBatch(payload) {
 }
 
 /**
+ * Post a new announcement
+ */
+function postAnnouncement(payload) {
+  setupInitialSheets();
+  const sheet = SS.getSheetByName(SHEETS.ANNOUNCEMENTS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Announcements sheet not found' });
+  
+  const announcementId = 'ANN-' + new Date().getTime();
+  const dateStr = new Date().toISOString();
+  
+  const row = [
+    announcementId,
+    payload.type || 'ทั่วไป',
+    payload.title || 'ไม่มีหัวข้อ',
+    payload.content || '',
+    dateStr,
+    payload.icon || '📢',
+    payload.author || 'Admin'
+  ];
+  
+  sheet.appendRow(row);
+  return createResponse({ status: 'success', id: announcementId });
+}
+
+/**
  * Run this once to initialize all sheets
  */
 function setupInitialSheets() {
@@ -412,7 +441,8 @@ function setupInitialSheets() {
     [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
     [SHEETS.PAYMENTS]: ['รหัสนักศึกษา', 'รายการ', 'จำนวนเงิน', 'สถานะ', 'วันที่'],
     [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
-    [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ']
+    [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ'],
+    [SHEETS.ANNOUNCEMENTS]: ['รหัสประกาศ', 'ประเภท', 'หัวข้อ', 'เนื้อหา', 'วันที่ประกาศ', 'ไอคอน', 'ผู้ประกาศ']
   };
 
   Object.keys(defaultHeaders).forEach(sheetName => {

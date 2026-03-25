@@ -76,7 +76,8 @@ async function bootApp() {
             enrollments: enrollmentsData, 
             payments: paymentsData, 
             evaluations: evaluationsData, 
-            documents: documentsData 
+            documents: documentsData,
+            announcements: announcementsData
         } = allData;
 
         // Map Students and attach Grades from Enrollments
@@ -90,9 +91,12 @@ async function bootApp() {
                 // Group enrollments into student.grades format
                 const gradesMap = {};
                 studentEnrollments.forEach(e => {
-                    const semName = `ภาคเรียนที่ ${e['ภาคเรียน']}/${e['ปีการศึกษา']}`;
-                    const cGrade = String(e['เกรด'] || '').trim();
-                    const creditsRaw = String(e['หน่วยกิต'] || '0');
+                    const year = e['academic_year'] || e['ปีการศึกษา'] || '-';
+                    const sem = e['semester'] || e['ภาคเรียน'] || '-';
+                    const semName = `ภาคเรียนที่ ${sem}/${year}`;
+                    
+                    const cGrade = String(e['grade'] || e['เกรด'] || '').trim();
+                    const creditsRaw = String(e['credits'] || e['หน่วยกิต'] || '0');
                     const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
                     
                     let point = 0;
@@ -112,8 +116,8 @@ async function bootApp() {
                     }
                     
                     gradesMap[semName].courses.push({
-                        code: e['รหัสวิชา'],
-                        name: e['ชื่อวิชา'],
+                        code: e['course_code'] || e['รหัสวิชา'] || '-',
+                        name: e['course_name'] || e['ชื่อวิชา'] || '-',
                         credits: cCredits,
                         grade: cGrade,
                         point: point
@@ -161,7 +165,7 @@ async function bootApp() {
                     parentPhone: s['เบอร์ผู้ปกครอง'] || s.parentPhone || '-',
                     gpa: overallGpa,
                     totalCredits: overallCredits,
-                    requiredCredits: parseInt(s['หน่วยกิตที่ต้องเรียน']) || s.requiredCredits || 132,
+                    requiredCredits: parseInt(s['หน่วยกิตที่ต้องเรียน']) || s.requiredCredits || 36,
                     grades: finalGrades
                 };
             });
@@ -238,27 +242,79 @@ async function bootApp() {
         }
 
         if (documentsData && documentsData.length > 0) {
-            MOCK.documents = documentsData.map(d => ({
-                studentId: d['รหัสนักศึกษา'] || d.studentId,
-                senderName: d['ชื่อผู้ส่ง'] || d.senderName,
-                documentType: d['ประเภทเอกสาร'] || d.documentType,
-                fileName: d['ชื่อไฟล์'] || d.fileName,
-                fileUrl: d['ลิงก์เอกสาร'] || d.fileUrl,
-                signedFileUrl: d['ลิงก์เอกสารที่ลงนาม'] || d.signedFileUrl,
-                date: d['วันที่ส่ง'] || d.date,
-                status: d['สถานะ'] || d.status,
-                nextStep: d['ผู้รับผิดชอบถัดไป'] || d.nextStep,
-                note: d['หมายเหตุ'] || d.note
-            }));
+            MOCK.documents = documentsData.map(d => {
+                const sId = d['รหัสนักศึกษา'] || d['รหัสประจำตัว'] || d.studentId || d.id;
+                const name = d['ชื่อผู้ส่ง'] || d['ชื่อ-นามสกุล'] || d.senderName;
+                const type = d['ประเภทเอกสาร'] || d['ประเภท'] || d.documentType;
+                const dateRaw = d['วันที่ส่ง'] || d['วันที่'] || d.date;
+                const trackId = d['รหัสติดตาม'] || d.id;
+                
+                return {
+                    studentId: sId || 'Unknown',
+                    senderName: name || 'Unknown',
+                    documentType: type || 'คำร้องทั่วไป',
+                    fileName: d['ชื่อไฟล์'] || d.fileName || 'document.pdf',
+                    fileUrl: d['ลิงก์เอกสาร'] || d.fileUrl || '',
+                    signedFileUrl: d['ลิงก์เอกสารที่ลงนาม'] || d.signedFileUrl || '',
+                    date: dateRaw,
+                    status: d['สถานะ'] || d.status || 'รอตรวจสอบ',
+                    nextStep: d['ผู้รับผิดชอบถัดไป'] || d.nextStep || 'เจ้าหน้าที่งานทะเบียน',
+                    note: d['หมายเหตุ'] || d.note || '',
+                    id: trackId || ('DOC-' + new Date().getTime())
+                };
+            });
 
             // Sync for Admin view
-            MOCK.adminDocuments = MOCK.documents.map((d, index) => ({
-                ...d,
-                id: 'DOC-A' + (1000 + index),
-                formName: d.documentType,
-                submitDate: d.date,
-                attachment: d.fileName
-            })).reverse();
+            MOCK.adminDocuments = MOCK.documents.map((d, index) => {
+                // Determine a nice display date
+                let displayDate = String(d.date || '-');
+                try {
+                    const dateObj = new Date(d.date);
+                    if (!isNaN(dateObj.getTime())) {
+                        const day = String(dateObj.getDate()).padStart(2, '0');
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        let year = dateObj.getFullYear();
+                        // Thai Buddhist Year conversion (AD to BE)
+                        if (year < 2400) year += 543;
+                        
+                        const hours = String(dateObj.getHours()).padStart(2, '0');
+                        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                        displayDate = `${day}/${month}/${year} ${hours}:${minutes} น.`;
+                    }
+                } catch (e) {
+                    console.warn('Date formatting failed:', e);
+                }
+
+                return {
+                    ...d,
+                    formName: d.documentType,
+                    submitDate: displayDate,
+                    attachment: d.fileName
+                };
+            }).reverse();
+        }
+
+        if (announcementsData && announcementsData.length > 0) {
+            MOCK.announcements = announcementsData.map(a => ({
+                id: a['รหัสประกาศ'] || a.id,
+                type: a['ประเภท'] || a.type || 'ทั่วไป',
+                title: a['หัวข้อ'] || a.title || 'ไม่มีหัวข้อ',
+                content: a['เนื้อหา'] || a.content || '',
+                date: a['วันที่ประกาศ'] || a.date || '',
+                icon: a['ไอคอน'] || a.icon || '📢',
+                author: a['ผู้ประกาศ'] || a.author || 'Admin'
+            }));
+            
+            // Notification Badge Logic
+            const lastSeen = localStorage.getItem('lastSeenAnnouncementId');
+            const latestId = MOCK.announcements[0]?.id;
+            if (latestId && lastSeen !== latestId) {
+                const badge = document.querySelector('.notif-badge');
+                if (badge) {
+                    badge.style.display = 'block';
+                    badge.textContent = '!'; // Or calculate count
+                }
+            }
         }
 
         // Calculate Dashboard Stats from Real Data
@@ -339,12 +395,18 @@ window.syncActiveStudentData = async function() {
         const sId = String(MOCK.student.studentId || MOCK.student.id || '').trim();
 
         // 1. Sync Grades
-        const studentEnrollments = (enrollments || []).filter(e => String(e['รหัสนักศึกษา'] || e.studentId || '').trim() === sId);
+        const studentEnrollments = (enrollments || []).filter(e => {
+            const rowSId = String(e['student_id'] || e['รหัสนักศึกษา'] || e.studentId || '').trim();
+            return rowSId === sId;
+        });
         const gradesMap = {};
         studentEnrollments.forEach(e => {
-            const semName = `ภาคเรียนที่ ${e['ภาคเรียน']}/${e['ปีการศึกษา']}`;
-            const cGrade = String(e['เกรด'] || '').trim();
-            const creditsRaw = String(e['หน่วยกิต'] || '0');
+            const year = e['academic_year'] || e['ปีการศึกษา'] || '-';
+            const sem = e['semester'] || e['ภาคเรียน'] || '-';
+            const semName = `ภาคเรียนที่ ${sem}/${year}`;
+            
+            const cGrade = String(e['grade'] || e['เกรด'] || '').trim();
+            const creditsRaw = String(e['credits'] || e['หน่วยกิต'] || '0');
             const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
             
             let point = 0;
@@ -364,8 +426,8 @@ window.syncActiveStudentData = async function() {
             }
             
             gradesMap[semName].courses.push({
-                code: e['รหัสวิชา'],
-                name: e['ชื่อวิชา'],
+                code: e['course_code'] || e['รหัสวิชา'] || '-',
+                name: e['course_name'] || e['ชื่อวิชา'] || '-',
                 credits: cCredits,
                 grade: cGrade,
                 point: point

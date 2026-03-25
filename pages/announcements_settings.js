@@ -2,32 +2,148 @@
 // Announcements Page
 // ============================
 pages.announcements = function() {
+    const isAdmin = (window.currentUserRole === 'staff' || window.currentUserRole === 'admin');
     const typeColors = {
         'สำคัญ': 'danger', 'ผลการเรียน': 'info', 'การเงิน': 'warning',
-        'ทุนการศึกษา': 'success', 'กิจกรรม': 'purple', 'ระบบ': 'neutral'
+        'ทุนการศึกษา': 'success', 'กิจกรรม': 'purple', 'ระบบ': 'neutral',
+        'ทั่วไป': 'neutral'
     };
+
+    // Clear notification badge when viewing announcements
+    const latestAnn = MOCK.announcements && MOCK.announcements[0];
+    if (latestAnn) {
+        localStorage.setItem('lastSeenAnnouncementId', latestAnn.id);
+        const badge = document.querySelector('.notif-badge');
+        if (badge) badge.style.display = 'none';
+    }
+
     return `
     <div class="animate-in">
-        <div class="page-header">
-            <h1 class="page-title">ประกาศ</h1>
-            <p class="page-subtitle">ข่าวสารและประกาศจากมหาวิทยาลัย</p>
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h1 class="page-title">ประกาศ</h1>
+                <p class="page-subtitle">ข่าวสารและประกาศจากสถาบันพระบรมราชชนก</p>
+            </div>
+            ${isAdmin ? `
+            <button class="btn btn-primary" onclick="openCreateAnnouncementModal()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M12 5v14M5 12h14"/></svg>
+                สร้างประกาศใหม่
+            </button>
+            ` : ''}
         </div>
         <div class="announcement-list">
-            ${MOCK.announcements.map((a, i) => `
-                <div class="announcement-card animate-in animate-delay-${Math.min(i+1,4)}" onclick="openModal('${a.title}','<div><span class=\\'badge ${typeColors[a.type] || 'neutral'}\\'>${a.type}</span><p style=\\'margin-top:14px;line-height:1.8;color:var(--text-secondary)\\'>${a.content}</p><p style=\\'margin-top:12px;font-size:0.78rem;color:var(--text-muted)\\'>วันที่ประกาศ: ${a.date}</p></div>')">
-                    <div class="announcement-icon" style="background:var(--${typeColors[a.type] || 'neutral'}-bg, var(--bg-tertiary))">${a.icon}</div>
+            ${(MOCK.announcements || []).length === 0 ? `
+                <div class="card" style="text-align:center; padding:50px;">
+                    <p style="color:var(--text-muted);">ยังไม่มีประกาศในขณะนี้</p>
+                </div>
+            ` : MOCK.announcements.map((a, i) => `
+                <div class="announcement-card animate-in animate-delay-${Math.min(i+1,4)}" onclick="viewAnnouncementDetail('${a.id}')">
+                    <div class="announcement-icon" style="background:var(--${typeColors[a.type] || 'neutral'}-bg, var(--bg-tertiary))">${a.icon || '📢'}</div>
                     <div class="announcement-content">
                         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
                             <h4>${a.title}</h4>
                             <span class="badge ${typeColors[a.type] || 'neutral'}">${a.type}</span>
                         </div>
-                        <p>${a.content.substring(0, 100)}...</p>
-                        <div class="announcement-date">📅 ${a.date}</div>
+                        <p>${a.content.substring(0, 100)}${a.content.length > 100 ? '...' : ''}</p>
+                        <div class="announcement-date">📅 ${a.date ? new Date(a.date).toLocaleDateString('th-TH') : '-'}</div>
                     </div>
                 </div>
             `).join('')}
         </div>
     </div>`;
+};
+
+window.viewAnnouncementDetail = function(id) {
+    const a = MOCK.announcements.find(x => x.id === id);
+    if (!a) return;
+    
+    const typeColors = {
+        'สำคัญ': 'danger', 'ผลการเรียน': 'info', 'การเงิน': 'warning',
+        'ทุนการศึกษา': 'success', 'กิจกรรม': 'purple', 'ระบบ': 'neutral',
+        'ทั่วไป': 'neutral'
+    };
+
+    openModal(a.title, `
+        <div>
+            <span class="badge ${typeColors[a.type] || 'neutral'}" style="margin-bottom:15px;">${a.type}</span>
+            <div style="line-height:1.8; color:var(--text-secondary); white-space: pre-wrap; font-size:1.05rem;">${a.content}</div>
+            <div style="margin-top:25px; padding-top:15px; border-top:1px solid var(--border-color); display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:0.85rem; color:var(--text-muted);">📅 วันที่ประกาศ: ${new Date(a.date).toLocaleDateString('th-TH')} ${new Date(a.date).toLocaleTimeString('th-TH')} น.</span>
+                <span style="font-size:0.85rem; color:var(--text-muted);">👤 โดย: ${a.author || 'Admin'}</span>
+            </div>
+            <div style="margin-top:20px; display:flex; justify-content:flex-end;">
+                <button class="btn btn-secondary" onclick="closeModal()">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    `, '700px');
+};
+
+window.openCreateAnnouncementModal = function() {
+    openModal('สร้างประกาศใหม่', `
+        <div style="padding:10px;">
+            <div class="form-group">
+                <label class="form-label">ประเภทประกาศ</label>
+                <select id="annType" class="form-input">
+                    <option value="ทั่วไป">ทั่วไป</option>
+                    <option value="สำคัญ">สำคัญ (แดง)</option>
+                    <option value="ผลการเรียน">ผลการเรียน (ฟ้า)</option>
+                    <option value="การเงิน">การเงิน (เหลือง)</option>
+                    <option value="ทุนการศึกษา">ทุนการศึกษา (เขียว)</option>
+                    <option value="กิจกรรม">กิจกรรม (ม่วง)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">ไอคอน (Emoji)</label>
+                <input type="text" id="annIcon" class="form-input" value="📢" placeholder="เช่น 📢, 🚨, 📅">
+            </div>
+            <div class="form-group">
+                <label class="form-label">หัวข้อประกาศ</label>
+                <input type="text" id="annTitle" class="form-input" placeholder="ใส่หัวข้อสั้นๆ...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">เนื้อหาประกาศ</label>
+                <textarea id="annContent" class="form-input" style="height:200px;" placeholder="ใส่รายละเอียดข่าวสาร..."></textarea>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+                <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="submitAnnouncement()">📣 ยืนยันการประกาศ</button>
+            </div>
+        </div>
+    `, '600px');
+};
+
+window.submitAnnouncement = async function() {
+    const type = document.getElementById('annType').value;
+    const title = document.getElementById('annTitle').value;
+    const content = document.getElementById('annContent').value;
+    const icon = document.getElementById('annIcon').value;
+    
+    if (!title || !content) {
+        alert('กรุณากรอกหัวข้อและเนื้อหาประกาศ');
+        return;
+    }
+    
+    showApiLoading('กำลังส่งประกาศและแจ้งเตือน...');
+    try {
+        const payload = {
+            type, title, content, icon,
+            author: window.currentUserData?.name || 'Admin'
+        };
+        
+        const res = await postData('postAnnouncement', payload);
+        if (res.status === 'success') {
+            alert('📢 ประกาศข่าวสารเรียบร้อยแล้ว!');
+            closeModal();
+            // Refresh app to get new data
+            location.reload();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (e) {
+        alert('เกิดข้อผิดพลาด: ' + e.message);
+    } finally {
+        hideApiLoading();
+    }
 };
 
 // ============================
