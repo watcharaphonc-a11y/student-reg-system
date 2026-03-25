@@ -2,13 +2,14 @@
 // Dashboard Page
 // ============================
 pages.dashboard = function() {
-    const s = MOCK.dashboardStats;
+    const s = MOCK.dashboardStats || { totalStudents: 0, totalTeachers: 0, totalCourses: 0, avgGPA: 0 };
     const students = MOCK.students || [];
     const advisors = MOCK.academicAdvisors || [];
-    const totalStudents = students.length > 0 ? students.length : s.totalStudents;
+    const totalStudents = students.length > 0 ? students.length : (s.totalStudents || 0);
     const totalAdvisors = advisors.length;
-    const uniqueCourseNames = new Set((MOCK.enrolledCourses || []).map(c => c.name));
-    const totalCourses = uniqueCourseNames.size || s.totalCourses;
+    const enrolledCourses = MOCK.enrolledCourses || [];
+    const uniqueCourseNames = new Set(enrolledCourses.map(c => c.name));
+    const totalCourses = uniqueCourseNames.size || (s.totalCourses || 0);
 
     return `
     <div class="animate-in">
@@ -46,7 +47,7 @@ pages.dashboard = function() {
                 <div class="stat-icon green">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                 </div>
-                <div class="stat-value">${s.avgGPA.toFixed(2)}</div>
+                <div class="stat-value">${Number(s.avgGPA || 0).toFixed(2)}</div>
                 <div class="stat-label">GPA เฉลี่ย</div>
                 <span class="stat-change up">↑ 0.12</span>
             </div>
@@ -112,12 +113,12 @@ pages.dashboard = function() {
                 </div>
                 <div class="card-body">
                     <div class="bar-chart" id="gpaChart">
-                        ${MOCK.gpaHistory.map(h => `
+                        ${(MOCK.gpaHistory || []).map(h => `
                             <div class="bar-group">
-                                <div class="bar" style="height:${(h.gpa/4)*180}px;background:var(--accent-gradient);">
-                                    <span class="bar-value">${h.gpa.toFixed(2)}</span>
+                                <div class="bar" style="height:${(parseFloat(h.gpa || 0)/4)*180}px;background:var(--accent-gradient);">
+                                    <span class="bar-value">${parseFloat(h.gpa || 0).toFixed(2)}</span>
                                 </div>
-                                <span class="bar-label">${h.semester}</span>
+                                <span class="bar-label">${h.semester || '-'}</span>
                             </div>
                         `).join('')}
                     </div>
@@ -129,12 +130,12 @@ pages.dashboard = function() {
                 </div>
                 <div class="card-body">
                     <div class="activity-list">
-                        ${MOCK.recentActivities.map(a => `
+                        ${(MOCK.recentActivities || []).map(a => `
                             <div class="activity-item">
-                                <div class="activity-dot ${a.color}"></div>
+                                <div class="activity-dot ${a.color || 'purple'}"></div>
                                 <div>
-                                    <div class="activity-text">${a.text}</div>
-                                    <div class="activity-time">${a.time}</div>
+                                    <div class="activity-text">${a.text || '-'}</div>
+                                    <div class="activity-time">${a.time || '-'}</div>
                                 </div>
                             </div>
                         `).join('')}
@@ -143,22 +144,22 @@ pages.dashboard = function() {
             </div>
         </div>
         <div class="card animate-in animate-delay-4">
-            <div class="card-header">
-                <h3 class="card-title">รายวิชาที่ลงทะเบียน ภาคเรียนปัจจุบัน</h3>
-                <span class="badge info">${MOCK.enrolledCourses.length} วิชา / ${MOCK.enrolledCourses.reduce((s,c)=>s+c.credits,0)} หน่วยกิต</span>
-            </div>
-            <div class="card-body">
-                <div class="table-wrapper">
-                    <table class="data-table">
-                        <thead><tr><th>รหัสวิชา</th><th>ชื่อวิชา</th><th>หน่วยกิต</th><th>อาจารย์</th><th>เวลาเรียน</th><th>ห้อง</th></tr></thead>
-                        <tbody>
-                            ${MOCK.enrolledCourses.map(c => `
-                                <tr><td style="color:var(--accent-primary-hover);font-weight:600">${c.code}</td><td>${c.name}</td><td style="text-align:center">${c.credits}</td><td>${c.instructor}</td><td>${c.schedule}</td><td>${c.room}</td></tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
+                <div class="card-header">
+                    <h3 class="card-title">รายวิชาที่ลงทะเบียน ภาคเรียนปัจจุบัน</h3>
+                    <span class="badge info">${enrolledCourses.length} วิชา / ${enrolledCourses.reduce((s,c)=>s+(parseFloat(c.credits)||0),0)} หน่วยกิต</span>
                 </div>
-            </div>
+                <div class="card-body">
+                    <div class="table-wrapper">
+                        <table class="data-table">
+                            <thead><tr><th>รหัสวิชา</th><th>ชื่อวิชา</th><th>หน่วยกิต</th><th>อาจารย์</th><th>เวลาเรียน</th><th>ห้อง</th></tr></thead>
+                            <tbody>
+                                ${enrolledCourses.map(c => `
+                                    <tr><td style="color:var(--accent-primary-hover);font-weight:600">${c.code || '-'}</td><td>${c.name || '-'}</td><td style="text-align:center">${c.credits || 0}</td><td>${c.instructor || '-'}</td><td>${c.schedule || '-'}</td><td>${c.room || '-'}</td></tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
         </div>
     </div>`;
 };

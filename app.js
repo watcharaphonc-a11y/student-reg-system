@@ -51,19 +51,29 @@ window.hasPermission = function (actionKey) {
 };
 
 function renderPage() {
-    if (pages[currentPage]) {
+    if (!pages[currentPage]) {
+        console.error('Page not found:', currentPage);
+        currentPage = 'dashboard'; 
+    }
+
+    try {
         contentArea.innerHTML = pages[currentPage]();
         contentArea.scrollTop = 0;
-        // Initialize page-specific JS
+        
         const initFn = window['init_' + currentPage.replace(/-/g, '_')];
         if (initFn) initFn();
-    } else {
+    } catch (err) {
+        console.error(`Error rendering page ${currentPage}:`, err);
         contentArea.innerHTML = `
-            <div class="empty-state">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                <h3>ไม่พบหน้านี้</h3>
-                <p>กรุณาเลือกเมนูจาก Sidebar</p>
-            </div>`;
+            <div class="animate-in" style="padding:40px; text-align:center;">
+                <div style="font-size:3rem; margin-bottom:20px;">⚠️</div>
+                <h2 style="color:var(--danger-color); margin-bottom:10px;">เกิดข้อผิดพลาดในการแสดงผล</h2>
+                <div style="background:#f8f9fa; padding:15px; border-radius:8px; font-family:monospace; font-size:0.85rem; color:var(--danger-color); margin-bottom:20px; text-align:left; overflow-x:auto;">
+                    ${err.message}
+                </div>
+                <button class="btn btn-primary" onclick="navigateTo('dashboard')">กลับหน้าหลัก</button>
+            </div>
+        `;
     }
 }
 
@@ -373,8 +383,8 @@ async function bootApp() {
         if (MOCK.students && MOCK.students.length > 0) {
             const studentsWithGPA = MOCK.students.filter(s => s.gpa > 0);
             if (studentsWithGPA.length > 0) {
-                const totalGPA = studentsWithGPA.reduce((acc, s) => acc + s.gpa, 0);
-                MOCK.dashboardStats.avgGPA = (totalGPA / studentsWithGPA.length).toFixed(2);
+                const totalGPA = studentsWithGPA.reduce((acc, s) => acc + parseFloat(s.gpa || 0), 0);
+                MOCK.dashboardStats.avgGPA = parseFloat((totalGPA / studentsWithGPA.length).toFixed(2));
             }
         }
 
