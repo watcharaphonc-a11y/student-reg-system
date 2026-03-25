@@ -185,6 +185,8 @@ async function bootApp() {
                     prefix: s['คำนำหน้า'] || s.prefix,
                     firstName: s['ชื่อ'] || s.firstName,
                     lastName: s['นามสกุล'] || s.lastName,
+                    firstNameEn: s['firstNameEn'] || s['ชื่อ (EN)'] || '',
+                    lastNameEn: s['lastNameEn'] || s['นามสกุล (EN)'] || '',
                     faculty: s['คณะ'] || s.faculty,
                     department: s['สาขาวิชา'] || s.department,
                     program: s['หลักสูตร'] || s.program,
