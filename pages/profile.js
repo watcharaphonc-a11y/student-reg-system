@@ -1,9 +1,10 @@
 // ============================
 // Student Profile Page
 // ============================
-pages['student-profile'] = function() {
+    const isAdmin = (window.currentUserRole === 'staff' || window.currentUserRole === 'admin');
     const st = MOCK.student;
-    if (!st) {
+
+    if (!st && !isAdmin) {
         return `
         <div class="animate-in">
             <div class="page-header">
@@ -14,6 +15,35 @@ pages['student-profile'] = function() {
                 <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:15px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                 <h3 style="color:var(--text-muted);">ยังไม่มีข้อมูลนักศึกษา</h3>
                 <p style="color:var(--text-muted); font-size:0.9rem;">กรุณาลงทะเบียนนักศึกษาใหม่ก่อนเข้าใช้งานหน้านี้</p>
+            </div></div>
+        </div>`;
+    }
+
+    if (!st && isAdmin) {
+        return `
+        <div class="animate-in">
+            <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <h1 class="page-title">ข้อมูลนักศึกษา</h1>
+                    <p class="page-subtitle">กรุณาเลือกนักศึกษาเพื่อดูข้อมูล</p>
+                </div>
+                <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <select id="studentSelector" class="form-input" onchange="changeProfileStudent(this.value)" style="padding-right: 30px;">
+                            <option value="">-- เลือกนักศึกษาเพื่อดูข้อมูล --</option>
+                            ${(MOCK.students || []).map(s => `
+                                <option value="${s.id || s.studentId}">
+                                    ${s.studentId || ''} - ${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="card"><div class="card-body" style="text-align:center; padding:60px;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:20px; opacity:0.5;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                <h3 style="color:var(--text-muted);">กรุณาเลือกนักศึกษา</h3>
+                <p style="color:var(--text-muted);">ค้นหาและเลือกรายชื่อนักศึกษาจากรายการด้านบนเพื่อดูรายละเอียด</p>
             </div></div>
         </div>`;
     }
