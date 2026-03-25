@@ -185,11 +185,9 @@ pages.grades = function() {
 function renderStudentGradesDetail(st, grades) {
     if (!st) return `<div class="card"><div class="card-body">ไม่พบข้อมูลนักศึกษา</div></div>`;
     
-    // Recalculate global GPA from all grades for accurate summary
-    const allValidCourses = (grades || []).flatMap(s => (s.courses || []).filter(c => c.grade));
-    const totalGradePts = allValidCourses.reduce((sum, c) => sum + (c.point * (c.credits || 0)), 0);
-    const totalActiveCreds = allValidCourses.reduce((sum, c) => sum + (c.credits || 0), 0);
-    const calculatedGpa = totalActiveCreds > 0 ? (totalGradePts / totalActiveCreds) : 0;
+    // Use synchronized data from app.js as source of truth
+    const calculatedGpa = st.gpa || 0;
+    const totalActiveCreds = st.totalCredits || 0;
     
     const requiredCredits = st.requiredCredits || 0;
     const remaining = requiredCredits - totalActiveCreds;
