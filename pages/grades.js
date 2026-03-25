@@ -161,7 +161,7 @@ pages.grades = function() {
     const role = window.currentUserRole;
     
     if (role === 'student') {
-        return renderStudentGradesDetail(MOCK.student, MOCK.grades);
+        return renderStudentGradesDetail(MOCK.student, MOCK.student ? MOCK.student.grades : []);
     } else {
         // Admin or Staff
         if (window.gradesViewMode === 'detail' && MOCK.student) {
@@ -173,7 +173,7 @@ pages.grades = function() {
                             กลับไปหน้าภาพรวม
                         </button>
                     </div>
-                    ${renderStudentGradesDetail(MOCK.student, MOCK.grades)}
+                    ${renderStudentGradesDetail(MOCK.student, MOCK.student.grades || [])}
                 </div>
             `;
         } else {

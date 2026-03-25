@@ -123,6 +123,10 @@ async function bootApp() {
                     return eId === sId && eId !== '';
                 });
 
+                if (studentEnrollments.length > 0) {
+                    console.log(`[bootApp] Found ${studentEnrollments.length} enrollments for student ${sId}`);
+                }
+                
                 // Group enrollments into student.grades format
                 const gradesMap = {};
                 studentEnrollments.forEach(e => {
@@ -135,16 +139,15 @@ async function bootApp() {
                     const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
 
                     let point = 0;
-                    switch (cGrade) {
-                        case 'A': point = 4.0; break;
-                        case 'B+': point = 3.5; break;
-                        case 'B': point = 3.0; break;
-                        case 'C+': point = 2.5; break;
-                        case 'C': point = 2.0; break;
-                        case 'D+': point = 1.5; break;
-                        case 'D': point = 1.0; break;
-                        case 'F': point = 0.0; break;
-                    }
+                    const g = cGrade.toUpperCase();
+                    if (g === 'A') point = 4.0;
+                    else if (g === 'B+') point = 3.5;
+                    else if (g === 'B') point = 3.0;
+                    else if (g === 'C+') point = 2.5;
+                    else if (g === 'C') point = 2.0;
+                    else if (g === 'D+') point = 1.5;
+                    else if (g === 'D') point = 1.0;
+                    else if (g === 'F') point = 0.0;
 
                     if (!gradesMap[semName]) {
                         gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
@@ -433,30 +436,32 @@ window.syncActiveStudentData = async function () {
 
         // 1. Sync Grades
         const studentEnrollments = (enrollments || []).filter(e => {
-            const rowSId = String(e['student_id'] || e['รหัสนักศึกษา'] || e.studentId || '').trim();
-            return rowSId === sId;
+            const rowSId = String(e['รหัสนักศึกษา'] || e['student_id'] || e.studentId || '').trim();
+            return rowSId === sId && sId !== '';
         });
+        
+        console.log(`[syncActiveStudentData] Found ${studentEnrollments.length} enrollments for student ${sId}`);
+
         const gradesMap = {};
         studentEnrollments.forEach(e => {
-            const year = e['academic_year'] || e['ปีการศึกษา'] || '-';
-            const sem = e['semester'] || e['ภาคเรียน'] || '-';
+            const year = String(e['ปีการศึกษา'] || e['academic_year'] || e.academicYear || '-').trim();
+            const sem = String(e['ภาคเรียน'] || e['semester'] || '-').trim();
             const semName = `ภาคเรียนที่ ${sem}/${year}`;
 
-            const cGrade = String(e['grade'] || e['เกรด'] || '').trim();
-            const creditsRaw = String(e['credits'] || e['หน่วยกิต'] || '0');
+            const cGrade = String(e['เกรด'] || e['grade'] || '').trim();
+            const creditsRaw = String(e['หน่วยกิต'] || e['credits'] || '0').trim();
             const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
 
             let point = 0;
-            switch (cGrade) {
-                case 'A': point = 4.0; break;
-                case 'B+': point = 3.5; break;
-                case 'B': point = 3.0; break;
-                case 'C+': point = 2.5; break;
-                case 'C': point = 2.0; break;
-                case 'D+': point = 1.5; break;
-                case 'D': point = 1.0; break;
-                case 'F': point = 0.0; break;
-            }
+            const g = cGrade.toUpperCase();
+            if (g === 'A') point = 4.0;
+            else if (g === 'B+') point = 3.5;
+            else if (g === 'B') point = 3.0;
+            else if (g === 'C+') point = 2.5;
+            else if (g === 'C') point = 2.0;
+            else if (g === 'D+') point = 1.5;
+            else if (g === 'D') point = 1.0;
+            else if (g === 'F') point = 0.0;
 
             if (!gradesMap[semName]) {
                 gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
