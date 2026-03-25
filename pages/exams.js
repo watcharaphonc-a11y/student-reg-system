@@ -152,7 +152,9 @@ function renderAdminExams() {
                             </select>
                         </div>
                         <div style="display:flex;gap:10px;">
-                            <button class="btn btn-secondary" onclick="alert('ฟีเจอร์นำเข้าแบบ Batch กำลังพัฒนา...')">นำเข้า CSV</button>
+                            <button class="btn btn-secondary" onclick="window.downloadExamCSVTemplate()">ดาวน์โหลดเทมเพลต</button>
+                            <button class="btn btn-primary" onclick="document.getElementById('examCsvInput').click()">นำเข้า CSV</button>
+                            <input type="file" id="examCsvInput" accept=".csv" style="display:none" onchange="window.handleExamFileSelect(event)">
                         </div>
                     </div>
                 </div>
@@ -233,4 +235,124 @@ async function callApi(data) {
         body: JSON.stringify(data)
     });
     return response.json();
+}
+
+/**
+ * CSV Template & Import Functions
+ */
+window.downloadExamCSVTemplate = function() {
+    const headers = ['รหัสนักศึกษา', 'ประเภทการสอบ', 'สถานะ', 'คะแนน', 'วันที่', 'หมายเหตุ'];
+    const sampleRows = [
+        ['65100503002', 'ความรู้ภาษาอังกฤษ', 'ผ่าน', '7.5/9', '2024-03-25', 'ผ่านเกณฑ์ภาษาอังกฤษ'],
+        ['65100503002', 'หัวข้อวิทยานิพนธ์', 'ผ่าน', 'Pass', '2024-02-10', ''],
+        ['', '', '', '', '', ''],
+        ['* คำชี้แจง:', '', '', '', '', ''],
+        ['- ประเภทการสอบ:', EXAM_TYPES.join(', '), '', '', '', ''],
+        ['- สถานะ:', 'ผ่าน, ไม่ผ่าน, รอผล, ยังไม่สอบ', '', '', '', ''],
+        ['- วันที่:', 'รูปแบบ YYYY-MM-DD', '', '', '', '']
+    ];
+    
+    let csvContent = "\uFEFF"; // Add BOM for Excel Thai support
+    csvContent += headers.join(',') + "\n";
+    sampleRows.forEach(row => {
+        csvContent += row.map(val => {
+            val = String(val).replace(/"/g, '""');
+            return val.includes(',') ? `"${val}"` : val;
+        }).join(',') + "\n";
+    });
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "exam_results_template.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
+window.handleExamFileSelect = function(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        const text = e.target.result;
+        try {
+            const rows = parseCSV(text);
+            if (rows.length === 0) throw new Error('ไม่พบข้อมูลในไฟล์ CSV');
+            
+            // Map CSV headers to payload keys
+            // Expected: รหัสนักศึกษา, ประเภทการสอบ, สถานะ, คะแนน, วันที่, หมายเหตุ
+            const mapping = {
+                'รหัสนักศึกษา': 'student_id',
+                'ประเภทการสอบ': 'exam_type',
+                'สถานะ': 'status',
+                'คะแนน': 'score',
+                'วันที่': 'date',
+                'หมายเหตุ': 'note'
+            };
+            
+            const examsToImport = rows.map(r => {
+                const item = {};
+                Object.keys(mapping).forEach(csvKey => {
+                    item[mapping[csvKey]] = r[csvKey] || '';
+                });
+                return item;
+            }).filter(ex => ex.student_id && ex.exam_type);
+            
+            if (examsToImport.length === 0) throw new Error('ไม่พบข้อมูลที่ถูกต้องในไฟล์ CSV (ต้องมีรหัสนักศึกษาและประเภทการสอบ)');
+            
+            showToast(`กำลังนำเข้าข้อมูล ${examsToImport.length} รายการ...`, 'info');
+            
+            const res = await callApi({
+                action: 'importExams',
+                payload: { exams: examsToImport }
+            });
+            
+            if (res.status === 'success') {
+                showToast(`นำเข้าข้อมูลผลสอบสำเร็จ ${res.count || examsToImport.length} รายการ`, 'success');
+                if (typeof window.syncActiveStudentData === 'function') {
+                    await window.syncActiveStudentData();
+                }
+                renderPage();
+            } else {
+                throw new Error(res.message);
+            }
+        } catch (err) {
+            showToast('เกิดข้อผิดพลาดในการนำเข้า: ' + err.message, 'error');
+            console.error(err);
+        } finally {
+            event.target.value = ''; // Reset input
+        }
+    };
+    reader.readAsText(file);
+};
+
+function parseCSV(text) {
+    const lines = text.split(/\r?\n/).filter(line => line.trim());
+    if (lines.length === 0) return [];
+    
+    const headers = lines[0].replace(/^\uFEFF/, '').split(',').map(h => h.trim());
+    const result = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+        // Skip rows that start with '*' (comments)
+        if (lines[i].startsWith('*')) continue;
+        
+        const currentLine = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Regex to handle commas inside quotes
+        if (currentLine.length < headers.length) continue;
+        
+        const obj = {};
+        headers.forEach((h, index) => {
+            let val = currentLine[index] ? currentLine[index].trim() : '';
+            if (val.startsWith('"') && val.endsWith('"')) {
+                val = val.substring(1, val.length -1).replace(/""/g, '"');
+            }
+            obj[h] = val;
+        });
+        result.push(obj);
+    }
+    return result;
 }

@@ -139,6 +139,8 @@ function doPost(e) {
         return updatePermission(payload);
       case 'updateExam':
         return updateExamResult(payload);
+      case 'importExams':
+        return importExamsBatch(payload);
       default:
         return createResponse({ status: 'error', message: 'Unknown POST action' });
     }
@@ -610,4 +612,60 @@ function updateExamResult(payload) {
   }
   
   return createResponse({ status: 'success' });
+}
+
+/**
+ * Helper: Import Exams in Batch
+ */
+function importExamsBatch(payload) {
+  const sheet = SS.getSheetByName(SHEETS.EXAMS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Exams sheet not found' });
+  
+  const data = payload.exams; // Array of objects
+  if (!data || !Array.isArray(data)) return createResponse({ status: 'error', message: 'Invalid exams data' });
+  
+  const sheetData = sheet.getDataRange().getValues();
+  const headers = sheetData[0].map(h => String(h).trim());
+  const rows = sheetData.slice(1);
+  
+  const sIdIdx = headers.indexOf('student_id');
+  const typeIdx = headers.indexOf('exam_type');
+  
+  if (sIdIdx === -1 || typeIdx === -1) return createResponse({ status: 'error', message: 'Exams sheet headers missing' });
+  
+  const updates = [];
+  const newRows = [];
+
+  data.forEach(item => {
+    const sId = String(item.student_id || '').trim();
+    const type = String(item.exam_type || '').trim();
+    if (!sId || !type) return;
+
+    let existingRowIdx = -1;
+    for (let i = 0; i < rows.length; i++) {
+        if (String(rows[i][sIdIdx]).trim() === sId && String(rows[i][typeIdx]).trim() === type) {
+            existingRowIdx = i + 2;
+            break;
+        }
+    }
+
+    const rowValues = headers.map(h => item[h] || '');
+    if (existingRowIdx > 0) {
+        updates.push({ row: existingRowIdx, values: rowValues });
+    } else {
+        newRows.push(rowValues);
+    }
+  });
+
+  // Execute updates
+  updates.forEach(u => {
+    sheet.getRange(u.row, 1, 1, headers.length).setValues([u.values]);
+  });
+  
+  // Execute insertions
+  if (newRows.length > 0) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, headers.length).setValues(newRows);
+  }
+
+  return createResponse({ status: 'success', count: data.length });
 }
