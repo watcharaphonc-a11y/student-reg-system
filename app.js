@@ -490,8 +490,19 @@ window.syncActiveStudentData = async function () {
                 };
             }
 
-            const courseName = e['course_name'] || e['ชื่อวิชา'] || '-';
-            const courseCode = e['course_code'] || e['รหัสวิชา'] || '-';
+            let courseName = e['course_name'] || e['ชื่อวิชา'] || '';
+            const courseCode = (e['course_code'] || e['รหัสวิชา'] || '-').trim();
+            
+            // Critical Fix: If course name is missing in enrollment, look it up in the Master Course list
+            if (!courseName || courseName === '-') {
+                const masterCourse = (MOCK.courses || []).find(c => String(c.code || c.courseCode || c['รหัสวิชา'] || '').trim() === courseCode);
+                if (masterCourse) {
+                    courseName = masterCourse.name || masterCourse['ชื่อวิชา'] || '';
+                }
+            }
+            
+            // Fallback to '-' if still empty
+            if (!courseName) courseName = '-';
             
             gradesMap[semName].courses.push({
                 code: courseCode,
@@ -501,7 +512,12 @@ window.syncActiveStudentData = async function () {
                 point: point
             });
 
-            const isThesis = courseName.includes('วิทยานิพนธ์') || courseName.toLowerCase().includes('thesis');
+            const isThesis = courseName.includes('วิทยานิพนธ์') || 
+                             courseName.toLowerCase().includes('thesis') ||
+                             courseCode.startsWith('1005002') || // Logic from common nursing codes
+                             courseCode.startsWith('1005003') ||
+                             courseCode.startsWith('1005004');
+            
             const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(cGrade.toUpperCase());
 
             gradesMap[semName].totalCredits += cCredits;
