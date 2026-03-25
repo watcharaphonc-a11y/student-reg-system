@@ -136,16 +136,22 @@ pages.transcript = function() {
                     const cName = parsed.name || '';
                     const cleanCode = String(cCode).replace(/[^Aa-zZ0-9]/g, '');
                     const cleanCodeSuffix = cleanCode.substring(Math.max(0, cleanCode.length - 5));
-                    
+                    const cleanCName = String(cName).replace('ฯ', '').trim();
+
                     matchedIdx = gradesFlat.findIndex((g, idx) => {
                         if (!g || !g.code || usedGradeIndices.has(idx)) return false;
                         const gCodeClean = String(g.code).replace(/[^Aa-zZ0-9]/g, '');
                         const gName = String(g.name || '').toLowerCase();
-                        const curName = String(cName).toLowerCase();
-                        return gCodeClean.endsWith(cleanCodeSuffix) || (curName && gName && (curName.includes(gName) || gName.includes(curName)));
+                        const curNameLower = cleanCName.toLowerCase();
+                        return gCodeClean.endsWith(cleanCodeSuffix) || (curNameLower && gName && (gName.includes(curNameLower) || curNameLower.includes(gName)));
                     });
                     
-                    if (matchedIdx !== -1) usedGradeIndices.add(matchedIdx);
+                    if (matchedIdx !== -1) {
+                        usedGradeIndices.add(matchedIdx);
+                        const g = gradesFlat[matchedIdx];
+                        // Override with full name from sheet
+                        parsed.name = g.name || parsed.name;
+                    }
                 }
                 return { parsed, isElective, matchedIdx };
             })
@@ -169,13 +175,15 @@ pages.transcript = function() {
         });
     });
 
-    let totalPoints = 0;
-    let totalCredits = 0;
+    let totalPointsGPA = 0;
+    let totalCreditsGPA = 0;
+    let totalCreditsEarned = 0;
     let semesterHtmlRows = '';
 
     resolvedPlan.forEach(semPlan => {
-        let semCredits = 0;
-        let semPoints = 0;
+        let semCreditsTotal = 0;
+        let semCreditsGPA = 0;
+        let semPointsGPA = 0;
         let hasGradesInSem = false;
         let coursesHtml = '';
 
@@ -191,10 +199,20 @@ pages.transcript = function() {
             const gradePoint = matchingGrade ? (matchingGrade.point || 0) : 0;
 
             if (gradeVal && gradeVal !== 'W' && gradeVal !== 'I' && !isNaN(cCred) && cCred !== '-') {
-                semCredits += Number(cCred);
-                semPoints += (Number(cCred) * gradePoint);
-                totalCredits += Number(cCred);
-                totalPoints += (Number(cCred) * gradePoint);
+                const credNum = Number(cCred);
+                semCreditsTotal += credNum;
+                totalCreditsEarned += credNum;
+
+                // Exclude Thesis and P/S/U from GPA calculation
+                const isThesis = cName.includes('วิทยานิพนธ์') || cName.toLowerCase().includes('thesis');
+                const isNonGPAGrade = ['P', 'S', 'U'].includes(gradeVal);
+
+                if (!isThesis && !isNonGPAGrade) {
+                    semCreditsGPA += credNum;
+                    semPointsGPA += (credNum * gradePoint);
+                    totalCreditsGPA += credNum;
+                    totalPointsGPA += (credNum * gradePoint);
+                }
                 hasGradesInSem = true;
             }
 
@@ -208,8 +226,8 @@ pages.transcript = function() {
             `;
         });
 
-        const semGPA = semCredits > 0 ? (semPoints / semCredits).toFixed(2) : '0.00';
-        const cumGPAAtEnd = totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+        const semGPA = semCreditsGPA > 0 ? (semPointsGPA / semCreditsGPA).toFixed(2) : '0.00';
+        const cumGPAAtEnd = totalCreditsGPA > 0 ? (totalPointsGPA / totalCreditsGPA).toFixed(2) : '0.00';
 
         let semTitle = semPlan.title || '';
         if (semTitle.includes('ภาค')) {
@@ -232,13 +250,13 @@ pages.transcript = function() {
         semesterHtmlRows += `
             <tr>
                 <td colspan="4" class="center" style="font-weight:700;">
-                    หน่วยกิต ${semCredits} คะแนนเฉลี่ย ${semGPA} หน่วยกิตสะสม ${totalCredits} คะแนนเฉลี่ย ${cumGPAAtEnd}
+                    หน่วยกิต ${semCreditsTotal} คะแนนเฉลี่ย ${semGPA} หน่วยกิตสะสม ${totalCreditsEarned} คะแนนเฉลี่ย ${cumGPAAtEnd}
                 </td>
             </tr>
         `;
     });
 
-    const cumulativeGPACalculated = totalCredits > 0 ? (totalPoints / totalCredits).toFixed(2) : '0.00';
+    const cumulativeGPACalculated = totalCreditsGPA > 0 ? (totalPointsGPA / totalCreditsGPA).toFixed(2) : '0.00';
 
     return `
     <div class="animate-in">
@@ -292,8 +310,8 @@ pages.transcript = function() {
                     <div>คะแนนเฉลี่ยสะสมตลอดหลักสูตร: ${cumulativeGPACalculated}</div>
                 </div>
                 <div>
-                    <div style="margin-bottom:8px;">รวมหน่วยกิตตลอดปีการศึกษา: ${totalCredits}</div>
-                    <div>รวมหน่วยกิตสะสมตลอดหลักสูตร: ${totalCredits}</div>
+                    <div style="margin-bottom:8px;">รวมหน่วยกิตตลอดปีการศึกษา: ${totalCreditsEarned}</div>
+                    <div>รวมหน่วยกิตสะสมตลอดหลักสูตร: ${totalCreditsEarned}</div>
                 </div>
             </div>
             
