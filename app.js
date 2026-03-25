@@ -109,8 +109,11 @@ async function bootApp() {
             payments: paymentsData,
             evaluations: evaluationsData,
             documents: documentsData,
-            announcements: announcementsData
+            announcements: announcementsData,
+            exams: examsData
         } = allData;
+
+        MOCK.allExams = examsData || []; // Global for admin view
 
         // Map Students and attach Grades from Enrollments
         if (studentsData && studentsData.length > 0) {
@@ -206,7 +209,8 @@ async function bootApp() {
                     gpa: overallGpa,
                     totalCredits: overallCredits,
                     requiredCredits: parseInt(s['หน่วยกิตที่ต้องเรียน']) || s.requiredCredits || 36,
-                    grades: finalGrades
+                    grades: finalGrades,
+                    exams: (examsData || []).filter(ex => String(ex.student_id || '').trim() === sId)
                 };
             });
         }
@@ -428,10 +432,11 @@ window.syncActiveStudentData = async function () {
     // Refresh student data from Google Sheets
     showApiLoading('กำลังอัปเดตข้อมูลนักศึกษา...');
     try {
-        const [enrollments, payments, documents] = await Promise.all([
+        const [enrollments, payments, documents, exams] = await Promise.all([
             fetchData('getEnrollments'),
             fetchData('getPayments'),
-            fetchData('getDocuments')
+            fetchData('getDocuments'),
+            fetchData('getExams')
         ]);
 
         const sId = String(MOCK.student.studentId || MOCK.student.id || '').trim();
@@ -523,6 +528,12 @@ window.syncActiveStudentData = async function () {
                     signedFileUrl: d['ลิงก์เอกสารที่ลงนาม'] || d.signedFileUrl,
                     note: d['หมายเหตุ'] || d.note
                 }));
+        }
+
+        // 4. Sync Exams
+        if (exams && exams.length > 0) {
+            MOCK.studentExams = exams.filter(ex => String(ex.student_id || '').trim() === sId);
+            MOCK.student.exams = MOCK.studentExams;
         }
     } catch (err) {
         console.error('Sync student data failed:', err);

@@ -23,7 +23,8 @@ const SHEETS = {
   EVALUATIONS: 'Evaluations',
   DOCUMENTS: 'Documents',
   ANNOUNCEMENTS: 'Announcements',
-  PERMISSIONS: 'Permissions'
+  PERMISSIONS: 'Permissions',
+  EXAMS: 'Exams'
 };
 
 /**
@@ -70,11 +71,15 @@ function doGet(e) {
           evaluations: getSheetData(SHEETS.EVALUATIONS),
           documents: getSheetData(SHEETS.DOCUMENTS),
           announcements: getSheetData(SHEETS.ANNOUNCEMENTS),
-          permissions: getSheetData(SHEETS.PERMISSIONS)
+          permissions: getSheetData(SHEETS.PERMISSIONS),
+          exams: getSheetData(SHEETS.EXAMS)
         };
         break;
       case 'getPermissions':
         data = getSheetData(SHEETS.PERMISSIONS);
+        break;
+      case 'getExams':
+        data = getSheetData(SHEETS.EXAMS);
         break;
       default:
         return createResponse({ status: 'error', message: 'Unknown action' });
@@ -132,6 +137,8 @@ function doPost(e) {
         return postAnnouncement(payload);
       case 'updatePermission':
         return updatePermission(payload);
+      case 'updateExam':
+        return updateExamResult(payload);
       default:
         return createResponse({ status: 'error', message: 'Unknown POST action' });
     }
@@ -378,10 +385,6 @@ function importGradesBatch(payload) {
   const sheet = SS.getSheetByName(SHEETS.ENROLLMENTS);
   if (!sheet) return createResponse({ status: 'error', message: 'Enrollments sheet not found' });
   
-function importGrades(payload) {
-  const sheet = SS.getSheetByName(SHEETS.ENROLLMENTS);
-  if (!sheet) return createResponse({ status: 'error', message: 'Enrollments sheet not found' });
-  
   const data = payload.grades; // Array of objects
   if (!data || !Array.isArray(data)) return createResponse({ status: 'error', message: 'Invalid grades data' });
   
@@ -516,7 +519,8 @@ function setupInitialSheets() {
     [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
     [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ'],
     [SHEETS.ANNOUNCEMENTS]: ['รหัสประกาศ', 'ประเภท', 'หัวข้อ', 'เนื้อหา', 'วันที่ประกาศ', 'ไอคอน', 'ผู้ประกาศ'],
-    [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data']
+    [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data'],
+    [SHEETS.EXAMS]: ['student_id', 'exam_type', 'status', 'score', 'date', 'note']
   };
 
   const defaultPermissions = [
@@ -561,4 +565,49 @@ function setupInitialSheets() {
 function createResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Update or Insert an Exam Result
+ */
+function updateExamResult(payload) {
+  const sheet = SS.getSheetByName(SHEETS.EXAMS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Exams sheet not found' });
+  
+  const values = sheet.getDataRange().getValues();
+  const headers = values[0].map(h => String(h).trim());
+  const rows = values.slice(1);
+  
+  const sIdIdx = headers.indexOf('student_id');
+  const typeIdx = headers.indexOf('exam_type');
+  
+  if (sIdIdx === -1 || typeIdx === -1) {
+    // If headers missing, just append if it's the first data
+    if (values.length === 1 && values[0].length === 0) {
+       sheet.appendRow(['student_id', 'exam_type', 'status', 'score', 'date', 'note']);
+       return updateExamResult(payload);
+    }
+    return createResponse({ status: 'error', message: 'Exams sheet headers missing' });
+  }
+  
+  let rowIndex = -1;
+  const sId = String(payload.student_id).trim();
+  const type = String(payload.exam_type).trim();
+  
+  for (let i = 0; i < rows.length; i++) {
+    if (String(rows[i][sIdIdx]).trim() === sId && String(rows[i][typeIdx]).trim() === type) {
+      rowIndex = i + 2;
+      break;
+    }
+  }
+  
+  const rowData = headers.map(h => payload[h] || '');
+  
+  if (rowIndex !== -1) {
+    sheet.getRange(rowIndex, 1, 1, headers.length).setValues([rowData]);
+  } else {
+    sheet.appendRow(rowData);
+  }
+  
+  return createResponse({ status: 'success' });
 }
