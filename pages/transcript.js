@@ -136,14 +136,13 @@ pages.transcript = function() {
                     const cName = parsed.name || '';
                     const cleanCode = String(cCode).replace(/[^Aa-zZ0-9]/g, '');
                     const cleanCodeSuffix = cleanCode.substring(Math.max(0, cleanCode.length - 5));
-                    const cleanCName = String(cName).replace('ฯ', '').trim();
+                    const cleanCName = String(cName).replace(/ฯ/g, '').trim().toLowerCase();
 
                     matchedIdx = gradesFlat.findIndex((g, idx) => {
                         if (!g || !g.code || usedGradeIndices.has(idx)) return false;
                         const gCodeClean = String(g.code).replace(/[^Aa-zZ0-9]/g, '');
-                        const gName = String(g.name || '').toLowerCase();
-                        const curNameLower = cleanCName.toLowerCase();
-                        return gCodeClean.endsWith(cleanCodeSuffix) || (curNameLower && gName && (gName.includes(curNameLower) || curNameLower.includes(gName)));
+                        const gNameClean = String(g.name || '').replace(/ฯ/g, '').trim().toLowerCase();
+                        return gCodeClean.endsWith(cleanCodeSuffix) || (cleanCName && gNameClean && (gNameClean.includes(cleanCName) || cleanCName.includes(gNameClean)));
                     });
                     
                     if (matchedIdx !== -1) {
