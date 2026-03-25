@@ -7,9 +7,12 @@ function renderLoginUI() {
     <div class="login-container animate-in">
         <div class="login-card">
             <div class="login-header">
-                <img src="assets/logo_pi.png" alt="PI Logo" style="width: 320px; max-width: 90%; margin: 0 auto 20px auto; display: block;">
-                <h2 style="font-size: 1.7rem; margin-bottom: 8px;">เข้าสู่ระบบ</h2>
-                <p style="font-size: 1.15rem; color: var(--text-primary); font-weight: 600; margin-bottom: 25px;">ระบบทะเบียนนักศึกษา สถาบันพระบรมราชชนก</p>
+                <img src="assets/logo_pi.png" alt="PI Logo" style="width: 480px; max-width: 100%; margin: 0 auto 30px auto; display: block;">
+                <h2 style="font-size: 1.8rem; margin-bottom: 12px; color: var(--text-primary); font-weight: 800;">เข้าสู่ระบบ</h2>
+                <div style="font-size: 1.3rem; color: var(--text-primary); font-weight: 800; margin-bottom: 35px; line-height: 1.6;">
+                    ระบบทะเบียนนักศึกษา<br>
+                    <span style="font-size: 1.05rem; color: var(--text-muted); font-weight: 600;">หลักสูตรพยาบาลศาสตรมหาบัณฑิต คณะพยาบาลศาสตร์</span>
+                </div>
             </div>
             
             <div class="login-tabs">
@@ -62,7 +65,7 @@ function renderLoginUI() {
     overlay.className = 'login-overlay';
     overlay.innerHTML = `
         ${loginHtml}
-        <div style="position: fixed; bottom: 15px; right: 20px; font-size: 0.8rem; color: #64748b; font-weight: 500; pointer-events: none;">(อัปเดทระบบ ${window.APP_VERSION})</div>
+        <div style="position: fixed; bottom: 15px; right: 20px; font-size: 0.8rem; color: #64748b; font-weight: 500; pointer-events: none;">(อัปเดทระบบ ${window.APP_VERSION || 'V.1.2'})</div>
     `;
     document.body.appendChild(overlay);
 }
@@ -301,8 +304,8 @@ function applyRolePermissions(role) {
     // Super Admin sees everything (all visible by default)
 }
 
-// Ensure Login UI kicks off on script load
-renderLoginUI();
+// Ensure Login UI kicks off
+// renderLoginUI(); // Now handled by app.js to ensure window.APP_VERSION is ready
 
 // Update connection status dot periodically
 setInterval(() => {

@@ -7,6 +7,11 @@ let currentPage = 'dashboard';
 window.apiDataLoaded = false;
 window.APP_VERSION = "V.1.2 By Watcharaphon.c";
 
+// Initialize Login UI if not logged in
+if (!localStorage.getItem('currentUser')) {
+    if (typeof renderLoginUI === 'function') renderLoginUI();
+}
+
 // DOM Elements
 const contentArea = document.getElementById('contentArea');
 const sidebar = document.getElementById('sidebar');
