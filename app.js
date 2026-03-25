@@ -481,33 +481,58 @@ window.syncActiveStudentData = async function () {
             else if (g === 'F') point = 0.0;
 
             if (!gradesMap[semName]) {
-                gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
+                gradesMap[semName] = { 
+                    semester: semName, 
+                    totalCredits: 0, 
+                    gpaCredits: 0, 
+                    gpaPoints: 0, 
+                    courses: [] 
+                };
             }
 
+            const courseName = e['course_name'] || e['ชื่อวิชา'] || '-';
+            const courseCode = e['course_code'] || e['รหัสวิชา'] || '-';
+            
             gradesMap[semName].courses.push({
-                code: e['course_code'] || e['รหัสวิชา'] || '-',
-                name: e['course_name'] || e['ชื่อวิชา'] || '-',
+                code: courseCode,
+                name: courseName,
                 credits: cCredits,
                 grade: cGrade,
                 point: point
             });
 
+            const isThesis = courseName.includes('วิทยานิพนธ์') || courseName.toLowerCase().includes('thesis');
+            const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(cGrade.toUpperCase());
+
             gradesMap[semName].totalCredits += cCredits;
-            gradesMap[semName].totalPoints += (point * cCredits);
+            if (!isThesis && !isNonGPA) {
+                gradesMap[semName].gpaCredits += cCredits;
+                gradesMap[semName].gpaPoints += (point * cCredits);
+            }
         });
 
         MOCK.grades = Object.values(gradesMap).map(g => ({
             semester: g.semester,
             totalCredits: g.totalCredits,
-            gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
+            gpa: g.gpaCredits > 0 ? (g.gpaPoints / g.gpaCredits) : 0,
             courses: g.courses
         })).sort((a, b) => b.semester.localeCompare(a.semester));
 
         // Update student object stats
         const allCourses = MOCK.grades.flatMap(g => g.courses);
-        MOCK.student.totalCredits = allCourses.reduce((sum, c) => sum + c.credits, 0);
-        const overallPoints = allCourses.reduce((sum, c) => sum + (c.point * c.credits), 0);
-        MOCK.student.gpa = MOCK.student.totalCredits > 0 ? (overallPoints / MOCK.student.totalCredits) : 0;
+        MOCK.student.totalCredits = allCourses.reduce((sum, c) => sum + (c.credits || 0), 0);
+        
+        // Filter for aggregate GPA calculation
+        const gpaCourses = allCourses.filter(c => {
+            const isThesis = (c.name || '').includes('วิทยานิพนธ์') || (c.name || '').toLowerCase().includes('thesis');
+            const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(String(c.grade || '').toUpperCase());
+            return !isThesis && !isNonGPA;
+        });
+        
+        const aggregateGPACredits = gpaCourses.reduce((sum, c) => sum + (c.credits || 0), 0);
+        const aggregateGPAPoints = gpaCourses.reduce((sum, c) => sum + ((c.point || 0) * (c.credits || 0)), 0);
+        
+        MOCK.student.gpa = aggregateGPACredits > 0 ? (aggregateGPAPoints / aggregateGPACredits) : 0;
         MOCK.student.grades = MOCK.grades;
 
         // 2. Sync Payments
