@@ -314,7 +314,7 @@ async function bootApp() {
         console.error('Failed to load API data:', e);
         window.apiDataLoaded = 'error'; // Indicate error state
         if (typeof showError === 'function') {
-            showError('ไม่สามารถเชื่อมต่อกับ Google Sheets ได้ กรุณาตรวจสอบการตั้งค่า Apps Script และสิทธิ์การเข้าถึง');
+            showError(`การเชื่อมต่อผิดพลาด: ${e.message || e}\nกรุณาตรวจสอบการตั้งค่า Apps Script (Deployment) หรือสิทธิ์การเข้าถึง`);
         }
     }
 
