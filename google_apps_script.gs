@@ -378,35 +378,77 @@ function importGradesBatch(payload) {
   const sheet = SS.getSheetByName(SHEETS.ENROLLMENTS);
   if (!sheet) return createResponse({ status: 'error', message: 'Enrollments sheet not found' });
   
-  const data = payload.grades; // Array of objects mapping to headers
+function importGrades(payload) {
+  const sheet = SS.getSheetByName(SHEETS.ENROLLMENTS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Enrollments sheet not found' });
+  
+  const data = payload.grades; // Array of objects
   if (!data || !Array.isArray(data)) return createResponse({ status: 'error', message: 'Invalid grades data' });
   
-  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const sheetData = sheet.getDataRange().getValues();
+  const headers = sheetData[0].map(h => String(h).trim());
+  const rows = sheetData.slice(1);
   
+  const sIdIdx = headers.indexOf('รหัสนักศึกษา');
+  const cCodeIdx = headers.indexOf('รหัสวิชา');
+  const semIdx = headers.indexOf('ภาคเรียน');
+  const yearIdx = headers.indexOf('ปีการศึกษา');
+  
+  if (sIdIdx === -1) return createResponse({ status: 'error', message: 'Enrollments sheet headers missing "รหัสนักศึกษา"' });
+  
+  // Helper to get value using multiple possible keys
+  const getVal = (item, thKey, enKey) => item[thKey] || item[enKey] || '';
+
+  const newRows = [];
+  const updates = []; // {row, values}
+
   data.forEach(item => {
-    // Basic update/append logic: Find if student+course+semester+year exists
-    const values = sheet.getDataRange().getValues();
-    let rowIndex = -1;
+    const sId = String(getVal(item, 'รหัสนักศึกษา', 'student_id')).trim();
+    const cCode = String(getVal(item, 'รหัสวิชา', 'course_code')).trim();
+    const sem = String(getVal(item, 'ภาคเรียน', 'semester')).trim();
+    const year = String(getVal(item, 'ปีการศึกษา', 'academic_year')).trim();
     
-    // We start from 1 to skip header
-    for (let i = 1; i < values.length; i++) {
-        const row = values[i];
-        if (row[headers.indexOf('รหัสนักศึกษา')] == item['รหัสนักศึกษา'] && 
-            row[headers.indexOf('รหัสวิชา')] == item['รหัสวิชา'] &&
-            row[headers.indexOf('ภาคเรียน')] == item['ภาคเรียน'] &&
-            row[headers.indexOf('ปีการศึกษา')] == item['ปีการศึกษา']) {
-          rowIndex = i + 1;
-          break;
-        }
+    if (!sId) return;
+
+    let existingRowIdx = -1;
+    for (let i = 0; i < rows.length; i++) {
+      if (String(rows[i][sIdIdx]).trim() === sId && 
+          String(rows[i][cCodeIdx]).trim() === cCode && 
+          String(rows[i][semIdx]).trim() === sem && 
+          String(rows[i][yearIdx]).trim() === year) {
+        existingRowIdx = i + 2; // +1 for slice, +1 for 1-based range
+        break;
+      }
     }
-    
-    const rowValues = headers.map(h => item[h] || '');
-    if (rowIndex > 0) {
-      sheet.getRange(rowIndex, 1, 1, headers.length).setValues([rowValues]);
+
+    const rowValues = headers.map(h => {
+      // Map common Thai headers to possible EN keys
+      if (h === 'รหัสนักศึกษา') return sId;
+      if (h === 'รหัสวิชา') return cCode;
+      if (h === 'ชื่อวิชา') return getVal(item, 'ชื่อวิชา', 'course_name');
+      if (h === 'หน่วยกิต') return getVal(item, 'หน่วยกิต', 'credits');
+      if (h === 'ภาคเรียน') return sem;
+      if (h === 'ปีการศึกษา') return year;
+      if (h === 'เกรด') return getVal(item, 'เกรด', 'grade');
+      return item[h] || '';
+    });
+
+    if (existingRowIdx > 0) {
+      updates.push({ row: existingRowIdx, values: rowValues });
     } else {
-      sheet.appendRow(rowValues);
+      newRows.push(rowValues);
     }
   });
+
+  // Execute updates
+  updates.forEach(u => {
+    sheet.getRange(u.row, 1, 1, headers.length).setValues([u.values]);
+  });
+  
+  // Execute appends
+  if (newRows.length > 0) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, headers.length).setValues(newRows);
+  }
   
   return createResponse({ status: 'success', count: data.length });
 }

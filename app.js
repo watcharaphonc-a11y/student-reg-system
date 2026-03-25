@@ -40,13 +40,13 @@ function navigateTo(page) {
 /**
  * check if current user role has permission for an action
  */
-window.hasPermission = function(actionKey) {
+window.hasPermission = function (actionKey) {
     if (window.currentUserRole === 'admin' && window.currentUserData?.name === 'Super Admin') return true; // Super Admin always YES
     if (!MOCK.permissions || MOCK.permissions.length === 0) return false;
-    
+
     const rolePerms = MOCK.permissions.find(p => String(p.Role).toLowerCase() === String(window.currentUserRole).toLowerCase());
     if (!rolePerms) return false;
-    
+
     return rolePerms[actionKey] === 'YES';
 };
 
@@ -74,7 +74,7 @@ if (notifBtn) {
         navigateTo('announcements');
         const badge = document.querySelector('.notif-badge');
         if (badge) badge.style.display = 'none';
-        
+
         const latestId = MOCK.announcements && MOCK.announcements[0]?.id;
         if (latestId) localStorage.setItem('lastSeenAnnouncementId', latestId);
     });
@@ -100,14 +100,14 @@ async function bootApp() {
         const allData = await fetchData('getAllData');
         if (!allData || allData.status === 'error') throw new Error(allData?.message || 'Failed to fetch data');
 
-        const { 
-            users: usersData, 
-            students: studentsData, 
-            teachers: teachersData, 
-            courses: coursesData, 
-            enrollments: enrollmentsData, 
-            payments: paymentsData, 
-            evaluations: evaluationsData, 
+        const {
+            users: usersData,
+            students: studentsData,
+            teachers: teachersData,
+            courses: coursesData,
+            enrollments: enrollmentsData,
+            payments: paymentsData,
+            evaluations: evaluationsData,
             documents: documentsData,
             announcements: announcementsData
         } = allData;
@@ -116,23 +116,26 @@ async function bootApp() {
         if (studentsData && studentsData.length > 0) {
             MOCK.students = studentsData.map(s => {
                 const sId = String(s['รหัสนักศึกษา'] || s.studentId || s.id || '').trim();
-                
-                // Find enrollments for this student
-                const studentEnrollments = (enrollmentsData || []).filter(e => String(e['รหัสนักศึกษา'] || e.studentId).trim() === sId);
-                
+
+                // Find enrollments for this student (Robust matching)
+                const studentEnrollments = (enrollmentsData || []).filter(e => {
+                    const eId = String(e['รหัสนักศึกษา'] || e.student_id || e.studentId || '').trim();
+                    return eId === sId && eId !== '';
+                });
+
                 // Group enrollments into student.grades format
                 const gradesMap = {};
                 studentEnrollments.forEach(e => {
                     const year = e['academic_year'] || e['ปีการศึกษา'] || '-';
                     const sem = e['semester'] || e['ภาคเรียน'] || '-';
                     const semName = `ภาคเรียนที่ ${sem}/${year}`;
-                    
-                    const cGrade = String(e['grade'] || e['เกรด'] || '').trim();
-                    const creditsRaw = String(e['credits'] || e['หน่วยกิต'] || '0');
+
+                    const cGrade = String(e['เกรด'] || e['grade'] || '').trim();
+                    const creditsRaw = String(e['หน่วยกิต'] || e['credits'] || '0').trim();
                     const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
-                    
+
                     let point = 0;
-                    switch(cGrade) {
+                    switch (cGrade) {
                         case 'A': point = 4.0; break;
                         case 'B+': point = 3.5; break;
                         case 'B': point = 3.0; break;
@@ -142,11 +145,11 @@ async function bootApp() {
                         case 'D': point = 1.0; break;
                         case 'F': point = 0.0; break;
                     }
-                    
+
                     if (!gradesMap[semName]) {
                         gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
                     }
-                    
+
                     gradesMap[semName].courses.push({
                         code: e['course_code'] || e['รหัสวิชา'] || '-',
                         name: e['course_name'] || e['ชื่อวิชา'] || '-',
@@ -154,17 +157,17 @@ async function bootApp() {
                         grade: cGrade,
                         point: point
                     });
-                    
+
                     gradesMap[semName].totalCredits += cCredits;
                     gradesMap[semName].totalPoints += (point * cCredits);
                 });
-                
+
                 const finalGrades = Object.values(gradesMap).map(g => ({
                     semester: g.semester,
                     totalCredits: g.totalCredits,
                     gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
                     courses: g.courses
-                })).sort((a,b) => b.semester.localeCompare(a.semester));
+                })).sort((a, b) => b.semester.localeCompare(a.semester));
 
                 // Overall Stats
                 const allCourses = finalGrades.flatMap(g => g.courses);
@@ -280,7 +283,7 @@ async function bootApp() {
                 const type = d['ประเภทเอกสาร'] || d['ประเภท'] || d.documentType;
                 const dateRaw = d['วันที่ส่ง'] || d['วันที่'] || d.date;
                 const trackId = d['รหัสติดตาม'] || d.id;
-                
+
                 return {
                     studentId: sId || 'Unknown',
                     senderName: name || 'Unknown',
@@ -308,7 +311,7 @@ async function bootApp() {
                         let year = dateObj.getFullYear();
                         // Thai Buddhist Year conversion (AD to BE)
                         if (year < 2400) year += 543;
-                        
+
                         const hours = String(dateObj.getHours()).padStart(2, '0');
                         const minutes = String(dateObj.getMinutes()).padStart(2, '0');
                         displayDate = `${day}/${month}/${year} ${hours}:${minutes} น.`;
@@ -336,7 +339,7 @@ async function bootApp() {
                 icon: a['ไอคอน'] || a.icon || '📢',
                 author: a['ผู้ประกาศ'] || a.author || 'Admin'
             }));
-            
+
             // Notification Badge Logic
             const lastSeen = localStorage.getItem('lastSeenAnnouncementId');
             const latestId = MOCK.announcements[0]?.id;
@@ -377,7 +380,7 @@ async function bootApp() {
                     String(s.studentId || '').trim() === myId ||
                     String(s.citizenId || '').trim() === myId
                 );
-                
+
                 // Fallback name matching if ID fails (case-insensitive contains)
                 if (!me && myName) {
                     const normMyName = myName.toLowerCase();
@@ -387,7 +390,7 @@ async function bootApp() {
                         return (sFull && sFull.includes(normMyName)) || (sParts && sParts.includes(normMyName)) || normMyName.includes(sParts);
                     });
                 }
-                
+
                 MOCK.student = me || null; // Force null if no match to prevent leakage
                 syncActiveStudentData();
             } else {
@@ -398,7 +401,7 @@ async function bootApp() {
             }
         }
         MOCK.permissions = allData.permissions || [];
-        
+
         window.apiDataLoaded = true;
     } catch (e) {
         console.error('Failed to load API data:', e);
@@ -414,9 +417,9 @@ async function bootApp() {
     renderPage();
 }
 
-window.syncActiveStudentData = async function() {
+window.syncActiveStudentData = async function () {
     if (!MOCK.student) return;
-    
+
     // Refresh student data from Google Sheets
     showApiLoading('กำลังอัปเดตข้อมูลนักศึกษา...');
     try {
@@ -425,7 +428,7 @@ window.syncActiveStudentData = async function() {
             fetchData('getPayments'),
             fetchData('getDocuments')
         ]);
-        
+
         const sId = String(MOCK.student.studentId || MOCK.student.id || '').trim();
 
         // 1. Sync Grades
@@ -438,13 +441,13 @@ window.syncActiveStudentData = async function() {
             const year = e['academic_year'] || e['ปีการศึกษา'] || '-';
             const sem = e['semester'] || e['ภาคเรียน'] || '-';
             const semName = `ภาคเรียนที่ ${sem}/${year}`;
-            
+
             const cGrade = String(e['grade'] || e['เกรด'] || '').trim();
             const creditsRaw = String(e['credits'] || e['หน่วยกิต'] || '0');
             const cCredits = parseInt(creditsRaw.split('(')[0]) || 0;
-            
+
             let point = 0;
-            switch(cGrade) {
+            switch (cGrade) {
                 case 'A': point = 4.0; break;
                 case 'B+': point = 3.5; break;
                 case 'B': point = 3.0; break;
@@ -454,11 +457,11 @@ window.syncActiveStudentData = async function() {
                 case 'D': point = 1.0; break;
                 case 'F': point = 0.0; break;
             }
-            
+
             if (!gradesMap[semName]) {
                 gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
             }
-            
+
             gradesMap[semName].courses.push({
                 code: e['course_code'] || e['รหัสวิชา'] || '-',
                 name: e['course_name'] || e['ชื่อวิชา'] || '-',
@@ -466,17 +469,17 @@ window.syncActiveStudentData = async function() {
                 grade: cGrade,
                 point: point
             });
-            
+
             gradesMap[semName].totalCredits += cCredits;
             gradesMap[semName].totalPoints += (point * cCredits);
         });
-        
+
         MOCK.grades = Object.values(gradesMap).map(g => ({
             semester: g.semester,
             totalCredits: g.totalCredits,
             gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
             courses: g.courses
-        })).sort((a,b) => b.semester.localeCompare(a.semester));
+        })).sort((a, b) => b.semester.localeCompare(a.semester));
 
         // Update student object stats
         const allCourses = MOCK.grades.flatMap(g => g.courses);

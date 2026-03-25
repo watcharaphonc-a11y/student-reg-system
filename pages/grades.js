@@ -65,7 +65,8 @@ window.processGradeImport = function() {
             const line = lines[i].trim();
             if(!line) continue;
             
-            const cols = line.split(',');
+            // Use the global parseCSVLine from core.js to handle quotes correctly
+            const cols = typeof parseCSVLine === 'function' ? parseCSVLine(line) : line.split(',');
             if (cols.length >= 7) {
                 const sId = cols[0].trim();
                 const aYear = cols[1].trim();
@@ -77,13 +78,13 @@ window.processGradeImport = function() {
                 
                 // Add to upload array (Matching GAS Enrollments headers)
                 gradesToUpload.push({
-                    'รหัสนักศึกษา': sId,
-                    'รหัสวิชา': cCode,
-                    'ชื่อวิชา': cName,
-                    'หน่วยกิต': creditsRaw, // Keep raw string for credits
-                    'ภาคเรียน': sem,
-                    'ปีการศึกษา': aYear,
-                    'เกรด': cGrade
+                    'student_id': sId,
+                    'academic_year': aYear,
+                    'semester': sem,
+                    'course_code': cCode,
+                    'course_name': cName,
+                    'credits': creditsRaw,
+                    'grade': cGrade
                 });
             }
         }
