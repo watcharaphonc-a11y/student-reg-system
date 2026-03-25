@@ -120,13 +120,15 @@ pages.transcript = function() {
             const cFormat = parsed.format || '';
 
             // Map grade
-            const cleanCode = cCode.replace(/[^Aa-zZ0-9]/g, '');
+            const cleanCode = String(cCode || '').replace(/[^Aa-zZ0-9]/g, '');
             const cleanCodeSuffix = cleanCode.substring(cleanCode.length > 5 ? cleanCode.length - 5 : 0);
             
             const matchingGrade = gradesFlat.find(g => {
-                if (!g.code) return false;
-                const gCodeClean = g.code.replace(/[^Aa-zZ0-9]/g, '');
-                return gCodeClean.endsWith(cleanCodeSuffix) || cName.includes(g.name) || (g.name && g.name.includes(cName));
+                if (!g || !g.code) return false;
+                const gCodeClean = String(g.code).replace(/[^Aa-zZ0-9]/g, '');
+                const gName = String(g.name || '').toLowerCase();
+                const curName = String(cName || '').toLowerCase();
+                return gCodeClean.endsWith(cleanCodeSuffix) || curName.includes(gName) || (gName && gName.includes(curName));
             });
 
             const gradeVal = matchingGrade ? matchingGrade.grade : '';
