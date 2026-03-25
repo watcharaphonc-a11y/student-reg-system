@@ -7,9 +7,11 @@ function renderLoginUI() {
     <div class="login-container animate-in">
         <div class="login-card">
             <div class="login-header">
-                <img src="assets/logo_pi.png" alt="PI Logo" style="width: 480px; max-width: 100%; margin: 0 auto 30px auto; display: block;">
+                <div style="display: flex; justify-content: center; margin-bottom: 30px;">
+                    <img src="assets/logo_pi.png" alt="PI Logo" style="width: 480px; max-width: 100%; transform: translateX(15px);">
+                </div>
                 <h2 style="font-size: 1.8rem; margin-bottom: 12px; color: var(--text-primary); font-weight: 800;">เข้าสู่ระบบ</h2>
-                <div style="font-size: 1.3rem; color: var(--text-primary); font-weight: 800; margin-bottom: 35px; line-height: 1.6;">
+                <div style="font-size: 1.3rem; color: var(--text-primary); font-weight: 800; margin-bottom: 35px; line-height: 1.2;">
                     ระบบทะเบียนนักศึกษา<br>
                     <span style="font-size: 1.05rem; color: var(--text-muted); font-weight: 600;">หลักสูตรพยาบาลศาสตรมหาบัณฑิต คณะพยาบาลศาสตร์</span>
                 </div>
