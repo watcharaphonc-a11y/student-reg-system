@@ -22,7 +22,8 @@ const SHEETS = {
   PAYMENTS: 'Payments',
   EVALUATIONS: 'Evaluations',
   DOCUMENTS: 'Documents',
-  ANNOUNCEMENTS: 'Announcements'
+  ANNOUNCEMENTS: 'Announcements',
+  PERMISSIONS: 'Permissions'
 };
 
 /**
@@ -68,8 +69,12 @@ function doGet(e) {
           payments: getSheetData(SHEETS.PAYMENTS),
           evaluations: getSheetData(SHEETS.EVALUATIONS),
           documents: getSheetData(SHEETS.DOCUMENTS),
-          announcements: getSheetData(SHEETS.ANNOUNCEMENTS)
+          announcements: getSheetData(SHEETS.ANNOUNCEMENTS),
+          permissions: getSheetData(SHEETS.PERMISSIONS)
         };
+        break;
+      case 'getPermissions':
+        data = getSheetData(SHEETS.PERMISSIONS);
         break;
       default:
         return createResponse({ status: 'error', message: 'Unknown action' });
@@ -125,6 +130,8 @@ function doPost(e) {
         return importGradesBatch(payload);
       case 'postAnnouncement':
         return postAnnouncement(payload);
+      case 'updatePermission':
+        return updatePermission(payload);
       default:
         return createResponse({ status: 'error', message: 'Unknown POST action' });
     }
@@ -430,6 +437,30 @@ function postAnnouncement(payload) {
 }
 
 /**
+ * Update a specific permission
+ */
+function updatePermission(payload) {
+  const sheet = SS.getSheetByName(SHEETS.PERMISSIONS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Permissions sheet not found' });
+  
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const roleIdx = headers.indexOf('Role');
+  const actionIdx = headers.indexOf(payload.actionKey);
+  
+  if (actionIdx === -1) return createResponse({ status: 'error', message: 'Action not found: ' + payload.actionKey });
+  
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][roleIdx]).toLowerCase() === String(payload.role).toLowerCase()) {
+      sheet.getRange(i + 1, actionIdx + 1).setValue(payload.value ? 'YES' : 'NO');
+      return createResponse({ status: 'success' });
+    }
+  }
+  
+  return createResponse({ status: 'error', message: 'Role not found' });
+}
+
+/**
  * Run this once to initialize all sheets
  */
 function setupInitialSheets() {
@@ -442,17 +473,29 @@ function setupInitialSheets() {
     [SHEETS.PAYMENTS]: ['รหัสนักศึกษา', 'รายการ', 'จำนวนเงิน', 'สถานะ', 'วันที่'],
     [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
     [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ'],
-    [SHEETS.ANNOUNCEMENTS]: ['รหัสประกาศ', 'ประเภท', 'หัวข้อ', 'เนื้อหา', 'วันที่ประกาศ', 'ไอคอน', 'ผู้ประกาศ']
+    [SHEETS.ANNOUNCEMENTS]: ['รหัสประกาศ', 'ประเภท', 'หัวข้อ', 'เนื้อหา', 'วันที่ประกาศ', 'ไอคอน', 'ผู้ประกาศ'],
+    [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data']
   };
+
+  const defaultPermissions = [
+    ['admin', 'YES', 'YES', 'YES', 'YES', 'YES'],
+    ['teacher', 'NO', 'YES', 'NO', 'YES', 'NO'],
+    ['student', 'NO', 'NO', 'NO', 'NO', 'NO']
+  ];
 
   Object.keys(defaultHeaders).forEach(sheetName => {
     let sheet = SS.getSheetByName(sheetName);
     if (!sheet) {
       sheet = SS.insertSheet(sheetName);
       sheet.appendRow(defaultHeaders[sheetName]);
+      
+      // Special initialization for Permissions
+      if (sheetName === SHEETS.PERMISSIONS) {
+        defaultPermissions.forEach(p => sheet.appendRow(p));
+      }
     } else {
-      // Check if we need to add missing columns to Documents sheet
-      if (sheetName === SHEETS.DOCUMENTS) {
+      // Check if we need to add missing columns
+      if (sheetName === SHEETS.DOCUMENTS || sheetName === SHEETS.PERMISSIONS) {
         const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
         defaultHeaders[sheetName].forEach(h => {
           if (currentHeaders.indexOf(h) === -1) {

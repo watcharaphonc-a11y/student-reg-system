@@ -15,6 +15,7 @@ const MOCK = {
         pendingPayments: 0,
         avgGPA: 0,
     },
+    permissions: [],
 
     // สาขาวิชา (Programs/Majors) - Keep for form rendering
     programs: [

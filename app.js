@@ -37,6 +37,19 @@ function navigateTo(page) {
     sidebar.classList.remove('mobile-open');
 }
 
+/**
+ * check if current user role has permission for an action
+ */
+window.hasPermission = function(actionKey) {
+    if (window.currentUserRole === 'admin' && window.currentUserData?.name === 'Super Admin') return true; // Super Admin always YES
+    if (!MOCK.permissions || MOCK.permissions.length === 0) return false;
+    
+    const rolePerms = MOCK.permissions.find(p => String(p.Role).toLowerCase() === String(window.currentUserRole).toLowerCase());
+    if (!rolePerms) return false;
+    
+    return rolePerms[actionKey] === 'YES';
+};
+
 function renderPage() {
     if (pages[currentPage]) {
         contentArea.innerHTML = pages[currentPage]();
@@ -52,6 +65,19 @@ function renderPage() {
                 <p>กรุณาเลือกเมนูจาก Sidebar</p>
             </div>`;
     }
+}
+
+// ====== Notification Bell ======
+const notifBtn = document.getElementById('notifBtn');
+if (notifBtn) {
+    notifBtn.addEventListener('click', () => {
+        navigateTo('announcements');
+        const badge = document.querySelector('.notif-badge');
+        if (badge) badge.style.display = 'none';
+        
+        const latestId = MOCK.announcements && MOCK.announcements[0]?.id;
+        if (latestId) localStorage.setItem('lastSeenAnnouncementId', latestId);
+    });
 }
 
 // ====== Sidebar Toggle ======
@@ -371,6 +397,8 @@ async function bootApp() {
                 syncActiveStudentData();
             }
         }
+        MOCK.permissions = allData.permissions || [];
+        
         window.apiDataLoaded = true;
     } catch (e) {
         console.error('Failed to load API data:', e);

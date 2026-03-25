@@ -24,7 +24,7 @@ pages.announcements = function() {
                 <h1 class="page-title">ประกาศ</h1>
                 <p class="page-subtitle">ข่าวสารและประกาศจากสถาบันพระบรมราชชนก</p>
             </div>
-            ${isAdmin ? `
+            ${window.hasPermission('post_announcement') ? `
             <button class="btn btn-primary" onclick="openCreateAnnouncementModal()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M12 5v14M5 12h14"/></svg>
                 สร้างประกาศใหม่

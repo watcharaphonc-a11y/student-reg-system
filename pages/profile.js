@@ -86,7 +86,7 @@ pages['student-profile'] = function() {
                 <p class="page-subtitle">ข้อมูลส่วนตัวและข้อมูลการศึกษา</p>
             </div>
             
-            ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+            ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin' || window.hasPermission('import_student')) ? `
             <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
                 <div class="form-group" style="margin-bottom: 0;">
                     <select id="studentSelector" class="form-input" onchange="changeProfileStudent(this.value)" style="padding-right: 30px;">
@@ -108,15 +108,19 @@ pages['student-profile'] = function() {
                     แก้ไขข้อมูล
                 </button>
                 ` : ''}
-                ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+                ${(window.hasPermission('export_template') || window.hasPermission('import_student')) ? `
+                ${window.hasPermission('export_template') ? `
                 <button class="btn btn-secondary" onclick="exportProfileTemplate()" style="gap:6px; font-size:0.85rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     Template
                 </button>
+                ` : ''}
+                ${window.hasPermission('import_student') ? `
                 <button class="btn btn-primary" onclick="importProfile()" style="gap:6px; font-size:0.85rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     นำเข้าข้อมูล
                 </button>
+                ` : ''}
                 ` : ''}
             </div>
         </div>
