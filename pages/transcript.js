@@ -214,9 +214,9 @@ pages.transcript = function() {
                 // Exclude Thesis and P/S/U from GPA calculation
                 const isThesis = cName.includes('วิทยานิพนธ์') || 
                                  cName.toLowerCase().includes('thesis') ||
-                                 cCode.startsWith('1005002') ||
-                                 cCode.startsWith('1005003') ||
-                                 cCode.startsWith('1005004');
+                                 String(cCode).startsWith('1005002') ||
+                                 String(cCode).startsWith('1005003') ||
+                                 String(cCode).startsWith('1005004');
                 const isNonGPAGrade = ['P', 'S', 'U'].includes(gradeVal);
 
                 if (!isThesis && !isNonGPAGrade) {

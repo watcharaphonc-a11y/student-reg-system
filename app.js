@@ -491,7 +491,7 @@ window.syncActiveStudentData = async function () {
             }
 
             let courseName = e['course_name'] || e['ชื่อวิชา'] || '';
-            const courseCode = (e['course_code'] || e['รหัสวิชา'] || '-').trim();
+            const courseCode = String(e['course_code'] || e['รหัสวิชา'] || '-').trim();
             
             // Critical Fix: If course name is missing in enrollment, look it up in the Master Course list
             if (!courseName || courseName === '-') {
