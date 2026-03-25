@@ -7,10 +7,9 @@ function renderLoginUI() {
     <div class="login-container animate-in">
         <div class="login-card">
             <div class="login-header">
-                <div class="logo-icon" style="margin: 0 auto 15px auto; width: 56px; height: 56px; background: var(--accent-gradient); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white;">
-                </div>
-                <h2>เข้าสู่ระบบ</h2>
-                <p class="page-subtitle">ระบบทะเบียนนักศึกษา สถาบันพระบรมราชชนก (อัปเดตระบบ V1.2)</p>
+                <img src="assets/logo_pi.png" alt="PI Logo" style="width: 320px; max-width: 90%; margin: 0 auto 20px auto; display: block;">
+                <h2 style="font-size: 1.7rem; margin-bottom: 8px;">เข้าสู่ระบบ</h2>
+                <p style="font-size: 1.15rem; color: var(--text-primary); font-weight: 600; margin-bottom: 25px;">ระบบทะเบียนนักศึกษา สถาบันพระบรมราชชนก</p>
             </div>
             
             <div class="login-tabs">
@@ -61,7 +60,10 @@ function renderLoginUI() {
     const overlay = document.createElement('div');
     overlay.id = 'loginOverlay';
     overlay.className = 'login-overlay';
-    overlay.innerHTML = loginHtml;
+    overlay.innerHTML = `
+        ${loginHtml}
+        <div style="position: fixed; bottom: 15px; right: 20px; font-size: 0.8rem; color: #64748b; font-weight: 500; pointer-events: none;">(อัปเดทระบบ ${window.APP_VERSION})</div>
+    `;
     document.body.appendChild(overlay);
 }
 

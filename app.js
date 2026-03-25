@@ -5,6 +5,7 @@
 
 let currentPage = 'dashboard';
 window.apiDataLoaded = false;
+window.APP_VERSION = "V.1.2 By Watcharaphon.c";
 
 // DOM Elements
 const contentArea = document.getElementById('contentArea');
