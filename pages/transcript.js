@@ -107,12 +107,11 @@ function parseCourseString(str) {
 pages.transcript = function() {
     const st = MOCK.student || {};
     const studentGrades = st.grades || MOCK.grades || [];
-    const gradesFlat = studentGrades.flatMap(s => s.courses || []);
     
-    // Fallbacks
-    const studentId = st.id || st.studentId || st.student_id || '---------';
+    // Fallbacks and Info
+    const studentId = st.studentId || st.id || '---------';
     const studentPrefix = st.prefix || '';
-    const studentFirstName = st.firstName || st.name || '';
+    const studentFirstName = st.firstName || '';
     const studentLastName = st.lastName || '';
     const studentProgramRaw = st.program || '';
     const studentProgram = studentProgramRaw.includes('หลักสูตร') ? studentProgramRaw.replace('หลักสูตร', '').trim() : studentProgramRaw;
@@ -122,118 +121,62 @@ pages.transcript = function() {
     const planId = getPlanIdFromDept(departmentName);
     const mockPlanData = getStudyPlanCoursesData(planId, admissionYear);
 
-    const usedGradeIndices = new Set();
-    const resolvedPlan = mockPlanData.map(sem => {
-        return {
-            ...sem,
-            resolvedCourses: sem.courses.map(courseStr => {
-                const parsed = parseCourseString(courseStr);
-                const isElective = String(parsed.name).includes('วิชาเลือก') || String(parsed.code || '').includes('xxxx');
-                let matchedIdx = -1;
-                
-                if (!isElective) {
-                    const cCode = parsed.code || '';
-                    const cName = parsed.name || '';
-                    const cleanCName = String(cName).replace(/[^A-Za-z0-9ก-๙]/g, '').toLowerCase();
-                    const cleanCode = String(cCode).replace(/[^0-9]/g, '');
-                    const cleanCodeSuffix = cleanCode.substring(Math.max(0, cleanCode.length - 5));
-
-                    matchedIdx = gradesFlat.findIndex((g, idx) => {
-                        if (!g || usedGradeIndices.has(idx)) return false;
-                        const gCodeClean = String(g.code || '').replace(/[^0-9]/g, '');
-                        const gNameClean = String(g.name || '').replace(/[^A-Za-z0-9ก-๙]/g, '').toLowerCase();
-                        
-                        // Priority 1: Code match
-                        if (gCodeClean && cleanCode && gCodeClean.includes(cleanCode)) return true;
-                        
-                        // Priority 2: Suffix match
-                        if (gCodeClean && cleanCodeSuffix && gCodeClean.endsWith(cleanCodeSuffix)) return true;
-                        
-                        // Priority 3: Fuzzy name match
-                        if (cleanCName && gNameClean && (gNameClean.includes(cleanCName) || cleanCName.includes(gNameClean))) return true;
-                        
-                        return false;
-                    });
-                    
-                    if (matchedIdx !== -1) {
-                        usedGradeIndices.add(matchedIdx);
-                        const g = gradesFlat[matchedIdx];
-                        parsed.name = g.name || parsed.name;
-                    }
-                }
-                return { parsed, isElective, matchedIdx };
-            })
-        };
-    });
-
-    // Pass 2: Match electives
-    resolvedPlan.forEach(sem => {
-        sem.resolvedCourses.forEach(entry => {
-            if (entry.isElective) {
-                const matchedIdx = gradesFlat.findIndex((g, idx) => !usedGradeIndices.has(idx) && g.grade);
-                if (matchedIdx !== -1) {
-                    usedGradeIndices.add(matchedIdx);
-                    entry.matchedIdx = matchedIdx;
-                    const g = gradesFlat[matchedIdx];
-                    entry.parsed.code = g.code || entry.parsed.code;
-                    entry.parsed.name = g.name || entry.parsed.name;
-                    entry.parsed.credits = g.credits || entry.parsed.credits;
-                }
-            }
-        });
-    });
-
+    // Data-Centric Rendering: Loop through actual grades grouped by semester in app.js
     let totalPointsGPA = 0;
     let totalCreditsGPA = 0;
     let totalCreditsEarned = 0;
     let semesterHtmlRows = '';
 
-    resolvedPlan.forEach(semPlan => {
+    // Collect all plan courses for matching
+    const allPlanCourses = mockPlanData.flatMap(sem => sem.courses.map(c => parseCourseString(c)));
+
+    studentGrades.forEach(semGroup => {
         let semCreditsTotal = 0;
         let semCreditsGPA = 0;
         let semPointsGPA = 0;
-        let hasGradesInSem = false;
         let coursesHtml = '';
 
-        semPlan.resolvedCourses.forEach(entry => {
-            const { parsed, matchedIdx } = entry;
-            const cCode = parsed.code || '-';
-            const cName = parsed.name || '-';
-            const cCred = parsed.credits || '-';
-            const cFormat = parsed.format || '';
+        (semGroup.courses || []).forEach(g => {
+            const gCode = String(g.code || '').trim();
+            const gName = String(g.name || '').trim();
+            const gCred = Number(g.credits || 0);
+            const gGrade = String(g.grade || '').trim();
+            const gPoint = Number(g.point || 0);
 
-            const matchingGrade = matchedIdx !== -1 ? gradesFlat[matchedIdx] : null;
-            const gradeVal = matchingGrade ? matchingGrade.grade : '';
-            const gradePoint = matchingGrade ? (matchingGrade.point || 0) : 0;
+            // Attempt to find "pretty" format from plan
+            let displayFormat = '';
+            const planMatch = allPlanCourses.find(pc => 
+                String(pc.code).replace(/[^0-9]/g, '') === gCode.replace(/[^0-9]/g, '') ||
+                String(pc.name).replace(/[^ก-๙A-Za-z]/g, '') === gName.replace(/[^ก-๙A-Za-z]/g, '')
+            );
+            if (planMatch) displayFormat = planMatch.format || '';
 
-            if (gradeVal && gradeVal !== 'W' && gradeVal !== 'I' && !isNaN(cCred) && cCred !== '-') {
-                const credNum = Number(cCred);
-                semCreditsTotal += credNum;
-                totalCreditsEarned += credNum;
+            if (gGrade && gGrade !== 'W' && gGrade !== 'I') {
+                semCreditsTotal += gCred;
+                totalCreditsEarned += gCred;
 
-                // Exclude Thesis and P/S/U from GPA calculation
-                const isThesis = String(cName).includes('วิทยานิพนธ์') || 
-                                 String(cName).toLowerCase().includes('thesis') ||
-                                 String(cCode).startsWith('1005002') ||
-                                 String(cCode).startsWith('1005003') ||
-                                 String(cCode).startsWith('1005004');
-                const isNonGPAGrade = ['P', 'S', 'U'].includes(gradeVal);
+                // Exclude Thesis and P/S/U from GPA
+                const isThesis = gName.includes('วิทยานิพนธ์') || 
+                                 gName.toLowerCase().includes('thesis') ||
+                                 gCode.startsWith('1005002') ||
+                                 gCode.startsWith('1005003') ||
+                                 gCode.startsWith('1005004');
+                const isNonGPAGrade = ['P', 'S', 'U'].includes(gGrade);
 
                 if (!isThesis && !isNonGPAGrade) {
-                    semCreditsGPA += credNum;
-                    semPointsGPA += (credNum * gradePoint);
-                    totalCreditsGPA += credNum;
-                    totalPointsGPA += (credNum * gradePoint);
+                    semCreditsGPA += gCred;
+                    semPointsGPA += (gCred * gPoint);
+                    totalCreditsGPA += gCred;
+                    totalPointsGPA += (gCred * gPoint);
                 }
-                hasGradesInSem = true;
             }
 
             coursesHtml += `
                 <tr>
-                    <td class="center">${cCode}</td>
-                    <td>${cName}</td>
-                    <td class="center">${cCred !== '-' ? cCred + '(' + cFormat + ')' : cCred}</td>
-                    <td class="center">${gradeVal}</td>
+                    <td class="center">${gCode}</td>
+                    <td>${gName}</td>
+                    <td class="center">${gCred}${displayFormat ? '(' + displayFormat + ')' : ''}</td>
+                    <td class="center">${gGrade}</td>
                 </tr>
             `;
         });
@@ -241,27 +184,16 @@ pages.transcript = function() {
         const semGPA = semCreditsGPA > 0 ? (semPointsGPA / semCreditsGPA).toFixed(2) : '0.00';
         const cumGPAAtEnd = totalCreditsGPA > 0 ? (totalPointsGPA / totalCreditsGPA).toFixed(2) : '0.00';
 
-        let semTitle = semPlan.title || '';
-        if (semTitle.includes('ภาค')) {
-            semTitle = semTitle.substring(semTitle.indexOf('ภาค'));
-        }
-        
-        const admissionYearInt = parseInt(admissionYear) || new Date().getFullYear() + 543;
-        const termAcademicYear = admissionYearInt + ((semPlan.year || 1) - 1);
-        if (!semTitle.includes('ปีการศึกษา')) {
-            semTitle += ` ปีการศึกษา ${termAcademicYear}`;
-        }
+        // Format Semester Title like in screenshot: "ภาคการศึกษาที่ 2 ปีการศึกษา 2565"
+        const formattedSemTitle = `ภาคการศึกษาที่ ${semGroup.term} ปีการศึกษา ${semGroup.year}`;
 
         semesterHtmlRows += `
             <tr>
-                <td colspan="4" class="center" style="font-weight:700;background:#f9f9f9;">${semTitle}</td>
+                <td colspan="4" class="center" style="font-weight:700;background:#f9f9f9;padding:10px;">${formattedSemTitle}</td>
             </tr>
             ${coursesHtml}
-        `;
-        
-        semesterHtmlRows += `
             <tr>
-                <td colspan="4" class="center" style="font-weight:700;">
+                <td colspan="4" class="center" style="font-weight:700; font-size:0.85rem; padding:8px; border-bottom:2px solid #eee;">
                     หน่วยกิต ${semCreditsTotal} คะแนนเฉลี่ย ${semGPA} หน่วยกิตสะสม ${totalCreditsEarned} คะแนนเฉลี่ย ${cumGPAAtEnd}
                 </td>
             </tr>

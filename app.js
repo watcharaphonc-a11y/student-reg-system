@@ -160,8 +160,9 @@ async function bootApp() {
                 // Group enrollments into student.grades format
                 const gradesMap = {};
                 studentEnrollments.forEach(e => {
-                    const year = e['academic_year'] || e['ปีการศึกษา'] || '-';
-                    const sem = e['semester'] || e['ภาคเรียน'] || '-';
+                    const year = parseInt(e['academic_year'] || e['ปีการศึกษา'] || '0');
+                    const sem = parseInt(e['semester'] || e['ภาคเรียน'] || '0');
+                    const semKey = `${year}_${sem}`;
                     const semName = `ภาคเรียนที่ ${sem}/${year}`;
 
                     const cGrade = String(e['เกรด'] || e['grade'] || '').trim();
@@ -179,28 +180,44 @@ async function bootApp() {
                     else if (g === 'D') point = 1.0;
                     else if (g === 'F') point = 0.0;
 
-                    if (!gradesMap[semName]) {
-                        gradesMap[semName] = { semester: semName, gpa: 0, totalCredits: 0, totalPoints: 0, courses: [] };
+                    if (!gradesMap[semKey]) {
+                        gradesMap[semKey] = { 
+                            semester: semName, 
+                            year: year,
+                            term: sem,
+                            gpa: 0, 
+                            totalCredits: 0, 
+                            totalPoints: 0, 
+                            courses: [] 
+                        };
                     }
 
-                    gradesMap[semName].courses.push({
-                        code: e['course_code'] || e['รหัสวิชา'] || '-',
-                        name: e['course_name'] || e['ชื่อวิชา'] || '-',
+                    gradesMap[semKey].courses.push({
+                        code: String(e['course_code'] || e['รหัสวิชา'] || '-').trim(),
+                        name: String(e['course_name'] || e['ชื่อวิชา'] || '-').trim(),
                         credits: cCredits,
                         grade: cGrade,
                         point: point
                     });
 
-                    gradesMap[semName].totalCredits += cCredits;
-                    gradesMap[semName].totalPoints += (point * cCredits);
+                    gradesMap[semKey].totalCredits += cCredits;
+                    gradesMap[semKey].totalPoints += (point * cCredits);
                 });
 
-                const finalGrades = Object.values(gradesMap).map(g => ({
-                    semester: g.semester,
-                    totalCredits: g.totalCredits,
-                    gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
-                    courses: g.courses
-                })).sort((a, b) => b.semester.localeCompare(a.semester));
+                const finalGrades = Object.values(gradesMap)
+                    .sort((a, b) => {
+                        if (a.year !== b.year) return a.year - b.year;
+                        return a.term - b.term;
+                    })
+                    .map(g => ({
+                        semester: g.semester,
+                        year: g.year,
+                        term: g.term,
+                        totalCredits: g.totalCredits,
+                        totalPoints: g.totalPoints,
+                        gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
+                        courses: g.courses
+                    }));
 
                 // Overall Stats
                 const allCourses = finalGrades.flatMap(g => g.courses);
@@ -481,8 +498,9 @@ window.syncActiveStudentData = async function () {
 
         const gradesMap = {};
         studentEnrollments.forEach(e => {
-            const year = String(e['ปีการศึกษา'] || e['academic_year'] || e.academicYear || '-').trim();
-            const sem = String(e['ภาคเรียน'] || e['semester'] || '-').trim();
+            const year = parseInt(e['ปีการศึกษา'] || e['academic_year'] || e.academicYear || '0');
+            const sem = parseInt(e['ภาคเรียน'] || e['semester'] || '0');
+            const semKey = `${year}_${sem}`;
             const semName = `ภาคเรียนที่ ${sem}/${year}`;
 
             const cGrade = String(e['เกรด'] || e['grade'] || '').trim();
@@ -500,9 +518,11 @@ window.syncActiveStudentData = async function () {
             else if (g === 'D') point = 1.0;
             else if (g === 'F') point = 0.0;
 
-            if (!gradesMap[semName]) {
-                gradesMap[semName] = { 
+            if (!gradesMap[semKey]) {
+                gradesMap[semKey] = { 
                     semester: semName, 
+                    year: year,
+                    term: sem,
                     totalCredits: 0, 
                     gpaCredits: 0, 
                     gpaPoints: 0, 
@@ -524,7 +544,7 @@ window.syncActiveStudentData = async function () {
             // Fallback to '-' if still empty
             if (!courseName) courseName = '-';
             
-            gradesMap[semName].courses.push({
+            gradesMap[semKey].courses.push({
                 code: courseCode,
                 name: courseName,
                 credits: cCredits,
@@ -540,19 +560,26 @@ window.syncActiveStudentData = async function () {
             
             const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(String(cGrade).toUpperCase());
 
-            gradesMap[semName].totalCredits += cCredits;
+            gradesMap[semKey].totalCredits += cCredits;
             if (!isThesis && !isNonGPA) {
-                gradesMap[semName].gpaCredits += cCredits;
-                gradesMap[semName].gpaPoints += (point * cCredits);
+                gradesMap[semKey].gpaCredits += cCredits;
+                gradesMap[semKey].gpaPoints += (point * cCredits);
             }
         });
 
-        MOCK.grades = Object.values(gradesMap).map(g => ({
-            semester: g.semester,
-            totalCredits: g.totalCredits,
-            gpa: g.gpaCredits > 0 ? (g.gpaPoints / g.gpaCredits) : 0,
-            courses: g.courses
-        })).sort((a, b) => b.semester.localeCompare(a.semester));
+        MOCK.grades = Object.values(gradesMap)
+            .sort((a, b) => {
+                if (a.year !== b.year) return a.year - b.year;
+                return a.term - b.term;
+            })
+            .map(g => ({
+                semester: g.semester,
+                year: g.year,
+                term: g.term,
+                totalCredits: g.totalCredits,
+                gpa: g.gpaCredits > 0 ? (g.gpaPoints / g.gpaCredits) : 0,
+                courses: g.courses
+            }));
 
         // Update student object stats
         const allCourses = MOCK.grades.flatMap(g => g.courses);
