@@ -12,8 +12,11 @@ const savedUser = localStorage.getItem('currentUser');
 if (savedUser) {
     try {
         const { role, userData } = JSON.parse(savedUser);
-        // We will apply the state AFTER the DOM is ready (handled in bootApp or before)
         window.tempSession = { role, userData };
+        // If student, the landing page should be their profile, not the dashboard
+        if (role === 'student') {
+            currentPage = 'student-profile';
+        }
     } catch (e) {
         localStorage.removeItem('currentUser');
     }
@@ -60,7 +63,12 @@ window.hasPermission = function (actionKey) {
 function renderPage() {
     if (!pages[currentPage]) {
         console.error('Page not found:', currentPage);
-        currentPage = 'dashboard'; 
+        currentPage = (window.currentUserRole === 'student') ? 'student-profile' : 'dashboard'; 
+    }
+
+    // Role-based Access Control: Prevent students from seeing the dashboard
+    if (window.currentUserRole === 'student' && currentPage === 'dashboard') {
+        currentPage = 'student-profile';
     }
 
     try {
