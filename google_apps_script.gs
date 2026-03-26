@@ -522,7 +522,7 @@ function setupInitialSheets() {
     [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ'],
     [SHEETS.ANNOUNCEMENTS]: ['รหัสประกาศ', 'ประเภท', 'หัวข้อ', 'เนื้อหา', 'วันที่ประกาศ', 'ไอคอน', 'ผู้ประกาศ'],
     [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data'],
-    [SHEETS.EXAMS]: ['student_id', 'exam_type', 'status', 'score', 'date', 'note']
+    [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note']
   };
 
   const defaultPermissions = [
@@ -582,28 +582,36 @@ function updateExamResult(payload) {
   
   const sIdIdx = headers.indexOf('student_id');
   const typeIdx = headers.indexOf('exam_type');
+  const idColIdx = headers.indexOf('id');
   
   if (sIdIdx === -1 || typeIdx === -1) {
-    // If headers missing, just append if it's the first data
-    if (values.length === 1 && values[0].length === 0) {
-       sheet.appendRow(['student_id', 'exam_type', 'status', 'score', 'date', 'note']);
-       return updateExamResult(payload);
-    }
     return createResponse({ status: 'error', message: 'Exams sheet headers missing' });
   }
   
   let rowIndex = -1;
+  const id = payload.id ? String(payload.id).trim() : null;
   const sId = String(payload.student_id).trim();
   const type = String(payload.exam_type).trim();
   
-  for (let i = 0; i < rows.length; i++) {
-    if (String(rows[i][sIdIdx]).trim() === sId && String(rows[i][typeIdx]).trim() === type) {
-      rowIndex = i + 2;
-      break;
+  if (id) {
+    // If ID is provided, look for that specific record to update
+    for (let i = 0; i < rows.length; i++) {
+      if (String(rows[i][idColIdx]).trim() === id) {
+        rowIndex = i + 2;
+        break;
+      }
     }
   }
   
-  const rowData = headers.map(h => payload[h] || '');
+  // If no ID or ID not found, and we want to prevent duplicates for SAME TYPE on SAME DATE? 
+  // No, user specifically wants "multiple times", so we should allow separate records.
+  // If no ID provided, it's a NEW attempt. Generate a new ID.
+  const finalId = id || ('EXM-' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000));
+  
+  const rowData = headers.map(h => {
+    if (h === 'id') return finalId;
+    return payload[h] !== undefined ? payload[h] : '';
+  });
   
   if (rowIndex !== -1) {
     sheet.getRange(rowIndex, 1, 1, headers.length).setValues([rowData]);
@@ -639,17 +647,24 @@ function importExamsBatch(payload) {
   data.forEach(item => {
     const sId = String(item.student_id || '').trim();
     const type = String(item.exam_type || '').trim();
+    const itemId = item.id ? String(item.id).trim() : null;
     if (!sId || !type) return;
 
     let existingRowIdx = -1;
-    for (let i = 0; i < rows.length; i++) {
-        if (String(rows[i][sIdIdx]).trim() === sId && String(rows[i][typeIdx]).trim() === type) {
-            existingRowIdx = i + 2;
-            break;
+    if (itemId) {
+        for (let i = 0; i < rows.length; i++) {
+            if (String(rows[i][headers.indexOf('id')]).trim() === itemId) {
+                existingRowIdx = i + 2;
+                break;
+            }
         }
     }
 
-    const rowValues = headers.map(h => item[h] || '');
+    const finalId = itemId || ('EXM-' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000) + '-' + updates.length + newRows.length);
+    const rowValues = headers.map(h => {
+        if (h === 'id') return finalId;
+        return item[h] !== undefined ? item[h] : '';
+    });
     if (existingRowIdx > 0) {
         updates.push({ row: existingRowIdx, values: rowValues });
     } else {

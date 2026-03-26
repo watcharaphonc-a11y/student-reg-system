@@ -612,6 +612,13 @@ input, select, textarea {
     margin-bottom: 28px;
 }
 
+.cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 20px;
+    margin-bottom: 28px;
+}
+
 /* ====== Data Table ====== */
 .table-wrapper {
     overflow-x: auto;
@@ -670,6 +677,19 @@ input, select, textarea {
 .badge.info { color: var(--info); background: var(--info-bg); }
 .badge.neutral { color: var(--text-secondary); background: var(--bg-tertiary); }
 .badge.purple { color: #a78bfa; background: rgba(139, 92, 246, 0.12); }
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.status-active { background: var(--success-bg); color: var(--success); }
+.status-inactive { background: var(--danger-bg); color: var(--danger); }
+.status-pending { background: var(--warning-bg); color: var(--warning); }
 
 /* ====== Buttons ====== */
 .btn {

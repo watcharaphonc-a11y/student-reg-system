@@ -25,26 +25,76 @@ function renderStudentExams(st) {
     
     const exams = st.exams || [];
     
-    let rowsHtml = '';
-    EXAM_TYPES.forEach(type => {
-        const found = exams.find(ex => ex.exam_type === type);
-        const status = found ? found.status : 'ยังไม่มีข้อมูล';
-        const score = found ? found.score : '-';
-        const date = found ? found.date : '-';
-        const note = found ? found.note : '-';
+    let cardsHtml = '';
+    EXAM_TYPES.forEach((type, typeIdx) => {
+        const typeExams = exams.filter(ex => ex.exam_type === type)
+                              .sort((a, b) => new Date(b.date) - new Date(a.date));
         
+        let statusSummary = 'ยังไม่มีข้อมูล';
         let statusClass = 'status-pending';
-        if (status === 'ผ่าน' || status === 'Pass') statusClass = 'status-active';
-        else if (status === 'ไม่ผ่าน' || status === 'Fail') statusClass = 'status-inactive';
+        
+        if (typeExams.length > 0) {
+            const latest = typeExams[0];
+            statusSummary = latest.status || 'รอผล';
+            if (statusSummary === 'ผ่าน' || statusSummary === 'Pass') statusClass = 'status-active';
+            else if (statusSummary === 'ไม่ผ่าน' || statusSummary === 'Fail') statusClass = 'status-inactive';
+        }
 
-        rowsHtml += `
-            <tr>
-                <td style="font-weight:600;">${type}</td>
-                <td><span class="status-badge ${statusClass}">${status}</span></td>
-                <td>${score}</td>
-                <td>${date}</td>
-                <td style="font-size:0.85rem;color:var(--text-secondary);">${note}</td>
-            </tr>
+        let historyRows = '';
+        if (typeExams.length === 0) {
+            historyRows = `
+                <tr>
+                    <td colspan="4" style="text-align:center;padding:20px;color:var(--text-secondary);">ไม่พบข้อมูลการสอบในหมวดนี้</td>
+                </tr>
+            `;
+        } else {
+            typeExams.forEach((ex, idx) => {
+                const status = ex.status || 'รอผล';
+                const score = ex.score || '-';
+                const date = ex.date || '-';
+                const note = ex.note || '-';
+                
+                let rowStatusClass = 'status-pending';
+                if (status === 'ผ่าน' || status === 'Pass') rowStatusClass = 'status-active';
+                else if (status === 'ไม่ผ่าน' || status === 'Fail') rowStatusClass = 'status-inactive';
+
+                historyRows += `
+                    <tr>
+                        <td>ครั้งที่ ${typeExams.length - idx}</td>
+                        <td><span class="status-badge ${rowStatusClass}">${status}</span></td>
+                        <td>${score}</td>
+                        <td>${date}</td>
+                        <td style="font-size:0.8rem;color:var(--text-secondary);">${note}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        cardsHtml += `
+            <div class="card animate-in" style="margin-bottom:20px; animation-delay: ${typeIdx * 0.1}s">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <h3 class="card-title">${type}</h3>
+                    <span class="status-badge ${statusClass}">${statusSummary}</span>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:15%">ครั้งที่</th>
+                                    <th style="width:20%">สถานะ</th>
+                                    <th style="width:15%">คะแนน/ผล</th>
+                                    <th style="width:20%">วันที่สอบ</th>
+                                    <th style="width:30%">หมายเหตุ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${historyRows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         `;
     });
 
@@ -55,28 +105,8 @@ function renderStudentExams(st) {
                 <p class="page-subtitle">แสดงสถานะและคะแนนการสอบวัดความรู้และวิทยานิพนธ์</p>
             </div>
             
-            <div class="card animate-in animate-delay-1">
-                <div class="card-header">
-                    <h3 class="card-title">สรุปผลการสอบ: ${st.firstName} ${st.lastName}</h3>
-                </div>
-                <div class="card-body" style="padding:0;">
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ประเภทการสอบ</th>
-                                    <th>สถานะ</th>
-                                    <th>คะแนน/ผล</th>
-                                    <th>วันที่สอบ</th>
-                                    <th>หมายเหตุ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${rowsHtml}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+            <div class="cards-grid">
+                ${cardsHtml}
             </div>
             
             <div class="card animate-in animate-delay-2" style="margin-top:20px;border-left:4px solid var(--primary-color);">
@@ -101,35 +131,70 @@ function renderAdminExams() {
         </option>
     `).join('');
 
-    let editRowsHtml = '';
+    let cardsHtml = '';
     if (selectedStudent) {
         const exams = selectedStudent.exams || [];
-        EXAM_TYPES.forEach(type => {
-            const found = exams.find(ex => ex.exam_type === type) || {};
-            const status = found.status || '';
-            const score = found.score || '';
-            const date = found.date || '';
-            const note = found.note || '';
+        EXAM_TYPES.forEach((type, typeIdx) => {
+            const typeExams = exams.filter(ex => ex.exam_type === type)
+                                  .sort((a, b) => new Date(a.date) - new Date(b.date));
+            
+            let historyRows = '';
+            typeExams.forEach((ex, idx) => {
+                const status = ex.status || '';
+                const score = ex.score || '';
+                const date = ex.date || '';
+                const note = ex.note || '';
+                const examId = ex.id || '';
 
-            editRowsHtml += `
-                <tr data-type="${type}">
-                    <td style="font-weight:600;">${type}</td>
-                    <td>
-                        <select class="form-control status-select" style="min-width:100px;">
-                            <option value="" ${!status ? 'selected' : ''}>- เลือกสถานะ -</option>
-                            <option value="ผ่าน" ${status === 'ผ่าน' ? 'selected' : ''}>ผ่าน (Pass)</option>
-                            <option value="ไม่ผ่าน" ${status === 'ไม่ผ่าน' ? 'selected' : ''}>ไม่ผ่าน (Fail)</option>
-                            <option value="รอผล" ${status === 'รอผล' ? 'selected' : ''}>รอผล (Pending)</option>
-                            <option value="ยังไม่สอบ" ${status === 'ยังไม่สอบ' ? 'selected' : ''}>ยังไม่สอบ</option>
-                        </select>
-                    </td>
-                    <td><input type="text" class="form-control score-input" value="${score}" placeholder="เช่น 70/100"></td>
-                    <td><input type="date" class="form-control date-input" value="${date}"></td>
-                    <td><input type="text" class="form-control note-input" value="${note}" placeholder="ระบุหมายเหตุ..."></td>
-                    <td>
-                        <button class="btn btn-primary btn-sm" onclick="saveIndividualExam('${selectedId}', '${type}', this)">บันทึก</button>
-                    </td>
-                </tr>
+                historyRows += `
+                    <tr data-type="${type}" data-id="${examId}">
+                        <td>ครั้งที่ ${idx + 1}</td>
+                        <td>
+                            <select class="form-control status-select" style="min-width:100px;">
+                                <option value="" ${!status ? 'selected' : ''}>- เลือกสถานะ -</option>
+                                <option value="ผ่าน" ${status === 'ผ่าน' ? 'selected' : ''}>ผ่าน (Pass)</option>
+                                <option value="ไม่ผ่าน" ${status === 'ไม่ผ่าน' ? 'selected' : ''}>ไม่ผ่าน (Fail)</option>
+                                <option value="รอผล" ${status === 'รอผล' ? 'selected' : ''}>รอผล (Pending)</option>
+                                <option value="ยังไม่สอบ" ${status === 'ยังไม่สอบ' ? 'selected' : ''}>ยังไม่สอบ</option>
+                            </select>
+                        </td>
+                        <td><input type="text" class="form-control score-input" value="${score}" placeholder="เช่น 70/100"></td>
+                        <td><input type="date" class="form-control date-input" value="${date}"></td>
+                        <td><input type="text" class="form-control note-input" value="${note}" placeholder="ระบุหมายเหตุ..."></td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="saveIndividualExam('${selectedId}', '${type}', this)">บันทึก</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            cardsHtml += `
+                <div class="card animate-in" style="margin-bottom:25px; border-top:3px solid var(--primary-color); animation-delay: ${typeIdx * 0.1}s">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+                        <h3 class="card-title" style="color:var(--primary-dark);">${type}</h3>
+                        <button class="btn btn-secondary btn-sm" onclick="addNewExamRow('${selectedId}', '${type}', this)">+ เพิ่มบันทึกการสอบใหม่</button>
+                    </div>
+                    <div class="card-body" style="padding:0;">
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:10%">ครั้งที่</th>
+                                        <th style="width:15%">สถานะ</th>
+                                        <th style="width:15%">คะแนน/ผล</th>
+                                        <th style="width:15%">วันที่สอบ</th>
+                                        <th style="width:35%">หมายเหตุ</th>
+                                        <th style="width:10%">จัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${historyRows}
+                                    ${historyRows === '' ? '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-secondary);">ยังไม่มีประวัติการสอบในหมวดนี้</td></tr>' : ''}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             `;
         });
     }
@@ -161,29 +226,11 @@ function renderAdminExams() {
             </div>
 
             ${selectedStudent ? `
-                <div class="card animate-in animate-delay-2">
-                    <div class="card-header">
-                        <h3 class="card-title">แก้ไขผลสอบ: ${selectedStudent.firstName} ${selectedStudent.lastName}</h3>
-                    </div>
-                    <div class="card-body" style="padding:0;">
-                        <div class="table-container">
-                            <table class="data-table">
-                                <thead>
-                                    <tr>
-                                        <th style="width:20%">ประเภทการสอบ</th>
-                                        <th style="width:15%">สถานะ</th>
-                                        <th style="width:15%">คะแนน/ผล</th>
-                                        <th style="width:15%">วันที่สอบ</th>
-                                        <th style="width:25%">หมายเหตุ</th>
-                                        <th style="width:10%">จัดการ</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${editRowsHtml}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                <div class="animate-in animate-delay-2" style="margin-bottom:20px;">
+                    <h2 style="font-size:1.4rem; color:var(--text-primary); margin-bottom:15px; display:flex; align-items:center; gap:10px;">
+                        <i class="fas fa-user-graduate"></i> จัดการผลสอบ: ${selectedStudent.firstName} ${selectedStudent.lastName}
+                    </h2>
+                    ${cardsHtml}
                 </div>
             ` : `
                 <div class="card"><div class="card-body" style="text-align:center;color:var(--text-secondary);">กรุณาเลือกนักศึกษาเพื่อจัดการข้อมูล</div></div>
@@ -194,9 +241,12 @@ function renderAdminExams() {
 
 window.saveIndividualExam = async function(studentId, type, btn) {
     const row = btn.closest('tr');
+    const examId = row.dataset.id || '';
+    
     const payload = {
         action: 'updateExam',
         payload: {
+            id: examId,
             student_id: studentId,
             exam_type: type,
             status: row.querySelector('.status-select').value,
@@ -227,6 +277,34 @@ window.saveIndividualExam = async function(studentId, type, btn) {
         btn.disabled = false;
         btn.textContent = 'บันทึก';
     }
+};
+
+window.addNewExamRow = function(studentId, type, btn) {
+    const parentRow = btn.closest('tr');
+    const newRow = document.createElement('tr');
+    newRow.dataset.type = type;
+    newRow.dataset.id = ''; // New
+    newRow.innerHTML = `
+        <td style="font-weight:600; color:var(--primary-color);">+ ${type} (ใหม่)</td>
+        <td>
+            <select class="form-control status-select" style="min-width:100px;">
+                <option value="" selected>- เลือกสถานะ -</option>
+                <option value="ผ่าน">ผ่าน (Pass)</option>
+                <option value="ไม่ผ่าน">ไม่ผ่าน (Fail)</option>
+                <option value="รอผล">รอผล (Pending)</option>
+                <option value="ยังไม่สอบ">ยังไม่สอบ</option>
+            </select>
+        </td>
+        <td><input type="text" class="form-control score-input" placeholder="เช่น 70/100"></td>
+        <td><input type="date" class="form-control date-input" value="${new Date().toISOString().split('T')[0]}"></td>
+        <td><input type="text" class="form-control note-input" placeholder="ระบุหมายเหตุ..."></td>
+        <td>
+            <button class="btn btn-primary btn-sm" onclick="saveIndividualExam('${studentId}', '${type}', this)">บันทึก</button>
+        </td>
+    `;
+    parentRow.parentNode.insertBefore(newRow, parentRow);
+    btn.disabled = true;
+    btn.innerHTML = 'ระบุข้อมูลด้านบน...';
 };
 
 async function callApi(data) {
