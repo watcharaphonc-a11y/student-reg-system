@@ -280,12 +280,20 @@ window.saveIndividualExam = async function(studentId, type, btn) {
 };
 
 window.addNewExamRow = function(studentId, type, btn) {
-    const parentRow = btn.closest('tr');
+    const card = btn.closest('.card');
+    const tbody = card.querySelector('tbody');
+    
+    // Check if there's a "no data" row and remove it
+    const emptyRow = tbody.querySelector('td[colspan="6"]');
+    if (emptyRow) {
+        emptyRow.closest('tr').remove();
+    }
+
     const newRow = document.createElement('tr');
     newRow.dataset.type = type;
     newRow.dataset.id = ''; // New
     newRow.innerHTML = `
-        <td style="font-weight:600; color:var(--primary-color);">+ ${type} (ใหม่)</td>
+        <td style="font-weight:600; color:var(--primary-color);">+ ใหม่</td>
         <td>
             <select class="form-control status-select" style="min-width:100px;">
                 <option value="" selected>- เลือกสถานะ -</option>
@@ -302,9 +310,9 @@ window.addNewExamRow = function(studentId, type, btn) {
             <button class="btn btn-primary btn-sm" onclick="saveIndividualExam('${studentId}', '${type}', this)">บันทึก</button>
         </td>
     `;
-    parentRow.parentNode.insertBefore(newRow, parentRow);
+    tbody.appendChild(newRow);
     btn.disabled = true;
-    btn.innerHTML = 'ระบุข้อมูลด้านบน...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังระบุข้อมูล...';
 };
 
 async function callApi(data) {
