@@ -128,7 +128,7 @@ pages.transcript = function() {
             ...sem,
             resolvedCourses: sem.courses.map(courseStr => {
                 const parsed = parseCourseString(courseStr);
-                const isElective = parsed.name.includes('วิชาเลือก') || (parsed.code || '').includes('xxxx');
+                const isElective = String(parsed.name).includes('วิชาเลือก') || String(parsed.code || '').includes('xxxx');
                 let matchedIdx = -1;
                 
                 if (!isElective) {
@@ -212,8 +212,8 @@ pages.transcript = function() {
                 totalCreditsEarned += credNum;
 
                 // Exclude Thesis and P/S/U from GPA calculation
-                const isThesis = cName.includes('วิทยานิพนธ์') || 
-                                 cName.toLowerCase().includes('thesis') ||
+                const isThesis = String(cName).includes('วิทยานิพนธ์') || 
+                                 String(cName).toLowerCase().includes('thesis') ||
                                  String(cCode).startsWith('1005002') ||
                                  String(cCode).startsWith('1005003') ||
                                  String(cCode).startsWith('1005004');

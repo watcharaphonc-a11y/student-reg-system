@@ -366,42 +366,32 @@ async function regSubmit() {
     showApiLoading('กำลังบันทึกข้อมูลการลงทะเบียน...');
     
     const payload = {
-        studentId: regData.studentId || ('68' + Math.floor(Math.random() * 10000000).toString().padStart(8, '0')),
-        prefix: regData.prefix,
-        firstName: regData.firstName,
-        lastName: regData.lastName,
-        firstNameEn: regData.firstNameEn,
-        lastNameEn: regData.lastNameEn,
-        faculty: regData.faculty,
-        department: regData.department,
-        program: regData.program,
-        year: 1,
-        status: 'กำลังศึกษา',
-        admissionYear: new Date().getFullYear() + 543,
-        advisor: 'รอการจัดสรร',
-        email: regData.email,
-        phone: regData.phone,
-        dob: regData.dob,
-        address: regData.address,
-        prevSchool: regData.prevSchool,
-        prevMajor: regData.prevMajor,
-        graduationDate: regData.graduationDate,
-        prevGPA: regData.prevGPA,
-        workPlace: regData.workPlace,
-        workPosition: regData.workPosition,
-        workDuration: regData.workDuration,
-        workPeriod: regData.workPeriod,
-        currentWorkPlace: regData.currentWorkPlace,
-        workAddress: regData.workAddress,
-        fundType: regData.fundType,
-        fundOther: regData.fundOther
+        'คำนำหน้า': regData.prefix,
+        'ชื่อ (ไทย)': regData.firstName,
+        'นามสกุล (ไทย)': regData.lastName,
+        'ชื่อ (EN)': regData.firstNameEn,
+        'นามสกุล (EN)': regData.lastNameEn,
+        'เลขบัตรประชาชน': regData.idCard,
+        'รหัสนักศึกษา': regData.studentId || ('68' + Math.floor(Math.random() * 10000000).toString().padStart(8, '0')),
+        'วันเกิด (YYYY-MM-DD)': regData.dob,
+        'เพศ': regData.gender || 'ไม่ระบุ',
+        'อีเมล': regData.email,
+        'E-mail ของสถาบัน': regData.institutionalEmail || (regData.studentId + '@pi.ac.th'),
+        'เบอร์โทร': regData.phone,
+        'สาขาวิชา': regData.department,
+        'ปีการศึกษาที่เข้า': regData.admissionYear || (new Date().getFullYear() + 543),
+        'ที่อยู่': regData.address,
+        'หลักสูตร': regData.program || 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต',
+        'คณะ': regData.faculty || 'คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก',
+        'Username': regData.username || regData.studentId,
+        'Password': regData.password || '123456'
     };
 
     const res = await postData('registerStudent', payload);
     hideApiLoading();
 
     if (res && res.status === 'success') {
-        openModal('สำเร็จ!', `<div style="text-align:center;padding:20px"><div style="font-size:3rem;margin-bottom:12px">🎉</div><h3 style="margin-bottom:8px">ลงทะเบียนนักศึกษาใหม่สำเร็จ</h3><p style="color:var(--text-muted)">รหัสนักศึกษาใหม่: <strong>${payload.studentId}</strong></p><p style="color:var(--text-muted);font-size:0.85rem;margin-top:8px">ข้อมูลถูกบันทึกลงในฐานข้อมูล (Google Sheets) แล้ว</p><button class="btn btn-primary" style="margin-top:16px" onclick="closeModal();registrationStep=1;regData={};navigateTo('dashboard')">กลับหน้าหลัก</button></div>`);
+        openModal('สำเร็จ!', `<div style="text-align:center;padding:20px"><div style="font-size:3rem;margin-bottom:12px">🎉</div><h3 style="margin-bottom:8px">ลงทะเบียนนักศึกษาใหม่สำเร็จ</h3><p style="color:var(--text-muted)">รหัสนักศึกษาใหม่: <strong>${payload['รหัสนักศึกษา']}</strong></p><p style="color:var(--text-muted);font-size:0.85rem;margin-top:8px">ข้อมูลถูกบันทึกลงในฐานข้อมูล (Google Sheets) แล้ว</p><button class="btn btn-primary" style="margin-top:16px" onclick="closeModal();registrationStep=1;regData={};if(typeof bootApp === 'function') bootApp(); else navigateTo('dashboard');">กลับหน้าหลัก</button></div>`);
     } else {
         openModal('เกิดข้อผิดพลาด', `<div style="text-align:center;padding:20px"><div style="font-size:3rem;margin-bottom:12px">❌</div><h3 style="margin-bottom:8px">ไม่สามารถบันทึกข้อมูลได้</h3><p style="color:var(--danger)">${res ? res.message : 'Network Error'}</p><button class="btn btn-secondary" style="margin-top:16px" onclick="closeModal()">ปิด</button></div>`);
     }
@@ -538,32 +528,25 @@ window.submitBulkImport = async function() {
 
     let successCount = 0;
     for (const row of bulkImportData) {
+        const studentId = row['รหัสนักศึกษา'] || ('68' + Math.floor(Math.random() * 10000000).toString().padStart(8, '0'));
         const payload = {
-            studentId: row['รหัสนักศึกษา'] || ('68' + Math.floor(Math.random() * 10000000).toString().padStart(8, '0')),
-            prefix: row['คำนำหน้า'] || '',
-            firstName: row['ชื่อ (ไทย)'] || '',
-            lastName: row['นามสกุล (ไทย)'] || '',
-            firstNameEn: row['ชื่อ (EN)'] || '',
-            lastNameEn: row['นามสกุล (EN)'] || '',
-            faculty: 'คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก',
-            department: row['สาขาวิชา'] || '',
-            program: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต',
-            year: 1,
-            status: 'กำลังศึกษา',
-            admissionYear: row['ปีการศึกษาที่เข้า'] || (new Date().getFullYear() + 543),
-            advisor: 'รอการจัดสรร',
-            email: row['อีเมล'] || '',
-            institutionalEmail: row['E-mail ของสถาบัน'] || '',
-            phone: row['เบอร์โทร'] || '',
-            dob: row['วันเกิด (YYYY-MM-DD)'] || '',
-            address: row['ที่อยู่'] || '',
-            prevSchool: row['สถาบันที่จบ'] || '',
-            prevMajor: row['สาขาที่จบ'] || '',
-            prevGPA: row['GPA'] || '',
-            currentWorkPlace: row['สถานที่ทำงาน'] || '',
-            fundType: row['แหล่งทุน'] || '',
-            username: row['Username'] || '',
-            password: row['Password'] || ''
+            'คำนำหน้า': row['คำนำหน้า'] || '',
+            'ชื่อ (ไทย)': row['ชื่อ (ไทย)'] || '',
+            'นามสกุล (ไทย)': row['นามสกุล (ไทย)'] || '',
+            'ชื่อ (EN)': row['ชื่อ (EN)'] || '',
+            'นามสกุล (EN)': row['นามสกุล (EN)'] || '',
+            'เลขบัตรประชาชน': row['เลขบัตรประชาชน'] || '',
+            'รหัสนักศึกษา': studentId,
+            'วันเกิด (YYYY-MM-DD)': row['วันเกิด (YYYY-MM-DD)'] || '',
+            'เพศ': row['เพศ'] || '',
+            'อีเมล': row['อีเมล'] || '',
+            'E-mail ของสถาบัน': row['E-mail ของสถาบัน'] || (studentId + '@pi.ac.th'),
+            'เบอร์โทร': row['เบอร์โทร'] || '',
+            'สาขาวิชา': row['สาขาวิชา'] || '',
+            'ปีการศึกษาที่เข้า': row['ปีการศึกษาที่เข้า'] || (new Date().getFullYear() + 543),
+            'ที่อยู่': row['ที่อยู่'] || '',
+            'Username': row['Username'] || studentId,
+            'Password': row['Password'] || '123456'
         };
         const res = await postData('registerStudent', payload);
         if (res && res.status === 'success') successCount++;

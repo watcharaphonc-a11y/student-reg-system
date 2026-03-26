@@ -138,16 +138,17 @@ window.switchTeacherRegMode = function(mode) {
 // ====== Single Teacher Submit ======
 window.submitSingleTeacher = async function() {
     const payload = {
-        prefix: document.getElementById('t_prefix').value,
-        name: document.getElementById('t_prefix').value + document.getElementById('t_firstName').value + ' ' + document.getElementById('t_lastName').value,
-        firstName: document.getElementById('t_firstName').value,
-        lastName: document.getElementById('t_lastName').value,
-        position: document.getElementById('t_position').value,
-        expertise: document.getElementById('t_expertise').value,
-        email: document.getElementById('t_email').value,
-        phone: document.getElementById('t_phone').value,
-        faculty: document.getElementById('t_faculty').value,
-        studentCount: parseInt(document.getElementById('t_studentCount').value) || 0
+        'คำนำหน้า': document.getElementById('t_prefix').value,
+        'ชื่อ': document.getElementById('t_firstName').value,
+        'นามสกุล': document.getElementById('t_lastName').value,
+        'ตำแหน่งทางวิชาการ': document.getElementById('t_position').value,
+        'ความเชี่ยวชาญ': document.getElementById('t_expertise').value,
+        'อีเมล': document.getElementById('t_email').value,
+        'เบอร์โทร': document.getElementById('t_phone').value,
+        'คณะ/สังกัด': document.getElementById('t_faculty').value,
+        'นศ. ในกำกับ': parseInt(document.getElementById('t_studentCount').value) || 0,
+        'Username': document.getElementById('t_email').value.split('@')[0],
+        'Password': '111111'
     };
 
     if (!payload.firstName || !payload.lastName) {
@@ -274,18 +275,17 @@ window.submitTeacherBulkImport = async function() {
         const firstName = row['ชื่อ'] || '';
         const lastName = row['นามสกุล'] || '';
         const payload = {
-            prefix: prefix,
-            name: prefix + firstName + ' ' + lastName,
-            firstName: firstName,
-            lastName: lastName,
-            position: row['ตำแหน่งทางวิชาการ'] || '',
-            expertise: row['ความเชี่ยวชาญ'] || '',
-            email: row['อีเมล'] || '',
-            phone: row['เบอร์โทร'] || '',
-            faculty: row['คณะ/สังกัด'] || 'คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก',
-            studentCount: parseInt(row['นศ. ในกำกับ']) || 0,
-            username: row['Username'] || '',
-            password: row['Password'] || ''
+            'คำนำหน้า': row['คำนำหน้า'] || '',
+            'ชื่อ': row['ชื่อ'] || '',
+            'นามสกุล': row['นามสกุล'] || '',
+            'ตำแหน่งทางวิชาการ': row['ตำแหน่งทางวิชาการ'] || '',
+            'ความเชี่ยวชาญ': row['ความเชี่ยวชาญ'] || '',
+            'อีเมล': row['อีเมล'] || '',
+            'เบอร์โทร': row['เบอร์โทร'] || '',
+            'คณะ/สังกัด': row['คณะ/สังกัด'] || 'คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก',
+            'นศ. ในกำกับ': parseInt(row['นศ. ในกำกับ']) || 0,
+            'Username': row['Username'] || (row['อีเมล'] ? row['อีเมล'].split('@')[0] : ''),
+            'Password': row['Password'] || '111111'
         };
         const res = await postData('registerTeacher', payload);
         if (res && res.status === 'success') {
@@ -300,5 +300,5 @@ window.submitTeacherBulkImport = async function() {
     }
 
     hideApiLoading();
-    openModal('นำเข้าข้อมูลเสร็จสิ้น', `<div style="text-align:center;padding:20px"><div style="font-size:3rem;margin-bottom:12px">👩‍🏫</div><h3 style="margin-bottom:8px">นำเข้าข้อมูลอาจารย์สำเร็จ</h3><p style="color:var(--text-muted)">นำเข้าสำเร็จ <strong>${successCount}</strong> จาก ${teacherBulkImportData.length} รายการ</p><button class="btn btn-primary" style="margin-top:16px" onclick="closeModal();clearTeacherBulkImport();navigateTo('dashboard');">ตกลง</button></div>`);
+    openModal('นำเข้าข้อมูลเสร็จสิ้น', `<div style="text-align:center;padding:20px"><div style="font-size:3rem;margin-bottom:12px">👩‍🏫</div><h3 style="margin-bottom:8px">นำเข้าข้อมูลอาจารย์สำเร็จ</h3><p style="color:var(--text-muted)">นำเข้าสำเร็จ <strong>${successCount}</strong> จาก ${teacherBulkImportData.length} รายการ</p><button class="btn btn-primary" style="margin-top:16px" onclick="closeModal();clearTeacherBulkImport();if(typeof bootApp === 'function') bootApp(); else navigateTo('dashboard');">ตกลง</button></div>`);
 };

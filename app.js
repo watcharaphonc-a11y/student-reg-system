@@ -454,10 +454,8 @@ async function bootApp() {
 }
 
 window.syncActiveStudentData = async function () {
-    if (!MOCK.student) return;
-
     // Refresh student data from Google Sheets
-    showApiLoading('กำลังอัปเดตข้อมูลนักศึกษา...');
+    showApiLoading('กำลังอัปเดตข้อมูล...');
     try {
         const [enrollments, payments, documents, exams] = await Promise.all([
             fetchData('getEnrollments'),
@@ -465,6 +463,11 @@ window.syncActiveStudentData = async function () {
             fetchData('getDocuments'),
             fetchData('getExams')
         ]);
+
+        // Global Update
+        if (exams) MOCK.allExams = exams;
+
+        if (!MOCK.student) return;
 
         const sId = String(MOCK.student.studentId || MOCK.student.id || '').trim();
 
@@ -529,13 +532,13 @@ window.syncActiveStudentData = async function () {
                 point: point
             });
 
-            const isThesis = courseName.includes('วิทยานิพนธ์') || 
-                             courseName.toLowerCase().includes('thesis') ||
+            const isThesis = String(courseName).includes('วิทยานิพนธ์') || 
+                             String(courseName).toLowerCase().includes('thesis') ||
                              String(courseCode).startsWith('1005002') || 
                              String(courseCode).startsWith('1005003') ||
                              String(courseCode).startsWith('1005004');
             
-            const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(cGrade.toUpperCase());
+            const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(String(cGrade).toUpperCase());
 
             gradesMap[semName].totalCredits += cCredits;
             if (!isThesis && !isNonGPA) {
