@@ -7,9 +7,16 @@ let currentPage = 'dashboard';
 window.apiDataLoaded = false;
 window.APP_VERSION = "V.1.2 By Watcharaphon.c";
 
-// Initialize Login UI if not logged in
-if (!localStorage.getItem('currentUser')) {
-    if (typeof renderLoginUI === 'function') renderLoginUI();
+// Initialize or Restore session
+const savedUser = localStorage.getItem('currentUser');
+if (savedUser) {
+    try {
+        const { role, userData } = JSON.parse(savedUser);
+        // We will apply the state AFTER the DOM is ready (handled in bootApp or before)
+        window.tempSession = { role, userData };
+    } catch (e) {
+        localStorage.removeItem('currentUser');
+    }
 }
 
 // DOM Elements
@@ -102,6 +109,16 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
 
 // ====== Boot ======
 async function bootApp() {
+    // Restore session UI if exists
+    if (window.tempSession) {
+        if (typeof applyLoginState === 'function') {
+            applyLoginState(window.tempSession.role, window.tempSession.userData);
+        }
+        delete window.tempSession;
+    } else {
+        if (typeof renderLoginUI === 'function') renderLoginUI();
+    }
+
     if (typeof showApiLoading === 'function') {
         showApiLoading('กำลังโหลดข้อมูลเบื้องต้น...');
     }

@@ -170,9 +170,22 @@ function handleLogin(role) {
 }
 
 function performLogin(role, userData) {
+    applyLoginState(role, userData);
+    
+    // Save to localStorage for persistence across refreshes
+    localStorage.setItem('currentUser', JSON.stringify({ role, userData }));
+
+    // Force a re-render/navigate to landing page only on fresh login
+    if (typeof navigateTo === 'function') {
+        const landingPage = (role === 'student') ? 'student-profile' : 'dashboard';
+        navigateTo(landingPage);
+    }
+}
+
+window.applyLoginState = function(role, userData) {
     window.currentUserRole = role;
     window.currentUserData = userData;
-    window.isAdmin = (role === 'admin'); // Staff is not admin per new rules
+    window.isAdmin = (role === 'admin');
 
     // Bind current user to MOCK globally for profile rendering
     if (role === 'student' && userData.id) {
@@ -185,7 +198,6 @@ function performLogin(role, userData) {
             String(s.citizenId || s['เลขประจำตัวประชาชน'] || '').trim() === idStr
         );
 
-        // Fallback: If logged in using Citizen ID but Students sheet only has Student ID, try matching by Name
         if (!loggedInStudent && nameStr) {
             const normName = nameStr.toLowerCase();
             loggedInStudent = (MOCK.students || []).find(s => {
@@ -222,18 +234,15 @@ function performLogin(role, userData) {
     if (userRoleEl) userRoleEl.textContent = roleMap[role];
     if (userAvatarEl) userAvatarEl.textContent = displayName.charAt(0).toUpperCase();
 
-    // Cleanup UI
-    document.getElementById('loginOverlay').remove();
-    document.querySelector('.app').style.display = 'flex';
+    // Cleanup UI (if login overlay exists)
+    const overlay = document.getElementById('loginOverlay');
+    if (overlay) overlay.remove();
+    
+    const appEl = document.querySelector('.app');
+    if (appEl) appEl.style.display = 'flex';
 
     // Enforce role-based access to sidebar items
     applyRolePermissions(role);
-
-    // Force a re-render of current view
-    if (typeof navigateTo === 'function') {
-        const landingPage = (role === 'student') ? 'student-profile' : 'dashboard';
-        navigateTo(landingPage);
-    }
 
     // Inject Logout Button into header if not present
     if (!document.getElementById('logoutBtn')) {
@@ -250,9 +259,25 @@ function performLogin(role, userData) {
 }
 
 window.performLogout = function () {
+    // Clear persistent storage
+    localStorage.removeItem('currentUser');
+    
     window.currentUserRole = null;
+    window.currentUserData = null;
     window.isAdmin = false;
+    
+    // Clear mock state
+    if (MOCK) {
+        MOCK.student = null;
+        MOCK.teacher = null;
+    }
+
     document.querySelector('.app').style.display = 'none';
+    
+    // Remove logout button from header
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) logoutBtn.remove();
+
     renderLoginUI();
 };
 
