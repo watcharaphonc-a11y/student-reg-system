@@ -200,7 +200,15 @@ async function bootApp() {
                         point: point
                     });
 
-                    gradesMap[semKey].totalCredits += cCredits;
+                    const isThesis = String(e['course_name'] || e['ชื่อวิชา'] || '').includes('วิทยานิพนธ์') || 
+                                     String(e['course_name'] || e['ชื่อวิชา'] || '').toLowerCase().includes('thesis') ||
+                                     String(e['course_code'] || e['รหัสวิชา'] || '').startsWith('1005002') ||
+                                     String(e['course_code'] || e['รหัสวิชา'] || '').startsWith('1005003') ||
+                                     String(e['course_code'] || e['รหัสวิชา'] || '').startsWith('1005004');
+
+                    if (!isThesis) {
+                        gradesMap[semKey].totalCredits += cCredits;
+                    }
                     gradesMap[semKey].totalPoints += (point * cCredits);
                 });
 
@@ -221,7 +229,14 @@ async function bootApp() {
 
                 // Overall Stats
                 const allCourses = finalGrades.flatMap(g => g.courses);
-                const overallCredits = allCourses.reduce((sum, c) => sum + c.credits, 0);
+                const overallCredits = allCourses.reduce((sum, c) => {
+                    const isThesis = String(c.name || '').includes('วิทยานิพนธ์') || 
+                                     String(c.name || '').toLowerCase().includes('thesis') ||
+                                     String(c.code || '').startsWith('1005002') ||
+                                     String(c.code || '').startsWith('1005003') ||
+                                     String(c.code || '').startsWith('1005004');
+                    return sum + (isThesis ? 0 : (c.credits || 0));
+                }, 0);
                 const overallPoints = allCourses.reduce((sum, c) => sum + (c.point * c.credits), 0);
                 const overallGpa = overallCredits > 0 ? (overallPoints / overallCredits) : 0;
 
@@ -560,7 +575,9 @@ window.syncActiveStudentData = async function () {
             
             const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(String(cGrade).toUpperCase());
 
-            gradesMap[semKey].totalCredits += cCredits;
+            if (!isThesis) {
+                gradesMap[semKey].totalCredits += cCredits;
+            }
             if (!isThesis && !isNonGPA) {
                 gradesMap[semKey].gpaCredits += cCredits;
                 gradesMap[semKey].gpaPoints += (point * cCredits);
@@ -583,7 +600,14 @@ window.syncActiveStudentData = async function () {
 
         // Update student object stats
         const allCourses = MOCK.grades.flatMap(g => g.courses);
-        MOCK.student.totalCredits = allCourses.reduce((sum, c) => sum + (c.credits || 0), 0);
+        MOCK.student.totalCredits = allCourses.reduce((sum, c) => {
+            const isThesis = String(c.name || '').includes('วิทยานิพนธ์') || 
+                             String(c.name || '').toLowerCase().includes('thesis') ||
+                             String(c.code || '').startsWith('1005002') ||
+                             String(c.code || '').startsWith('1005003') ||
+                             String(c.code || '').startsWith('1005004');
+            return sum + (isThesis ? 0 : (c.credits || 0));
+        }, 0);
         
         // Filter for aggregate GPA calculation
         const gpaCourses = allCourses.filter(c => {

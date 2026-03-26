@@ -152,9 +152,6 @@ pages.transcript = function() {
             if (planMatch) displayFormat = planMatch.format || '';
 
             if (gGrade && gGrade !== 'W' && gGrade !== 'I') {
-                semCreditsTotal += gCred;
-                totalCreditsEarned += gCred;
-
                 // Exclude Thesis and P/S/U from GPA
                 const isThesis = gName.includes('วิทยานิพนธ์') || 
                                  gName.toLowerCase().includes('thesis') ||
@@ -162,6 +159,11 @@ pages.transcript = function() {
                                  gCode.startsWith('1005003') ||
                                  gCode.startsWith('1005004');
                 const isNonGPAGrade = ['P', 'S', 'U'].includes(gGrade);
+
+                if (!isThesis) {
+                    semCreditsTotal += gCred;
+                    totalCreditsEarned += gCred;
+                }
 
                 if (!isThesis && !isNonGPAGrade) {
                     semCreditsGPA += gCred;
