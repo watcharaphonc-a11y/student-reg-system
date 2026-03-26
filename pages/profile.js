@@ -1,7 +1,7 @@
 // ============================
 // Student Profile Page
 // ============================
-pages['student-profile'] = function() {
+pages['student-profile'] = function () {
     const isAdmin = (window.currentUserRole === 'staff' || window.currentUserRole === 'admin');
     const st = MOCK.student;
 
@@ -209,19 +209,19 @@ pages['student-profile'] = function() {
 // ============================
 function generateDegreeAuditHtml(student) {
     // Attempt to get the cohort-specific study plan
-    const planInfo = typeof window.getStudyPlanForStudent === 'function' 
-        ? window.getStudyPlanForStudent(student) 
+    const planInfo = typeof window.getStudyPlanForStudent === 'function'
+        ? window.getStudyPlanForStudent(student)
         : { title: 'ไม่พบข้อมูลหลักสูตร', data: [] };
-        
+
     const planData = planInfo.data;
-    
+
     // Collect passed courses from mock grades for audit checkmarks
     const passedCourses = new Set();
     const studentGrades = student.grades || (window.MOCK && MOCK.grades) || [];
-    
+
     studentGrades.forEach(term => {
         (term.courses || []).forEach(c => {
-            if (['A','B+','B','C+','C','P','S'].includes(c.grade)) {
+            if (['A', 'B+', 'B', 'C+', 'C', 'P', 'S'].includes(c.grade)) {
                 passedCourses.add(String(c.code || '').trim());
             }
         });
@@ -232,7 +232,7 @@ function generateDegreeAuditHtml(student) {
     }
 
     let html = `<div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px;">`;
-    
+
     planData.forEach((semData, semIndex) => {
         html += `
             <div class="card" style="padding: 15px; background:var(--bg-secondary); border: 1px solid var(--border-color);">
@@ -241,26 +241,26 @@ function generateDegreeAuditHtml(student) {
                     <span style="color:var(--text-muted); font-size:0.9rem;">${semData.credits} หน่วยกิต</span>
                 </div>
                 <ul style="margin:0; padding-left: 0; list-style:none; font-size: 0.9rem; color:var(--text-secondary); line-height: 1.6;">`;
-                
+
         semData.courses.forEach((courseStr, courseIndex) => {
             // Check if student has explicitly mapped this elective slot in their profile
             let displayCourse = courseStr;
             const slotId = `${semIndex}-${courseIndex}`;
             const isElectiveSlot = displayCourse.includes('วิชาเลือก');
-            
+
             if (isElectiveSlot && student.electives && student.electives[slotId]) {
                 displayCourse = student.electives[slotId];
             }
-            
+
             const extractCode = displayCourse.split(' ')[0];
             const isPassed = passedCourses.has(extractCode);
-            
+
             html += `
                 <li style="margin-bottom:8px; display:flex; align-items:flex-start; gap:8px;">
                     <div style="margin-top:2px;">
-                        ${isPassed 
-                            ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success-color)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>' 
-                            : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>'}
+                        ${isPassed
+                    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--success-color)" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>'
+                    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2"><circle cx="12" cy="12" r="10"></circle></svg>'}
                     </div>
                     <div style="flex:1;">
                         <span style="${isPassed ? 'color:var(--text-primary); font-weight:500;' : ''}">${displayCourse}</span>
@@ -274,20 +274,20 @@ function generateDegreeAuditHtml(student) {
                     </div>
                 </li>`;
         });
-        
+
         html += `</ul></div>`;
     });
-    
+
     html += `</div>`;
     return html;
 }
 
-window.openElectiveSelectionModal = function(semIndex, courseIndex) {
+window.openElectiveSelectionModal = function (semIndex, courseIndex) {
     const slotId = `${semIndex}-${courseIndex}`;
-    
+
     // Extract available electives from MOCK.courses (only where type === 'เลือก' or 'เลือกเสรี')
     const electives = (MOCK.courses || []).filter(c => c.type && c.type.includes('เลือก'));
-    
+
     let html = `
         <div style="padding:10px;">
             <p style="color:var(--text-muted); margin-bottom:15px;">กรุณาเลือกรายวิชาเลือกเสรีที่คุณต้องการศึกษาในภาคเรียนนี้</p>
@@ -295,7 +295,7 @@ window.openElectiveSelectionModal = function(semIndex, courseIndex) {
                 <label class="form-label">รายวิชาเลือก</label>
                 <select id="electiveSelect" class="form-input">
                     <option value="">-- กรุณาเลือก --</option>
-                    ${electives.map(c => `<option value="${c.id} ${c.name} ${c.credits||'3'}(x-x-x)">[${c.id}] ${c.name}</option>`).join('')}
+                    ${electives.map(c => `<option value="${c.id} ${c.name} ${c.credits || '3'}(x-x-x)">[${c.id}] ${c.name}</option>`).join('')}
                 </select>
             </div>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
@@ -304,33 +304,33 @@ window.openElectiveSelectionModal = function(semIndex, courseIndex) {
             </div>
         </div>
     `;
-    
+
     openModal('เลือกรายวิชาเลือก (Elective)', html);
 };
 
-window.saveElectiveSelection = function(slotId) {
+window.saveElectiveSelection = function (slotId) {
     const selectEl = document.getElementById('electiveSelect');
     if (!selectEl || !selectEl.value) {
         alert('กรุณาเลือกรายวิชาวิชาหนึ่ง');
         return;
     }
-    
+
     if (MOCK.student) {
         if (!MOCK.student.electives) MOCK.student.electives = {};
         MOCK.student.electives[slotId] = selectEl.value;
     }
-    
+
     closeModal();
     renderPage();
 };
 
-window.exportProfileTemplate = function() {
-    const headers = ['รหัสนักศึกษา','คำนำหน้า','ชื่อ','นามสกุล','คณะ','สาขาวิชา','หลักสูตร','ชั้นปี','สถานะ','อีเมล','โทรศัพท์','GPA','หน่วยกิตสะสม'];
-    const sample = ['6801012630','นางสาว','พิมพ์ใจ','รักดี','คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก','สาขาวิชาการพยาบาลจิตเวชและสุขภาพจิต','พยาบาลศาสตรมหาบัณฑิต (พย.ม.)','1','กำลังศึกษา','pimjai.r@pi.ac.th','081-234-5678','3.45','96'];
+window.exportProfileTemplate = function () {
+    const headers = ['รหัสนักศึกษา', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'คณะ', 'สาขาวิชา', 'หลักสูตร', 'ชั้นปี', 'สถานะ', 'อีเมล', 'โทรศัพท์', 'GPA', 'หน่วยกิตสะสม'];
+    const sample = ['6801012630', 'นางสาว', 'พิมพ์ใจ', 'รักดี', 'คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก', 'สาขาวิชาการพยาบาลจิตเวชและสุขภาพจิต', 'พยาบาลศาสตรมหาบัณฑิต (พย.ม.)', '1', 'กำลังศึกษา', 'pimjai.r@pi.ac.th', '081-234-5678', '3.45', '96'];
     downloadCSVTemplate('template_ข้อมูลนักศึกษา.csv', headers, sample);
 };
 
-window.importProfile = function() {
+window.importProfile = function () {
     handleGenericCSVImport((data) => {
         if (data && data.length > 0) {
             const row = data[0]; // Take first row to update current student
@@ -347,14 +347,14 @@ window.importProfile = function() {
             MOCK.student.phone = row['โทรศัพท์'] || MOCK.student.phone;
             MOCK.student.gpa = parseFloat(row['GPA']) || MOCK.student.gpa;
             MOCK.student.totalCredits = parseInt(row['หน่วยกิตสะสม']) || MOCK.student.totalCredits;
-            
+
             alert('นำเข้าข้อมูลนักศึกษาสำเร็จ');
             renderPage();
         }
     });
 };
 
-window.changeProfileStudent = function(studentId) {
+window.changeProfileStudent = function (studentId) {
     if (!studentId) return;
     const selected = (MOCK.students || []).find(s => (s.id || s.studentId) === studentId);
     if (selected) {
@@ -369,7 +369,7 @@ window.changeProfileStudent = function(studentId) {
 // ============================
 // Edit Profile Modal
 // ============================
-window.openEditStudentProfile = function() {
+window.openEditStudentProfile = function () {
     const st = MOCK.student;
     if (!st) return;
 
@@ -400,7 +400,7 @@ window.openEditStudentProfile = function() {
     openModal('แก้ไขข้อมูลส่วนตัว', modalHtml);
 };
 
-window.saveStudentProfileEdit = function() {
+window.saveStudentProfileEdit = function () {
     if (MOCK.student) {
         MOCK.student.phone = document.getElementById('editPhone').value;
         MOCK.student.personalEmail = document.getElementById('editPersonalEmail').value;
