@@ -305,18 +305,11 @@ window.previewStudentDoc = function(docId) {
             const urls = displayUrl.split(',').map(u => u.trim());
             const names = (doc.attachment || '').split(',').map(n => n.trim());
 
-            // 1. Visual Preview for the FIRST file
-            let embedUrl = urls[0];
-            if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
-                embedUrl = embedUrl.replace('/view', '/preview');
-            }
-            const iframeHtml = `<iframe src="${embedUrl}" style="width:100%; height:450px; border:none; border-radius:var(--radius-sm); margin-bottom:20px;" allow="autoplay"></iframe>`;
-
-            // 2. List of ALL files (if multiple)
+            // 1. List of ALL files (Show on TOP per user request)
             let filesListHtml = '';
             if (urls.length > 1) {
                 filesListHtml = `
-                    <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:15px; margin-top:10px;">
+                    <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:15px; margin-bottom:15px;">
                         <h4 style="margin-top:0; margin-bottom:12px; color:var(--text-primary); font-size:1rem; display:flex; align-items:center; gap:8px;">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
                             รายการไฟล์แนบทั้งหมด (${urls.length} ไฟล์)
@@ -337,7 +330,14 @@ window.previewStudentDoc = function(docId) {
                 `;
             }
 
-            previewContent = iframeHtml + filesListHtml;
+            // 2. Visual Preview for the FIRST file (Now at BOTTOM)
+            let embedUrl = urls[0];
+            if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
+                embedUrl = embedUrl.replace('/view', '/preview');
+            }
+            const iframeHtml = `<iframe src="${embedUrl}" style="width:100%; height:450px; border:none; border-radius:var(--radius-sm);" allow="autoplay"></iframe>`;
+
+            previewContent = filesListHtml + iframeHtml;
         } else {
             previewContent = `
                 <div class="animate-in" style="background:#f1f5f9; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; text-align:center; min-height:400px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
