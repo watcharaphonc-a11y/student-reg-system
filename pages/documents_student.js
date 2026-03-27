@@ -516,65 +516,88 @@ window.submitStudentDocument = function () {
     // Generate a SINGLE groupId for all files in this submission
     const groupId = 'DOC-' + Date.now();
     
-    // Use an async loop to upload files SEQUENTIALLY for better reliability
+    // Use an async loop to upload files SEQUENTIALLY to Drive first
     (async () => {
-        const results = [];
-        let successCount = 0;
+        const uploadedFiles = [];
+        let errorCount = 0;
         
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
-            showApiLoading(`กำลังส่งไฟล์ที่ ${i + 1}/${files.length}: ${file.name}...`);
+            showApiLoading(`กำลังอัปโหลดไฟล์ที่ ${i + 1}/${files.length}: ${file.name}...`);
             
+            try {
+                // Phase 1: Upload to Drive only (Using the new api method)
+                const response = await window.api.uploadFileOnly(file);
+                if (response && response.status === 'success') {
+                    uploadedFiles.push({
+                        name: file.name,
+                        url: response.fileUrl
+                    });
+                } else {
+                    throw new Error(response.message || 'Upload failed');
+                }
+            } catch (err) {
+                console.error(`Error uploading file ${file.name}:`, err);
+                errorCount++;
+            }
+        }
+        
+        if (uploadedFiles.length === 0) {
+            hideApiLoading();
+            alert('ไม่สามารถอัปโหลดไฟล์ได้ กรุณาลองใหม่อีกครั้ง');
+            return;
+        }
+
+        // Phase 2: Save metadata and ALL links to Sheet in ONE row
+        showApiLoading('กำลังบันทึกข้อมูลคำร้อง...');
+        try {
             const metadata = {
                 studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
                 senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
                 documentType: templateName,
                 major: majorId,
                 note: note,
-                groupId: groupId  // All files share the same groupId
-            };
-            
-            try {
-                const response = await window.uploadFile(file, metadata);
-                results.push(response);
-                if (response && response.status === 'success') successCount++;
-            } catch (err) {
-                console.error(`Error uploading file ${file.name}:`, err);
-                results.push({ status: 'error', message: err.message, fileName: file.name });
-            }
-        }
-        
-        hideApiLoading();
-        
-        if (successCount > 0) {
-            const firstSuccess = results.find(r => r.status === 'success');
-            const docId = groupId;  // Use the shared groupId
-            const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-
-            const newDoc = {
-                id: docId,
-                formId: formId,
-                formName: templateName,
-                status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
-                submitDate: today,
-                lastUpdate: today,
-                attachment: files.length === 1 ? files[0].name : `${files[0].name} (และอีก ${files.length - 1} ไฟล์)`,
-                fileUrl: firstSuccess.fileUrl
+                fileNames: uploadedFiles.map(f => f.name).join(', '),
+                fileUrls: uploadedFiles.map(f => f.url).join(', ')
             };
 
-            if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
-            MOCK.studentDocuments.unshift(newDoc);
+            const saveResult = await window.api.saveDocumentRecord(metadata);
+            hideApiLoading();
 
-            alert(`ส่งเอกสารสำเร็จ ${successCount}/${files.length} ไฟล์\nรหัสติดตาม: ${docId}`);
+            if (saveResult && saveResult.status === 'success') {
+                const docId = saveResult.id;
+                const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
 
-            if (typeof navigateTo === 'function') {
-                navigateTo('documents-status');
+                const newDoc = {
+                    id: docId,
+                    formId: formId,
+                    formName: templateName,
+                    status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
+                    submitDate: today,
+                    lastUpdate: today,
+                    attachment: files.length === 1 ? files[0].name : `${files[0].name} (และอีก ${files.length - 1} ไฟล์)`,
+                    fileUrl: uploadedFiles[0].url // Principal link
+                };
+
+                if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
+                MOCK.studentDocuments.unshift(newDoc);
+
+                let msg = `ส่งเอกสารสำเร็จ! รหัสติดตาม: ${docId}`;
+                if (errorCount > 0) msg += `\n(หมายเหตุ: อัปโหลดล้มเหลว ${errorCount} ไฟล์)`;
+                alert(msg);
+
+                if (typeof navigateTo === 'function') {
+                    navigateTo('documents-status');
+                } else {
+                    renderPage();
+                }
             } else {
-                renderPage();
+                alert('ไม่สามารถบันทึกข้อมูลได้: ' + (saveResult ? saveResult.message : 'Unknown error'));
             }
-        } else {
-            const firstError = results.find(r => r.status === 'error');
-            alert('ไม่สามารถส่งเอกสารได้: ' + (firstError ? firstError.message : 'Unknown error'));
+        } catch (err) {
+            hideApiLoading();
+            console.error('Save Record Error:', err);
+            alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + err.message);
         }
     })();
 };

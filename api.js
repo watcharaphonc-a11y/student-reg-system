@@ -4,6 +4,9 @@
 
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoeVHFYsghNTI30QKKIBOAKugDfDLwdQeuGmoDYVPOebH479wu50v98Z1gFM5SJVBB/exec'.trim();
 
+// Ensure api namespace exists
+window.api = window.api || {};
+
 // Loading overlay to block UI during API calls
 function showApiLoading(message = 'กำลังโหลดข้อมูล...') {
     let loader = document.getElementById('apiLoader');
@@ -56,21 +59,7 @@ async function fetchData(action) {
     }
 }
 
-// Post Data (POST)
-// parameters: action (e.g. 'registerStudent'), payload (object with data)
-async function postData(action, payload) {
-    try {
-        const response = await fetch(SCRIPT_URL, {
-            method: 'POST',
-            body: JSON.stringify({ action: action, payload: payload })
-        });
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        console.error('API Error:', error);
-        return { status: 'error', message: error.toString() };
-    }
-}
+// Note: postData is defined at the bottom with timeout support
 
 // Upload Single File (Robust for large files)
 window.api.uploadFile = async function (file, metadata = {}) {
