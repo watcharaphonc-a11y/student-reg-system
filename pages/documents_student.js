@@ -487,6 +487,9 @@ window.submitStudentDocument = function () {
     const template = templates.find(t => t.id === formId);
     const templateName = template ? template.name : formId;
     
+    // Generate a SINGLE groupId for all files in this submission
+    const groupId = 'DOC-' + Date.now();
+    
     // Use an async loop to upload files SEQUENTIALLY for better reliability
     (async () => {
         const results = [];
@@ -501,7 +504,8 @@ window.submitStudentDocument = function () {
                 senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
                 documentType: templateName,
                 major: majorId,
-                note: note
+                note: note,
+                groupId: groupId  // All files share the same groupId
             };
             
             try {
@@ -518,7 +522,7 @@ window.submitStudentDocument = function () {
         
         if (successCount > 0) {
             const firstSuccess = results.find(r => r.status === 'success');
-            const docId = firstSuccess.id || 'DOC-SUB';
+            const docId = groupId;  // Use the shared groupId
             const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
 
             const newDoc = {

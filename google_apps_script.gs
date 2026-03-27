@@ -259,6 +259,7 @@ function getDocumentsFolder() {
 
 /**
  * Helper: Upload Base64 File to Google Drive
+ * Supports groupId to group multiple files under one tracking ID
  */
 function uploadDocumentToDrive(payload) {
   console.log('Starting uploadDocumentToDrive for: ' + payload.fileName);
@@ -279,12 +280,13 @@ function uploadDocumentToDrive(payload) {
   
   const fileUrl = file.getUrl();
   
-  // 3. Save to Sheets (Check if update or new)
+  // 3. Save to Sheets
   const docId = payload.id;
+  const groupId = payload.groupId;
   const sheet = SS.getSheetByName(SHEETS.DOCUMENTS);
   
+  // --- Case A: Admin signed upload (has docId) ---
   if (docId && sheet) {
-    // UPDATE existing row
     const values = sheet.getDataRange().getValues();
     const headers = values[0];
     const idCol = headers.indexOf('รหัสติดตาม');
@@ -298,26 +300,55 @@ function uploadDocumentToDrive(payload) {
     }
     
     if (rowIndex > 0) {
-      // Find 'ลิงก์เอกสารที่ลงนาม' column
       const signedCol = headers.indexOf('ลิงก์เอกสารที่ลงนาม') + 1;
       if (signedCol > 0) {
         sheet.getRange(rowIndex, signedCol).setValue(fileUrl);
       }
-      
-      // Update status too
       const statusCol = headers.indexOf('สถานะ') + 1;
       if (statusCol > 0) {
         sheet.getRange(rowIndex, statusCol).setValue('ลงนามเรียบร้อยแล้ว');
       }
-      
-    return createResponse({ status: 'success', id: docId, fileUrl: fileUrl, action: 'update' });
+      return createResponse({ status: 'success', id: docId, fileUrl: fileUrl, action: 'update' });
     } else {
-      console.warn(`uploadDocumentToDrive: docId ${docId} provided but not found in sheet.`);
+      console.warn('uploadDocumentToDrive: docId ' + docId + ' not found in sheet.');
     }
   }
 
-  // NEW Row
-  const newId = 'DOC-' + new Date().getTime();
+  // --- Case B: Grouped upload (has groupId, append to existing row) ---
+  if (groupId && sheet) {
+    const values = sheet.getDataRange().getValues();
+    const headers = values[0];
+    const idCol = headers.indexOf('รหัสติดตาม');
+    
+    let rowIndex = -1;
+    for (let i = 1; i < values.length; i++) {
+      if (String(values[i][idCol]).trim() === String(groupId).trim()) {
+        rowIndex = i + 1;
+        break;
+      }
+    }
+    
+    if (rowIndex > 0) {
+      // Append file name and link to existing row
+      const fileNameCol = headers.indexOf('ชื่อไฟล์') + 1;
+      const linkCol = headers.indexOf('ลิงก์เอกสาร') + 1;
+      
+      if (fileNameCol > 0) {
+        const oldName = sheet.getRange(rowIndex, fileNameCol).getValue();
+        sheet.getRange(rowIndex, fileNameCol).setValue(oldName + ', ' + payload.fileName);
+      }
+      if (linkCol > 0) {
+        const oldLink = sheet.getRange(rowIndex, linkCol).getValue();
+        sheet.getRange(rowIndex, linkCol).setValue(oldLink + ', ' + fileUrl);
+      }
+      
+      console.log('Appended file to existing group: ' + groupId);
+      return createResponse({ status: 'success', id: groupId, fileUrl: fileUrl, action: 'append' });
+    }
+  }
+
+  // --- Case C: New Row (first file in group or standalone) ---
+  const newId = groupId || ('DOC-' + new Date().getTime());
   const newRowPayload = {
     'รหัสติดตาม': newId,
     'รหัสนักศึกษา': payload.studentId || '',
@@ -325,7 +356,7 @@ function uploadDocumentToDrive(payload) {
     'ประเภทเอกสาร': payload.documentType || 'ทั่วไป',
     'ชื่อไฟล์': payload.fileName || '',
     'ลิงก์เอกสาร': fileUrl,
-    'วันที่ส่ง': new Date().toLocaleString('th-TH'),
+    'วันที่ส่ง': Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm'),
     'สถานะ': 'รอตรวจสอบ'
   };
   console.log('Inserting new document row:', newRowPayload);
@@ -369,7 +400,7 @@ function uploadBatch(payloads) {
         'ประเภทเอกสาร': payload.documentType || 'ทั่วไป',
         'ชื่อไฟล์': payload.fileName || '',
         'ลิงก์เอกสาร': fileUrl,
-        'วันที่ส่ง': new Date().toLocaleString('th-TH'),
+        'วันที่ส่ง': Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm'),
         'สถานะ': 'รอตรวจสอบ'
       };
       
