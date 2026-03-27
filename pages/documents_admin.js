@@ -153,15 +153,15 @@ window.openUploadSignedModal = function(docId) {
             <p style="margin-bottom:15px;">อัปโหลดไฟล์ที่ได้รับการลงนามแล้วสำหรับเอกสารรหัส <strong>${docId}</strong></p>
             
             <div class="form-group">
-                <label class="form-label">เลือกไฟล์เอกสาร (PDF)</label>
+                <label class="form-label">เลือกไฟล์เอกสาร (PDF หรือรูปภาพ)</label>
                 <div style="border: 2px dashed var(--border-color); padding: 25px; text-align: center; border-radius: var(--radius-md); background: var(--bg-tertiary); cursor: pointer;" onclick="document.getElementById('signedFile').click()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin-bottom: 8px;">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="17 8 12 3 7 8"></polyline>
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
-                    <p style="color: var(--text-muted); font-size: 0.85rem;" id="signedFileNameDisplay">คลิกเพื่อเลือกไฟล์ที่ลงนามแล้ว</p>
-                    <input type="file" id="signedFile" style="display: none;" onchange="updateSignedFileName(this)">
+                    <p style="color: var(--text-muted); font-size: 0.85rem;" id="signedFileNameDisplay">คลิกเพื่อเลือกไฟล์ที่ลงนามแล้ว (เลือกได้หลายไฟล์)</p>
+                    <input type="file" id="signedFile" style="display: none;" onchange="updateSignedFileName(this)" multiple>
                 </div>
             </div>
             
@@ -184,18 +184,24 @@ window.updateSignedFileName = function(input) {
     const sizeDisplay = document.getElementById('uploadFileSize');
     
     if (input.files && input.files.length > 0) {
-        display.textContent = input.files[0].name;
+        if (input.files.length === 1) {
+            display.textContent = input.files[0].name;
+        } else {
+            display.textContent = `เลือกแล้ว ${input.files.length} ไฟล์`;
+        }
         display.style.color = 'var(--text-primary)';
         display.style.fontWeight = '600';
         
         if (previewSection) {
             previewSection.style.display = 'block';
-            const sizeInMB = (input.files[0].size / (1024 * 1024)).toFixed(2);
-            sizeDisplay.textContent = `เอกสาร PDF ขนาด: ${sizeInMB > 0.00 ? sizeInMB : '0.01'} MB`;
+            let totalSize = 0;
+            for (let i = 0; i < input.files.length; i++) totalSize += input.files[i].size;
+            const sizeInMB = (totalSize / (1024 * 1024)).toFixed(2);
+            sizeDisplay.textContent = `ขนาดรวม: ${sizeInMB > 0.00 ? sizeInMB : '0.01'} MB`;
         }
     } else {
         if (previewSection) previewSection.style.display = 'none';
-        display.textContent = 'คลิกเพื่อเลือกไฟล์ที่ลงนามแล้ว';
+        display.textContent = 'คลิกเพื่อเลือกไฟล์ที่ลงนามแล้ว (เลือกได้หลายไฟล์)';
         display.style.color = 'var(--text-muted)';
         display.style.fontWeight = 'normal';
     }
