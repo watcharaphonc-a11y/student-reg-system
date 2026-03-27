@@ -204,6 +204,7 @@ async function bootApp() {
                         code: String(e['course_code'] || e['รหัสวิชา'] || '-').trim(),
                         name: String(e['course_name'] || e['ชื่อวิชา'] || '-').trim(),
                         credits: cCredits,
+                        creditsDisplay: creditsRaw,
                         grade: cGrade,
                         point: point
                     });
@@ -557,6 +558,7 @@ window.syncActiveStudentData = async function () {
                 code: courseCode,
                 name: courseName,
                 credits: cCredits,
+                creditsDisplay: creditsRaw,
                 grade: cGrade,
                 point: point
             });

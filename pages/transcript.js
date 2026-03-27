@@ -143,13 +143,21 @@ pages.transcript = function() {
             const gGrade = String(g.grade || '').trim();
             const gPoint = Number(g.point || 0);
 
-            // Attempt to find "pretty" format from plan
-            let displayFormat = '';
-            const planMatch = allPlanCourses.find(pc => 
-                String(pc.code).replace(/[^0-9]/g, '') === gCode.replace(/[^0-9]/g, '') ||
-                String(pc.name).replace(/[^ก-๙A-Za-z]/g, '') === gName.replace(/[^ก-๙A-Za-z]/g, '')
-            );
-            if (planMatch) displayFormat = planMatch.format || '';
+            // Use raw credit string from sheet (e.g. "3(3-0-6)") if available
+            const rawDisplay = String(g.creditsDisplay || '').trim();
+            let creditsText = '';
+            if (rawDisplay && rawDisplay.includes('(')) {
+                // Sheet already has format like "3(3-0-6)"
+                creditsText = rawDisplay;
+            } else {
+                // Fallback: try to find format from study plan
+                const planMatch = allPlanCourses.find(pc => 
+                    String(pc.code).replace(/[^0-9]/g, '') === gCode.replace(/[^0-9]/g, '') ||
+                    String(pc.name).replace(/[^ก-๙A-Za-z]/g, '') === gName.replace(/[^ก-๙A-Za-z]/g, '')
+                );
+                const displayFormat = planMatch ? (planMatch.format || '') : '';
+                creditsText = gCred + (displayFormat ? '(' + displayFormat + ')' : '');
+            }
 
             if (gGrade && gGrade !== 'W' && gGrade !== 'I') {
                 // All credits count toward total (including Thesis)
@@ -176,7 +184,7 @@ pages.transcript = function() {
                 <tr>
                     <td class="center">${gCode}</td>
                     <td>${gName}</td>
-                    <td class="center">${gCred}${displayFormat ? '(' + displayFormat + ')' : ''}</td>
+                    <td class="center">${creditsText}</td>
                     <td class="center">${gGrade}</td>
                 </tr>
             `;
