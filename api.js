@@ -101,45 +101,38 @@ window.uploadFile = async function (file, metadata) {
 };
 
 // Generic POST helper with custom timeout
-// WARNING: To avoid CORS Preflight (OPTIONS) which GAS doesn't support,
-// we send as 'text/plain' or 'application/x-www-form-urlencoded'
 async function postData(action, payload, timeoutMs = 120000) {
-    console.log(`[API] Starting action: ${action} with timeout ${timeoutMs/1000}s`);
+    console.log(`[API] >>> Call: ${action} | Size: ${Math.round(JSON.stringify(payload).length/1024)} KB`);
     
+    // Use an AbortSignal for the timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => {
-        console.warn(`[API] Timeout reached for ${action}`);
-        controller.abort();
-    }, timeoutMs);
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-        // We use text/plain to avoid OPTIONS preflight request
+        // IMPORTANT: No headers, no mode 'cors' - let fetch handle it as simply as possible
+        // This is often the most reliable way to talk to Google Apps Script Web Apps
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'cors',
-            headers: {
-                'Content-Type': 'text/plain;charset=utf-8'
-            },
             body: JSON.stringify({ action: action, payload: payload }),
             signal: controller.signal
         });
         
         clearTimeout(timeoutId);
-        console.log(`[API] Response received for ${action}, status: ${response.status}`);
+        console.log(`[API] <<< Status: ${response.status}`);
 
         if (!response.ok) {
-            throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+            throw new Error(`HTTP Error: ${response.status}`);
         }
         
         const data = await response.json();
-        console.log(`[API] Data parsed for ${action}:`, data);
+        console.log(`[API] Result:`, data);
         return data;
     } catch (err) {
         clearTimeout(timeoutId);
-        console.error(`[API] Error in ${action}:`, err);
+        console.error(`[API] FAIL:`, err);
         
         if (err.name === 'AbortError') {
-            throw new Error(`การเชื่อมต่อหมดเวลา (Timeout) หลังจากรอ ${timeoutMs/1000} วินาที อาจเกิดจากไฟล์มีขนาดใหญ่หรืออินเทอร์เน็ตไม่เสถียรครับ`);
+            throw new Error(`หมดเวลารอ (${timeoutMs/1000} วินาที)`);
         }
         throw err;
     }

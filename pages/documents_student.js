@@ -481,57 +481,70 @@ window.submitStudentDocument = function () {
         note = `[แก้ไขอ้างอิง ${window.selectedRefDocId}] ` + note;
     }
     const files = Array.from(fileInput.files);
-    showApiLoading(`กำลังส่งเอกสาร (${files.length} ไฟล์) โปรดรอมักครู่...`);
 
-    const uploadPromises = files.map(file => {
-        const metadata = {
-            studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
-            senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
-            documentType: template.name,
-            major: majorId,
-            note: note
-        };
-        return window.uploadFile(file, metadata);
-    });
-
-    Promise.all(uploadPromises)
-        .then(responses => {
-            hideApiLoading();
-            const successResults = responses.filter(r => r && r.status === 'success');
+    // Resolve template from formId
+    const templates = MOCK.documentTemplates || [];
+    const template = templates.find(t => t.id === formId);
+    const templateName = template ? template.name : formId;
+    
+    // Use an async loop to upload files SEQUENTIALLY for better reliability
+    (async () => {
+        const results = [];
+        let successCount = 0;
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            showApiLoading(`กำลังส่งไฟล์ที่ ${i + 1}/${files.length}: ${file.name}...`);
             
-            if (successResults.length > 0) {
-                const firstSuccess = successResults[0];
-                const docId = firstSuccess.id || 'DOC-SUB';
-                const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
-
-                const newDoc = {
-                    id: docId,
-                    formId: formId,
-                    formName: template.name,
-                    status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
-                    submitDate: today,
-                    lastUpdate: today,
-                    attachment: files.length === 1 ? files[0].name : `${files[0].name} (และอีก ${files.length - 1} ไฟล์)`,
-                    fileUrl: firstSuccess.fileUrl
-                };
-
-                if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
-                MOCK.studentDocuments.unshift(newDoc);
-
-                alert(`ส่งเอกสารสำเร็จ ${successResults.length}/${files.length} ไฟล์\nรหัสติดตาม: ${docId}`);
-
-                if (typeof navigateTo === 'function') {
-                    navigateTo('documents-status');
-                } else {
-                    renderPage();
-                }
-            } else {
-                alert('เกิดข้อผิดพลาดในการส่งทุกไฟล์ กรุณาลดขนาดไฟล์หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ตครับ');
+            const metadata = {
+                studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
+                senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
+                documentType: templateName,
+                major: majorId,
+                note: note
+            };
+            
+            try {
+                const response = await window.uploadFile(file, metadata);
+                results.push(response);
+                if (response && response.status === 'success') successCount++;
+            } catch (err) {
+                console.error(`Error uploading file ${file.name}:`, err);
+                results.push({ status: 'error', message: err.message, fileName: file.name });
             }
-        })
-        .catch(err => {
-            hideApiLoading();
-            console.error('Parallel Upload Error:', err);
-            alert('ไม่สามารถส่งเอกสารได้: ' + err.message);
-        });
+        }
+        
+        hideApiLoading();
+        
+        if (successCount > 0) {
+            const firstSuccess = results.find(r => r.status === 'success');
+            const docId = firstSuccess.id || 'DOC-SUB';
+            const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+
+            const newDoc = {
+                id: docId,
+                formId: formId,
+                formName: templateName,
+                status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
+                submitDate: today,
+                lastUpdate: today,
+                attachment: files.length === 1 ? files[0].name : `${files[0].name} (และอีก ${files.length - 1} ไฟล์)`,
+                fileUrl: firstSuccess.fileUrl
+            };
+
+            if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
+            MOCK.studentDocuments.unshift(newDoc);
+
+            alert(`ส่งเอกสารสำเร็จ ${successCount}/${files.length} ไฟล์\nรหัสติดตาม: ${docId}`);
+
+            if (typeof navigateTo === 'function') {
+                navigateTo('documents-status');
+            } else {
+                renderPage();
+            }
+        } else {
+            const firstError = results.find(r => r.status === 'error');
+            alert('ไม่สามารถส่งเอกสารได้: ' + (firstError ? firstError.message : 'Unknown error'));
+        }
+    })();
 };
