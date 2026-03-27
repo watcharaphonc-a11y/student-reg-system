@@ -98,7 +98,7 @@ pages['petitions-student'] = function () {
                             </svg>
                             <p style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);" id="fileNameDisplay">คลิกเพื่อเลือกไฟล์ <span style="color: var(--text-muted); font-weight: normal;"> หรือลากไฟล์มาวาง</span></p>
                             <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 8px;">รองรับ PDF, DOC, DOCX, JPG, PNG - สูงสุด 5 ไฟล์</p>
-                            <input type="file" id="docFile" style="display: none;" onchange="updateDocFileName(this)">
+                            <input type="file" id="docFile" style="display: none;" onchange="updateDocFileName(this)" multiple>
                         </div>
                     </div>
 
@@ -427,11 +427,15 @@ window.selectDocType = function (type) {
 window.updateDocFileName = function (input) {
     const display = document.getElementById('fileNameDisplay');
     if (input.files && input.files.length > 0) {
-        display.textContent = input.files[0].name;
+        if (input.files.length === 1) {
+            display.textContent = input.files[0].name;
+        } else {
+            display.textContent = `เลือกแล้ว ${input.files.length} ไฟล์`;
+        }
         display.style.color = 'var(--text-primary)';
         display.style.fontWeight = '600';
     } else {
-        display.textContent = 'คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวางที่นี่';
+        display.textContent = 'คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง';
         display.style.color = 'var(--text-muted)';
         display.style.fontWeight = 'normal';
     }
@@ -476,30 +480,33 @@ window.submitStudentDocument = function () {
     if (docType === 'revise' && window.selectedRefDocId) {
         note = `[แก้ไขอ้างอิง ${window.selectedRefDocId}] ` + note;
     }
-    const template = MOCK.documentTemplates.find(t => t.id === formId);
-    if (!template) return;
+    const files = Array.from(fileInput.files);
+    showApiLoading(`กำลังส่งเอกสาร (${files.length} ไฟล์) และบันทึกข้อมูล...`);
 
-    const file = fileInput.files[0];
-    const fileName = file.name;
+    // We'll upload all files. To keep tracking simple, we'll use the same metadata
+    // but GAS will create separate rows or we can handle it.
+    // Given the current GAS script, it creates one row per uploadDocument call.
+    
+    const uploadPromises = files.map(file => {
+        const metadata = {
+            studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
+            senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
+            documentType: template.name,
+            major: majorId,
+            note: note
+        };
+        return window.uploadFile(file, metadata);
+    });
 
-    showApiLoading('กำลังส่งเอกสารและบันทึกข้อมูลลง Google Sheet...');
-
-    // Prepare metadata for API
-    const metadata = {
-        studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
-        senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
-        documentType: template.name,
-        major: majorId,
-        note: note
-    };
-
-    // Use the uploadFile tool from api.js which handles base64 and POST to Google Apps Script
-    window.uploadFile(file, metadata)
-        .then(response => {
+    Promise.all(uploadPromises)
+        .then(responses => {
             hideApiLoading();
-            if (response && response.status === 'success') {
-                // Update local MOCK for immediate UI feedback
-                const docId = response.id || ('DOC-SUB' + Math.floor(Math.random() * 9000 + 1000));
+            const successResponses = responses.filter(r => r && r.status === 'success');
+            
+            if (successResponses.length > 0) {
+                // Update local MOCK for immediate UI feedback (show only the first one or a summary)
+                const firstResp = successResponses[0];
+                const docId = firstResp.id || ('DOC-SUB' + Math.floor(Math.random() * 9000 + 1000));
                 const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
 
                 const newDoc = {
@@ -509,14 +516,14 @@ window.submitStudentDocument = function () {
                     status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
                     submitDate: today,
                     lastUpdate: today,
-                    attachment: fileName,
-                    fileUrl: response.fileUrl
+                    attachment: files.length === 1 ? files[0].name : `${files[0].name} (และอีก ${files.length - 1} ไฟล์)`,
+                    fileUrl: firstResp.fileUrl
                 };
 
                 if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
                 MOCK.studentDocuments.unshift(newDoc);
 
-                alert('ส่งเอกสารสำเร็จและบันทึกข้อมูลลง Google Sheet เรียบร้อยแล้ว\nรหัสติดตาม: ' + docId);
+                alert(`ส่งเอกสารสำเร็จ ${successResponses.length}/${files.length} ไฟล์\nรหัสติดตาม: ${docId}`);
 
                 if (typeof navigateTo === 'function') {
                     navigateTo('documents-status');
@@ -524,7 +531,7 @@ window.submitStudentDocument = function () {
                     renderPage();
                 }
             } else {
-                alert('เกิดข้อผิดพลาดในการส่งเอกสาร: ' + (response ? response.message : 'Unknown error'));
+                alert('เกิดข้อผิดพลาดในการส่งเอกสาร: ' + (responses[0] ? responses[0].message : 'Unknown error'));
             }
         })
         .catch(err => {
