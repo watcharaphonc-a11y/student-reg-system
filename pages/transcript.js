@@ -226,9 +226,7 @@ pages.transcript = function() {
         
         <div class="report-paper animate-in animate-delay-1" id="printable-transcript">
             <div class="report-header">
-                <div style="width:70px;height:70px;background:var(--accent-gradient);border-radius:50%;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:bold;margin-right:20px;">
-                    พย.
-                </div>
+                <img src="assets/logo_faculty.png" alt="โลโก้คณะพยาบาลศาสตร์" style="width:70px;height:70px;object-fit:contain;margin-right:20px;">
                 <div class="report-header-text">
                     <div style="font-size:1.2rem;margin-bottom:4px;">คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก</div>
                     <div style="font-size:1rem;font-weight:600;">ระบบทะเบียนและประมวลผลการศึกษา</div>
