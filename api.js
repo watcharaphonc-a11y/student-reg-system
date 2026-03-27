@@ -2,7 +2,7 @@
 // Google Sheets API Integration
 // ============================
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx89JjJmet5aDA8Gb9_IYVh4E6qpHCXwD09-iaeI-84MfvIr-VXLNcmyckjFDueVtdA/exec'.trim();
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoeVHFYsghNTI30QKKIBOAKugDfDLwdQeuGmoDYVPOebH479wu50v98Z1gFM5SJVBB/exec'.trim();
 
 // Loading overlay to block UI during API calls
 function showApiLoading(message = 'กำลังโหลดข้อมูล...') {
@@ -73,10 +73,10 @@ async function postData(action, payload) {
 }
 
 // Upload Single File (Robust for large files)
-window.uploadFile = async function (file, metadata) {
-    const MAX_FILE_SIZE = 40 * 1024 * 1024; // 40MB limit per file (approx 53MB in base64)
+window.api.uploadFile = async function (file, metadata = {}) {
+    const MAX_FILE_SIZE = 40 * 1024 * 1024; // 40MB limit per file
     if (file.size > MAX_FILE_SIZE) {
-        throw new Error(`ไฟล์ "${file.name}" มีขนาดใหญ่เกินไป (${(file.size / (1024 * 1024)).toFixed(2)}MB) ระบบรองรับสูงสุด 40MB ต่อไฟล์ กรุณาลดขนาดไฟล์ก่อนส่งครับ`);
+        throw new Error(`ไฟล์ "${file.name}" มีขนาดใหญ่เกินไป (${(file.size / (1024 * 1024)).toFixed(2)}MB) ระบบรองรับสูงสุด 40MB ต่อไฟล์ครับ`);
     }
 
     return new Promise((resolve, reject) => {
@@ -89,7 +89,7 @@ window.uploadFile = async function (file, metadata) {
                     mimeType: file.type,
                     base64Data: reader.result
                 };
-                const result = await postData('uploadDocument', payload, 300000); // 5 minute timeout
+                const result = await postData('uploadDocument', payload, 300000); // 5 min timeout
                 resolve(result);
             } catch (err) {
                 reject(err);
@@ -99,6 +99,44 @@ window.uploadFile = async function (file, metadata) {
         reader.readAsDataURL(file);
     });
 };
+
+// --- New Two-Phase Upload Methods ---
+
+/**
+ * Upload File to Drive Only (Phase 1)
+ */
+window.api.uploadFileOnly = function (file) {
+    if (!file) return Promise.reject(new Error('No file provided'));
+
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async () => {
+            try {
+                const payload = {
+                    fileName: file.name,
+                    mimeType: file.type,
+                    base64Data: reader.result
+                };
+                const result = await postData('uploadFileOnly', payload, 300000); // 5 min timeout
+                resolve(result);
+            } catch (err) {
+                reject(err);
+            }
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+};
+
+/**
+ * Save Document Record to Sheet (Phase 2)
+ */
+window.api.saveDocumentRecord = function (metadata) {
+    return postData('saveDocumentRecord', metadata);
+};
+
+// Backwards compatibility helper
+window.uploadFile = function(file, metadata) { return window.api.uploadFile(file, metadata); };
 
 // Generic POST helper with custom timeout
 async function postData(action, payload, timeoutMs = 120000) {

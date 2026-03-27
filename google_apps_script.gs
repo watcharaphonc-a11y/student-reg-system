@@ -151,6 +151,10 @@ function doPost(e) {
         break;
       case 'uploadDocument':
         return uploadDocumentToDrive(payload);
+      case 'uploadFileOnly':
+        return uploadFileOnly(payload);
+      case 'saveDocumentRecord':
+        return saveDocumentRecord(payload);
       case 'uploadBatch':
         return uploadBatch(payload);
       case 'updateDocumentStatus':
@@ -361,8 +365,52 @@ function uploadDocumentToDrive(payload) {
   };
   console.log('Inserting new document row:', newRowPayload);
   appendRow(SHEETS.DOCUMENTS, newRowPayload);
-  
-  return createResponse({ status: 'success', id: newId, fileUrl: fileUrl, action: 'insert' });
+        return createResponse({ status: 'success', id: newId, fileUrl: fileUrl, action: 'insert' });
+}
+
+/**
+ * Specialized: Upload File to Drive ONLY (No Sheet record)
+ */
+function uploadFileOnly(payload) {
+  try {
+    const folder = getDocumentsFolder();
+    let data = payload.base64Data;
+    if (data && data.indexOf(',') > -1) data = data.split(',')[1];
+    
+    const blob = Utilities.newBlob(Utilities.base64Decode(data), payload.mimeType || 'application/pdf', payload.fileName || 'document.pdf');
+    const file = folder.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    return createResponse({ status: 'success', fileUrl: file.getUrl(), fileName: payload.fileName });
+  } catch (err) {
+    console.error('uploadFileOnly Error:', err);
+    return createResponse({ status: 'error', message: err.toString() });
+  }
+}
+
+/**
+ * Specialized: Save a single Document Record to the Sheet
+ */
+function saveDocumentRecord(payload) {
+  try {
+    const newId = 'DOC-' + new Date().getTime();
+    const newRowPayload = {
+      'รหัสติดตาม': newId,
+      'รหัสนักศึกษา': payload.studentId || '',
+      'ชื่อผู้ส่ง': payload.senderName || '',
+      'ประเภทเอกสาร': payload.documentType || 'ทั่วไป',
+      'ชื่อไฟล์': payload.fileNames || '', // Combined names
+      'ลิงก์เอกสาร': payload.fileUrls || '', // Combined URLs
+      'วันที่ส่ง': Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm'),
+      'สถานะ': 'รอตรวจสอบ'
+    };
+    
+    appendRow(SHEETS.DOCUMENTS, newRowPayload);
+    return createResponse({ status: 'success', id: newId });
+  } catch (err) {
+    console.error('saveDocumentRecord Error:', err);
+    return createResponse({ status: 'error', message: err.toString() });
+  }
 }
 
 /**
