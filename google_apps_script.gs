@@ -541,7 +541,7 @@ function setupInitialSheets() {
     [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data'],
     [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note'],
     [SHEETS.EVAL_QUESTIONS]: ['course_code', 'section', 'category', 'question_id', 'question_text'],
-    [SHEETS.COURSE_INSTRUCTORS]: ['course_code', 'course_name', 'instructor_name', 'group', 'semester', 'academic_year'],
+    [SHEETS.COURSE_INSTRUCTORS]: ['course_code', 'course_name', 'instructor_id', 'instructor_name', 'group', 'semester', 'academic_year'],
     [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text']
   };
 
@@ -721,7 +721,7 @@ function submitEvaluationResult(payload) {
     'student_id': payload.studentId || '',
     'course_code': payload.courseCode || '',
     'course_name': payload.courseName || '',
-    'instructor': payload.instructor || '',
+    'instructor_id': payload.instructor || '',
     'scores': JSON.stringify(payload.scores || {}),
     'comment': payload.comment || '',
     'skipped': payload.skipped ? 'true' : 'false',

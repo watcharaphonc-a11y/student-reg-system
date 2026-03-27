@@ -19,14 +19,19 @@ pages['manage-evals'] = function() {
     courseInstructors.forEach(ci => {
         const code = String(ci.course_code || '').trim();
         if (!courseInstMap[code]) courseInstMap[code] = { name: ci.course_name || '', instructors: [] };
-        courseInstMap[code].instructors.push(ci.instructor_name || '');
+        // Resolve name if only ID is present, or vice versa
+        const id = String(ci.instructor_id || ci.instructor_name || '').trim();
+        const displayName = getInstructorDisplayName(id);
+        if (!courseInstMap[code].instructors.find(ins => ins.id === id)) {
+            courseInstMap[code].instructors.push({ id, name: displayName });
+        }
     });
 
     return `
     <div class="animate-in">
         <div class="page-header">
             <h1 class="page-title">จัดการแบบประเมิน (Admin)</h1>
-            <p class="page-subtitle">จัดการคำถามประเมินรายวิชา, อาจารย์ผู้สอน, และคำถามประเมินอาจารย์</p>
+            <p class="page-subtitle">จัดการคำถามประเมินรายวิชา, อาจารย์ผู้สอน, และคำถามประเมินอาจารย์ โดยใช้รหัสอาจารย์เพื่อความแม่นยำ</p>
         </div>
 
         <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap:24px;">
@@ -77,7 +82,7 @@ pages['manage-evals'] = function() {
                 </div>
                 <div class="card-body">
                     <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:12px;">
-                        นำเข้าข้อมูลอาจารย์ต่อวิชา — CSV: <code>course_code, course_name, instructor_name, group, semester, academic_year</code>
+                        นำเข้าข้อมูลอาจารย์ต่อวิชา — CSV: <code>course_code, course_name, instructor_id, instructor_name, group, semester, academic_year</code>
                     </p>
                     <button class="btn btn-secondary" onclick="downloadEvalTemplate('course_instructors')" style="width:100%; margin-bottom:12px; justify-content:center;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -100,9 +105,13 @@ pages['manage-evals'] = function() {
                         <div style="max-height:200px; overflow-y:auto;">
                             ${Object.entries(courseInstMap).map(([code, info]) => `
                                 <div style="padding:8px 12px; background:var(--bg-secondary); border-radius:var(--radius-sm); margin-bottom:6px;">
-                                    <span style="font-weight:600; color:var(--accent-primary);">${code}</span>
-                                    <span style="color:var(--text-muted); font-size:0.85rem;"> — ${info.instructors.length} คน</span>
-                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">${info.instructors.slice(0,3).join(', ')}${info.instructors.length > 3 ? '...' : ''}</div>
+                                    <div style="display:flex; justify-content:space-between;">
+                                        <span style="font-weight:600; color:var(--accent-primary);">${code}</span>
+                                        <span style="color:var(--text-muted); font-size:0.85rem;"> — ${info.instructors.length} คน</span>
+                                    </div>
+                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
+                                        ${info.instructors.map(ins => `${ins.name} (${ins.id})`).slice(0,3).join(', ')}${info.instructors.length > 3 ? '...' : ''}
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -163,19 +172,19 @@ window.downloadEvalTemplate = function(type) {
     if (type === 'course_questions') {
         headers = ['course_code', 'section', 'category', 'question_id', 'question_text'];
         sampleRows = [
-            ['0100500101', 'โครงสร้างรายวิชา', 'course_structure', '1', 'ผลลัพธ์การเรียนรู้รายวิชาชัดเจน'],
-            ['0100500101', 'โครงสร้างรายวิชา', 'course_structure', '2', 'หน่วยกิตของรายวิชามีความเหมาะสม'],
-            ['0100500101', 'คำถามก่อนเรียน', 'pre_learning', '1', 'เนื้อหาตอดคล้องกับวัตถุประสงค์'],
-            ['0100500101', 'คำถามหลังเรียน', 'post_learning', '1', 'ท่านคิดว่าท่านมีความสามารถตามผลลัพธ์การเรียนรู้'],
-            ['0100500101', 'CLO', 'clo', '1', 'CLO4.4 ปฏิบัติเป็นแบบอย่างที่ดีในฐานะผู้นำ'],
-            ['0100500101', 'LLO', 'llo', '1', 'CLO5 แสดงออกถึงความซื่อสัตย์และจริยธรรม']
+            ['100500101', 'โครงสร้างรายวิชา', 'course_structure', '1', 'ผลลัพธ์การเรียนรู้รายวิชาชัดเจน'],
+            ['100500101', 'โครงสร้างรายวิชา', 'course_structure', '2', 'หน่วยกิตของรายวิชามีความเหมาะสม'],
+            ['100500101', 'คำถามก่อนเรียน', 'pre_learning', '1', 'เนื้อหาตอดคล้องกับวัตถุประสงค์'],
+            ['100500101', 'คำถามหลังเรียน', 'post_learning', '1', 'ท่านคิดว่าท่านมีความสามารถตามผลลัพธ์การเรียนรู้'],
+            ['100500101', 'CLO', 'clo', '1', 'CLO4.4 ปฏิบัติเป็นแบบอย่างที่ดีในฐานะผู้นำ'],
+            ['100500101', 'LLO', 'llo', '1', 'CLO5 แสดงออกถึงความซื่อสัตย์และจริยธรรม']
         ];
         filename = 'template_คำถามประเมินรายวิชา.csv';
     } else if (type === 'course_instructors') {
-        headers = ['course_code', 'course_name', 'instructor_name', 'group', 'semester', 'academic_year'];
+        headers = ['course_code', 'course_name', 'instructor_id', 'instructor_name', 'group', 'semester', 'academic_year'];
         sampleRows = [
-            ['0100500101', 'ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล', 'ดร.สุภาณี ดลังฤทธิ์', '1', '1', '2568'],
-            ['0100500101', 'ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล', 'ผศ.ดร.ศิราณี เศรษฐ์วิกุล', '1', '1', '2568']
+            ['100500101', 'ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล', 'T1001', 'ดร.สุภาณี ดลังฤทธิ์', '1', '2', '2568'],
+            ['100500101', 'ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล', 'T1002', 'ผศ.ดร.ศิราณี เศรษฐ์วิกุล', '1', '2', '2568']
         ];
         filename = 'template_อาจารย์ผู้สอนรายวิชา.csv';
     } else if (type === 'instructor_questions') {
@@ -186,7 +195,7 @@ window.downloadEvalTemplate = function(type) {
             ['3', 'สื่อการสอนชัดเจนและตอดคล้องกับเนื้อหา'],
             ['4', 'ชี้แจงผลลัพธ์การเรียนรู้อย่างชัดเจน'],
             ['5', 'การสอนทำให้นักศึกษาบรรลุผลลัพธ์การเรียนรู้'],
-            ['6', 'เทคนิคการสอนทำให้นักศึกษาเข้าใจง่าย']
+            ['6', 'เทคนิคการาสอนทำให้นักศึกษาเข้าใจง่าย']
         ];
         filename = 'template_คำถามประเมินอาจารย์.csv';
     }

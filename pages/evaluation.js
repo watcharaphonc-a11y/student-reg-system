@@ -3,6 +3,13 @@
 // (ประเมินการจัดการเรียนการสอนของรายวิชา)
 // ============================
 
+// Helper to resolve instructor name from ID (Username in Teachers sheet)
+function getInstructorDisplayName(id) {
+    if (!id) return 'ไม่ระบุอาจารย์';
+    const teacher = (MOCK.academicAdvisors || []).find(t => String(t.username || '').trim() === String(id).trim());
+    return teacher ? teacher.name : id;
+}
+
 pages['eval-course'] = function() {
     const evals = MOCK.evaluations || [];
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
@@ -88,7 +95,7 @@ pages['eval-course'] = function() {
                         // Get instructors for this course
                         const instructors = (MOCK.courseInstructors || [])
                             .filter(ci => String(ci.course_code || '').trim() === String(course.code).trim())
-                            .map(ci => ci.instructor_name);
+                            .map(ci => getInstructorDisplayName(ci.instructor_id));
                         
                         return `
                         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border-color); ${isEval ? 'background:rgba(40,167,69,0.05)' : ''}">
@@ -136,12 +143,13 @@ pages['eval-instructor'] = function() {
             courseMap[code] = {
                 code: code,
                 name: ci.course_name || '',
-                instructors: []
+                instructors: [] // Store as objects {id, name}
             };
         }
-        const instName = String(ci.instructor_name || '').trim();
-        if (instName && !courseMap[code].instructors.includes(instName)) {
-            courseMap[code].instructors.push(instName);
+        const instId = String(ci.instructor_id || ci.instructor_name || '').trim();
+        const instName = getInstructorDisplayName(instId);
+        if (instId && !courseMap[code].instructors.find(ins => ins.id === instId)) {
+            courseMap[code].instructors.push({ id: instId, name: instName });
         }
     });
 
@@ -156,7 +164,8 @@ pages['eval-instructor'] = function() {
     evalItems.forEach(item => {
         item.instructors.forEach(ins => {
             totalInstructors++;
-            if (evals.some(e => e.instructor === ins && e.courseCode === item.code && e.type === 'instructor' && e.studentId === studentId)) {
+            // Check by ID or Name (for backward compatibility during migration)
+            if (evals.some(e => (e.instructor === ins.id || e.instructor === ins.name) && e.courseCode === item.code && e.type === 'instructor' && e.studentId === studentId)) {
                 completedInstructors++;
             }
         });
@@ -205,22 +214,22 @@ pages['eval-instructor'] = function() {
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:12px;">
                     ${item.instructors.map(ins => {
-                        const isEval = evals.find(e => e.instructor === ins && e.courseCode === item.code && e.type === 'instructor' && e.studentId === studentId);
+                        const isEval = evals.find(e => (e.instructor === ins.id || e.instructor === ins.name) && e.courseCode === item.code && e.type === 'instructor' && e.studentId === studentId);
                         return `
                         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border: 1px solid ${isEval ? 'var(--success)' : 'transparent'};">
                             <div style="display:flex; align-items:center; gap:12px;">
-                                <div style="width:40px;height:40px;border-radius:50%;background:${isEval ? 'var(--success)' : 'var(--border-color)'};display:flex;align-items:center;justify-content:center;color:${isEval ? 'white' : 'var(--text-muted)'};font-weight:600;font-size:1rem;">${ins[0] || '?'}</div>
+                                <div style="width:40px;height:40px;border-radius:50%;background:${isEval ? 'var(--success)' : 'var(--border-color)'};display:flex;align-items:center;justify-content:center;color:${isEval ? 'white' : 'var(--text-muted)'};font-weight:600;font-size:1rem;">${ins.name[0] || '?'}</div>
                                 <div>
-                                    <div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'};">${ins}</div>
+                                    <div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'};">${ins.name}</div>
                                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
-                                        ${isEval ? '<span style="color:var(--success)">✓ ทำการประเมินแล้ว</span>' : 'ยังไม่ได้ประเมิน'}
+                                        ID: ${ins.id} · ${isEval ? '<span style="color:var(--success)">✓ ทำการประเมินแล้ว</span>' : 'ยังไม่ได้ประเมิน'}
                                     </div>
                                 </div>
                             </div>
                             <div>
                                 ${isEval 
                                     ? '<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed;">ประเมินแล้ว</button>'
-                                    : `<button class="btn btn-primary btn-sm" onclick="openInstructorEvalModal('${ins.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ทำแบบประเมิน</button>`
+                                    : `<button class="btn btn-primary btn-sm" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ทำแบบประเมิน</button>`
                                 }
                             </div>
                         </div>`;
@@ -300,9 +309,21 @@ window.startCourseEvalWizard = function(courseCode, courseName) {
     // Get instructors for this course
     const instructors = (MOCK.courseInstructors || [])
         .filter(ci => String(ci.course_code || '').trim() === String(courseCode).trim())
-        .map(ci => String(ci.instructor_name || '').trim())
-        .filter(n => n);
-    const uniqueInstructors = [...new Set(instructors)];
+        .map(ci => ({
+            id: String(ci.instructor_id || ci.instructor_name || '').trim(),
+            name: getInstructorDisplayName(ci.instructor_id || ci.instructor_name)
+        }))
+        .filter(ins => ins.id);
+    
+    // Deduplicate by ID
+    const uniqueInstructors = [];
+    const seenIds = new Set();
+    instructors.forEach(ins => {
+        if (!seenIds.has(ins.id)) {
+            seenIds.add(ins.id);
+            uniqueInstructors.push(ins);
+        }
+    });
 
     // Add instructor evaluation sections
     const instQuestions = MOCK.evalInstructorQuestions || [];
@@ -335,9 +356,10 @@ window.startCourseEvalWizard = function(courseCode, courseName) {
     uniqueInstructors.forEach(ins => {
         wizardPages.push({
             type: 'instructor',
-            key: 'instructor_' + ins,
-            label: 'การประเมินอาจารย์ผู้สอน: ' + ins,
-            instructorName: ins,
+            key: 'instructor_' + ins.id,
+            label: 'การประเมินอาจารย์ผู้สอน: ' + ins.name,
+            instructorId: ins.id,
+            instructorName: ins.name,
             questions: instQuestions.map(q => ({
                 id: q.question_id,
                 text: q.question_text
@@ -360,13 +382,16 @@ window.startCourseEvalWizard = function(courseCode, courseName) {
 
 function renderWizardPage() {
     const ws = wizardState;
+    if (!ws.pages || !ws.pages[ws.currentPage]) return;
+    
     const page = ws.pages[ws.currentPage];
     const totalPages = ws.pages.length;
     const pageNum = ws.currentPage + 1;
     const progressPercent = Math.round((pageNum / totalPages) * 100);
 
     const isInstructor = page.type === 'instructor';
-    const isSkipped = isInstructor && ws.instructorSkipped[page.instructorName];
+    const currentInstId = isInstructor ? page.instructorId : null;
+    const isSkipped = isInstructor && ws.instructorSkipped[currentInstId];
 
     let questionsHtml = '';
     if (isInstructor) {
@@ -374,7 +399,7 @@ function renderWizardPage() {
         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md); margin-bottom:20px;">
             <span style="font-weight:500;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
             <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
-                <input type="checkbox" ${isSkipped ? 'checked' : ''} onchange="toggleInstructorSkip('${page.instructorName.replace(/'/g, "\\\\'")}', this.checked)" style="opacity:0;width:0;height:0;">
+                <input type="checkbox" ${isSkipped ? 'checked' : ''} onchange="toggleInstructorSkip('${currentInstId.replace(/'/g, "\\\\'")}', this.checked)" style="opacity:0;width:0;height:0;">
                 <span style="position:absolute;inset:0;background:${isSkipped ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:26px;transition:0.3s;"></span>
                 <span style="position:absolute;left:${isSkipped ? '24px' : '3px'};top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
             </label>
@@ -460,15 +485,16 @@ window.setWizardScore = function(scoreKey, score, questionIdx) {
     }
 };
 
-window.toggleInstructorSkip = function(instructorName, checked) {
-    wizardState.instructorSkipped[instructorName] = checked;
+window.toggleInstructorSkip = function(instructorId, checked) {
+    wizardState.instructorSkipped[instructorId] = checked;
     renderWizardPage();
 };
 
 window.wizardNext = function() {
     // Validate current page
     const page = wizardState.pages[wizardState.currentPage];
-    const isSkipped = page.type === 'instructor' && wizardState.instructorSkipped[page.instructorName];
+    const isInstructor = page.type === 'instructor';
+    const isSkipped = isInstructor && wizardState.instructorSkipped[page.instructorId];
     
     if (!isSkipped) {
         const unanswered = page.questions.filter(q => {
@@ -495,7 +521,8 @@ window.wizardPrev = function() {
 window.submitWizardEval = async function() {
     // Validate last page
     const lastPage = wizardState.pages[wizardState.currentPage];
-    const isSkipped = lastPage.type === 'instructor' && wizardState.instructorSkipped[lastPage.instructorName];
+    const isInstructor = lastPage.type === 'instructor';
+    const isSkipped = isInstructor && wizardState.instructorSkipped[lastPage.instructorId];
     
     if (!isSkipped) {
         const unanswered = lastPage.questions.filter(q => {
@@ -543,7 +570,7 @@ window.submitWizardEval = async function() {
 
         // Submit instructor evaluations
         for (const page of wizardState.pages.filter(p => p.type === 'instructor')) {
-            const skipped = wizardState.instructorSkipped[page.instructorName];
+            const skipped = wizardState.instructorSkipped[page.instructorId];
             const instScores = {};
             if (!skipped) {
                 page.questions.forEach(q => {
@@ -557,7 +584,7 @@ window.submitWizardEval = async function() {
                 studentId: studentId,
                 courseCode: wizardState.courseCode,
                 courseName: wizardState.courseName,
-                instructor: page.instructorName,
+                instructor: page.instructorId, // Send ID
                 scores: instScores,
                 skipped: skipped,
                 comment: ''
@@ -568,7 +595,7 @@ window.submitWizardEval = async function() {
                 studentId: studentId,
                 courseCode: wizardState.courseCode,
                 courseName: wizardState.courseName,
-                instructor: page.instructorName,
+                instructor: page.instructorId,
                 scores: JSON.stringify(instScores),
                 skipped: skipped,
                 date: new Date().toISOString().split('T')[0]
@@ -596,7 +623,8 @@ window.submitWizardEval = async function() {
 // ============================
 // Instructor Modal (Standalone)
 // ============================
-window.openInstructorEvalModal = function(instructor, courseCode, courseName) {
+window.openInstructorEvalModal = function(instructorId, courseCode, courseName) {
+    const instName = getInstructorDisplayName(instructorId);
     const instQuestions = MOCK.evalInstructorQuestions || [];
     const questions = instQuestions.length > 0 
         ? instQuestions.map(q => ({ id: q.question_id, text: q.question_text }))
@@ -616,8 +644,8 @@ window.openInstructorEvalModal = function(instructor, courseCode, courseName) {
     <div style="padding:8px">
         <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);margin-bottom:20px;">
             <p style="margin:0 0 4px;font-size:0.82rem;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
-            <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${instructor}</div>
-            <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">วิชาที่สอน: ${courseCode} ${courseName}</div>
+            <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${instName}</div>
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">ID: ${instructorId} · วิชา: ${courseCode} ${courseName}</div>
         </div>
         
         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md); margin-bottom:20px;">
@@ -647,7 +675,7 @@ window.openInstructorEvalModal = function(instructor, courseCode, courseName) {
             </div>`).join('')}
         </div>
 
-        <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:1rem;" onclick="submitStandaloneInstructorEval('${instructor.replace(/'/g,"\\\\'")}', '${courseCode}', '${courseName.replace(/'/g,"\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
+        <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:1rem;" onclick="submitStandaloneInstructorEval('${instructorId.replace(/'/g,"\\\\'")}', '${courseCode}', '${courseName.replace(/'/g,"\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
     </div>`;
 
     window._instScores = {};
@@ -655,7 +683,7 @@ window.openInstructorEvalModal = function(instructor, courseCode, courseName) {
     openModal('ประเมินอาจารย์ผู้สอน', buildHtml());
 };
 
-window.submitStandaloneInstructorEval = async function(instructor, courseCode, courseName) {
+window.submitStandaloneInstructorEval = async function(instructorId, courseCode, courseName) {
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
     const skipped = window._instSkipped || false;
     const scores = window._instScores || {};
@@ -667,7 +695,7 @@ window.submitStandaloneInstructorEval = async function(instructor, courseCode, c
         studentId: studentId,
         courseCode: courseCode,
         courseName: courseName,
-        instructor: instructor,
+        instructor: instructorId, // Send ID
         scores: scores,
         skipped: skipped,
         comment: ''
@@ -680,7 +708,7 @@ window.submitStandaloneInstructorEval = async function(instructor, courseCode, c
         type: 'instructor',
         studentId: studentId,
         courseCode: courseCode,
-        instructor: instructor,
+        instructor: instructorId,
         scores: JSON.stringify(scores),
         skipped: skipped,
         date: new Date().toISOString().split('T')[0]
