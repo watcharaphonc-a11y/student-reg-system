@@ -2,7 +2,7 @@
 // Google Sheets API Integration
 // ============================
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxB_z5ZcD8tnU0ttVmLPeS2INaqm4-HTN6k6N-QU-DaqSYgObV71JI5KGRRSWfcRdyI/exec'.trim();
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzbLUUvV4ziuEwlyoyKPifh3Tfnvtbhew9Yo2PNezzzguwADXxOzgLT0UMTmgwG3CjC/exec'.trim();
 
 // Loading overlay to block UI during API calls
 function showApiLoading(message = 'กำลังโหลดข้อมูล...') {
@@ -101,25 +101,43 @@ window.uploadFile = async function (file, metadata) {
 };
 
 // Generic POST helper with custom timeout
+// WARNING: To avoid CORS Preflight (OPTIONS) which GAS doesn't support,
+// we send as 'text/plain' or 'application/x-www-form-urlencoded'
 async function postData(action, payload, timeoutMs = 120000) {
+    console.log(`[API] Starting action: ${action} with timeout ${timeoutMs/1000}s`);
+    
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    const timeoutId = setTimeout(() => {
+        console.warn(`[API] Timeout reached for ${action}`);
+        controller.abort();
+    }, timeoutMs);
 
     try {
+        // We use text/plain to avoid OPTIONS preflight request
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
+            mode: 'cors',
+            headers: {
+                'Content-Type': 'text/plain;charset=utf-8'
+            },
             body: JSON.stringify({ action: action, payload: payload }),
             signal: controller.signal
         });
-        clearTimeout(timeoutId);
         
+        clearTimeout(timeoutId);
+        console.log(`[API] Response received for ${action}, status: ${response.status}`);
+
         if (!response.ok) {
             throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
         }
         
-        return await response.json();
+        const data = await response.json();
+        console.log(`[API] Data parsed for ${action}:`, data);
+        return data;
     } catch (err) {
         clearTimeout(timeoutId);
+        console.error(`[API] Error in ${action}:`, err);
+        
         if (err.name === 'AbortError') {
             throw new Error(`การเชื่อมต่อหมดเวลา (Timeout) หลังจากรอ ${timeoutMs/1000} วินาที อาจเกิดจากไฟล์มีขนาดใหญ่หรืออินเทอร์เน็ตไม่เสถียรครับ`);
         }

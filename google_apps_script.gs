@@ -30,6 +30,9 @@ const SHEETS = {
   EVAL_INSTRUCTOR_QUESTIONS: 'EvalInstructorQuestions'
 };
 
+const DRIVE_FOLDER_ID = '1Zp4XU-m1I8o_g6Y6X6X6X6X6X6X6X6'; // Optional: Use ID for faster access
+let CACHED_FOLDER = null;
+
 /**
  * Handle GET Requests
  */
@@ -241,18 +244,26 @@ function appendRow(sheetName, payload) {
 }
 
 /**
+ * Helper: Get or Create Folder for Documents
+ */
+function getDocumentsFolder() {
+  if (CACHED_FOLDER) return CACHED_FOLDER;
+  
+  const folderName = "Student_Documents";
+  const folders = DriveApp.getFoldersByName(folderName);
+  const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+  
+  CACHED_FOLDER = folder;
+  return folder;
+}
+
+/**
  * Helper: Upload Base64 File to Google Drive
  */
 function uploadDocumentToDrive(payload) {
+  console.log('Starting uploadDocumentToDrive for: ' + payload.fileName);
   // 1. Get or Create Folder for Documents
-  let folder;
-  const folderName = "Student_Documents";
-  const folders = DriveApp.getFoldersByName(folderName);
-  if (folders.hasNext()) {
-    folder = folders.next();
-  } else {
-    folder = DriveApp.createFolder(folderName);
-  }
+  const folder = getDocumentsFolder();
   
   // 2. Decode and create file
   let data = payload.base64Data;
