@@ -216,34 +216,39 @@ window.previewAdminDoc = function(docId) {
             const urls = displayUrl.split(',').map(u => u.trim());
             const names = (doc.attachment || '').split(',').map(n => n.trim());
 
+            // 1. Visual Preview for the FIRST file
+            let embedUrl = urls[0];
+            if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
+                embedUrl = embedUrl.replace('/view', '/preview');
+            }
+            const iframeHtml = `<iframe src="${embedUrl}" style="width:100%; height:550px; border:none; border-radius:var(--radius-sm); margin-bottom:20px;" allow="autoplay"></iframe>`;
+
+            // 2. List of ALL files (if multiple)
+            let filesListHtml = '';
             if (urls.length > 1) {
-                // Multiple files: Show list of links
-                previewContent = `
-                    <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px;">
-                        <h4 style="margin-top:0; margin-bottom:15px; color:var(--text-primary); border-bottom:1px solid var(--border-color); padding-bottom:10px;">📄 รายการไฟล์แนบ (${urls.length} ไฟล์)</h4>
-                        <div style="display:flex; flex-direction:column; gap:12px;">
+                filesListHtml = `
+                    <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:15px; margin-top:10px;">
+                        <h4 style="margin-top:0; margin-bottom:12px; color:var(--text-primary); font-size:1rem; display:flex; align-items:center; gap:8px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                            รายการไฟล์แนบทั้งหมด (${urls.length} ไฟล์)
+                        </h4>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
                             ${urls.map((url, idx) => {
                                 const name = names[idx] || `ไฟล์ที่ ${idx + 1}`;
                                 return `
-                                    <a href="${url}" target="_blank" style="display:flex; align-items:center; gap:10px; padding:12px; background:white; border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--accent-primary); text-decoration:none; font-weight:500; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.background='rgba(var(--accent-primary-rgb), 0.02)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='white';">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                                        <span style="flex:1;">${name}</span>
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                    <a href="${url}" target="_blank" style="display:flex; align-items:center; gap:10px; padding:10px; background:white; border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--accent-primary); text-decoration:none; font-weight:500; font-size:0.9rem; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border-color)';">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                        <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${name}</span>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
                                     </a>
                                 `;
                             }).join('')}
                         </div>
-                        <p style="margin-top:20px; font-size:0.85rem; color:var(--text-muted); text-align:center;">* คลิกที่ชื่อไฟล์เพื่อเปิดดูหรือดาวน์โหลด</p>
                     </div>
                 `;
-            } else {
-                // Single file: Show iframe preview
-                let embedUrl = urls[0];
-                if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
-                    embedUrl = embedUrl.replace('/view', '/preview');
-                }
-                previewContent = `<iframe src="${embedUrl}" style="width:100%; height:550px; border:none; border-radius:var(--radius-sm);" allow="autoplay"></iframe>`;
             }
+
+            previewContent = iframeHtml + filesListHtml;
         } else {
             previewContent = `
                 <div class="animate-in" style="background:#f1f5f9; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; text-align:center; min-height:450px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
