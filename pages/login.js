@@ -161,7 +161,11 @@ function handleLogin(role) {
         });
 
         if (adminUser) {
-            performLogin('admin', { name: adminUser.name || 'ผู้ดูแลระบบ', roleName: 'Admin' });
+            performLogin('admin', { 
+                username: adminUser.username || adminUser.Username, 
+                name: adminUser.name || 'ผู้ดูแลระบบ', 
+                roleName: 'Admin' 
+            });
         } else {
             console.error('Admin Login Failed: No matching admin record found for password:', passTrimmed);
             return showError("รหัสผ่านไม่ถูกต้อง");
@@ -186,6 +190,11 @@ window.applyLoginState = function(role, userData) {
     window.currentUserRole = role;
     window.currentUserData = userData;
     window.isAdmin = (role === 'admin');
+    
+    // Super Admin check: Username must be "Super admin" or Name "Super Admin"
+    const username = String(userData.username || '').toLowerCase().trim();
+    const name = String(userData.name || '').toLowerCase().trim();
+    window.isSuperAdmin = (role === 'admin' && (username === 'super admin' || name === 'super admin'));
 
     // Bind current user to MOCK globally for profile rendering
     if (role === 'student' && userData.id) {
@@ -226,7 +235,7 @@ window.applyLoginState = function(role, userData) {
     const roleMap = {
         'student': 'นักศึกษา',
         'staff': userData.roleName || 'เจ้าหน้าที่',
-        'admin': 'Super Admin'
+        'admin': window.isSuperAdmin ? 'Super Admin' : 'Admin'
     };
 
     const displayName = userData.name || userData.id;
@@ -328,6 +337,20 @@ function applyRolePermissions(role) {
                 el.style.display = 'none';
             }
         });
+    } else if (role === 'admin') {
+        // Regular Admin vs Super Admin
+        if (!window.isSuperAdmin) {
+            const superAdminOnly = [
+                'nav-user-management',
+                'nav-manage-evals',
+                'nav-teacher-registration'
+            ];
+            allNavItems.forEach(el => {
+                if (superAdminOnly.includes(el.id)) {
+                    el.style.display = 'none';
+                }
+            });
+        }
     }
     // Super Admin sees everything (all visible by default)
 }

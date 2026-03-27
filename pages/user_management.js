@@ -66,7 +66,7 @@ pages['user-management'] = function() {
         </div>
         </div>
         
-        ${(window.currentUserRole === 'admin' && window.currentUserData?.name === 'Super Admin') ? `
+        ${window.isSuperAdmin ? `
         <!-- Role Permissions Matrix (Super Admin Only) -->
         <div class="card animate-in animate-delay-2" style="margin-top: 30px;">
             <div class="card-header">

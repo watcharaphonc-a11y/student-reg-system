@@ -309,10 +309,10 @@ window.submitSignedDoc = async function(docId) {
     const doc = MOCK.adminDocuments.find(d => d.id === docId);
     if (!doc) return;
 
-    showApiLoading('กำลังอัปโหลดไฟล์ที่ลงนามและบันทึกข้อมูล...');
+    showApiLoading(`กำลังอัปโหลดไฟล์ (0/${fileInput.files.length})...`);
     
     try {
-        const file = fileInput.files[0];
+        const uploadResults = [];
         const metadata = {
             id: doc.id,
             studentId: doc.studentId,
@@ -320,41 +320,50 @@ window.submitSignedDoc = async function(docId) {
             documentType: doc.documentType || doc.formName
         };
 
-        // 1. Upload the signed file
-        const uploadRes = await window.uploadFile(file, metadata);
-        if (uploadRes && uploadRes.status === 'success') {
-            const signedUrl = uploadRes.fileUrl;
+        // 1. Sequentially upload all selected signed files
+        for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            showApiLoading(`กำลังอัปโหลดไฟล์ (${i + 1}/${fileInput.files.length}): ${file.name}`);
             
-            // 2. Update the status in Sheet
-            const updatePayload = {
-                id: doc.id,
-                studentId: doc.studentId,
-                documentType: doc.documentType || doc.formName,
-                submitDate: doc.submitDate,
-                status: 'ลงนามเรียบร้อยแล้ว',
-                signedFileUrl: signedUrl,
-                note: 'อัปโหลดเอกสารลงนามแล้วโดยผู้ดูแลระบบ'
-            };
-
-            const updateRes = await postData('updateDocumentStatus', updatePayload);
-            
-            hideApiLoading();
-            if (updateRes && updateRes.status === 'success') {
-                closeModal();
-                alert('อัปโหลดไฟล์ลงนามและอัปเดตข้อมูลสำเร็จ');
-                MOCK.adminDocsSyncDone = false; // Trigger re-sync
-                renderPage();
+            const res = await window.uploadFile(file, metadata);
+            if (res && res.status === 'success') {
+                uploadResults.push(res);
             } else {
-                alert('อัปโหลดไฟล์สำเร็จ แต่ไม่สามารถอัปเดตสถานะใน Sheet ได้: ' + (updateRes ? updateRes.message : 'Unknown'));
+                throw new Error(`ไม่สามารถอัปโหลดไฟล์ ${file.name} ได้: ${res ? res.message : 'Unknown error'}`);
             }
+        }
+
+        const signedUrls = uploadResults.map(r => r.fileUrl).join(', ');
+        const signedNames = uploadResults.map(r => r.fileName).join(', ');
+
+        // 2. Update the status in Sheet with atomic record
+        showApiLoading('กำลังบันทึกข้อมูลสถานะลง Google Sheet...');
+        const updatePayload = {
+            id: doc.id,
+            studentId: doc.studentId,
+            documentType: doc.documentType || doc.formName,
+            submitDate: doc.submitDate,
+            status: 'ลงนามเรียบร้อยแล้ว',
+            signedFileUrl: signedUrls,
+            attachment: signedNames || doc.attachment, // Update signed names to reflect uploaded files
+            note: 'อัปโหลดเอกสารลงนามแล้วโดยผู้ดูแลระบบ'
+        };
+
+        const updateRes = await postData('updateDocumentStatus', updatePayload);
+        
+        hideApiLoading();
+        if (updateRes && updateRes.status === 'success') {
+            closeModal();
+            alert('อัปโหลดไฟล์ลงนาม (' + fileInput.files.length + ' ไฟล์) และอัปเดตข้อมูลสำเร็จ');
+            MOCK.adminDocsSyncDone = false; // Trigger re-sync
+            renderPage();
         } else {
-            hideApiLoading();
-            alert('ไม่สามารถอัปโหลดไฟล์ขึ้น Google Drive ได้: ' + (uploadRes ? uploadRes.message : 'Unknown'));
+            alert('อัปโหลดไฟล์สำเร็จ แต่ไม่สามารถอัปเดตสถานะใน Sheet ได้: ' + (updateRes ? updateRes.message : 'Unknown'));
         }
     } catch (err) {
         hideApiLoading();
-        console.error('Upload Signed Doc Error:', err);
-        alert('เกิดข้อผิดพลาด: ' + err.message);
+        console.error('Submit Signed Doc Error:', err);
+        alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + err.message);
     }
 };
 

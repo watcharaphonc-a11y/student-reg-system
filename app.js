@@ -51,7 +51,7 @@ function navigateTo(page) {
  * check if current user role has permission for an action
  */
 window.hasPermission = function (actionKey) {
-    if (window.currentUserRole === 'admin' && window.currentUserData?.name === 'Super Admin') return true; // Super Admin always YES
+    if (window.isSuperAdmin) return true; // Super Admin always YES
     if (!MOCK.permissions || MOCK.permissions.length === 0) return false;
 
     const rolePerms = MOCK.permissions.find(p => String(p.Role).toLowerCase() === String(window.currentUserRole).toLowerCase());
