@@ -525,6 +525,13 @@ async function bootApp() {
         }
         MOCK.permissions = allData.permissions || [];
 
+        // Set sync flags to prevent redundant per-page syncs
+        MOCK.adminDocsSyncDone = true;
+        MOCK.studentDocumentsSyncDone = true;
+        MOCK.studentExamsSyncDone = true;
+        MOCK.studentGradesSyncDone = true;
+        MOCK.studentPaymentsSyncDone = true;
+
         window.apiDataLoaded = true;
     } catch (e) {
         console.error('Failed to load API data:', e);
@@ -713,6 +720,19 @@ window.syncActiveStudentData = async function () {
     } finally {
         hideApiLoading();
         renderPage();
+    }
+};
+
+window.refreshAllData = async function() {
+    showApiLoading('กำลังอัปเดตข้อมูลทั้งหมดจากเซิร์ฟเวอร์...');
+    try {
+        await bootApp();
+        alert('อัปเดตข้อมูลล่าสุดเรียบร้อยแล้ว');
+    } catch (err) {
+        console.error('Refresh All Data failed:', err);
+        alert('ไม่สามารถอัปเดตข้อมูลได้: ' + err.message);
+    } finally {
+        hideApiLoading();
     }
 };
 

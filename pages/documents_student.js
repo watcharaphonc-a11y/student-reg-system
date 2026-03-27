@@ -150,6 +150,10 @@ window.updateGenerationField = function () {
 
 window.init_petitions_student = function () {
     window.updateGenerationField();
+    // If global data loaded successfully, we already have templates in MOCK.
+    if (!MOCK.studentPetitionsSyncDone && window.apiDataLoaded === true) {
+        MOCK.studentPetitionsSyncDone = true;
+    }
 };
 
 // ============================
@@ -271,6 +275,11 @@ window.syncStudentDocuments = async function() {
 };
 
 window.init_documents_status = function() {
+    // If global data loaded successfully, we already have studentDocuments in MOCK. 
+    if (!MOCK.studentDocumentsSyncDone && window.apiDataLoaded === true) {
+        MOCK.studentDocumentsSyncDone = true;
+    }
+    
     // Only fetch if we haven't fetched real data yet or if requested
     if (!MOCK.studentDocumentsSyncDone) {
         window.syncStudentDocuments().then(() => {

@@ -130,6 +130,13 @@ window.syncAdminDocuments = async function() {
 };
 
 window.init_documents_admin = function() {
+    // If global data loaded successfully, we already have adminDocuments in MOCK. 
+    // Only fetch if explicitly marked as not done or if we need a refresh.
+    if (!MOCK.adminDocsSyncDone && window.apiDataLoaded === true) {
+        // Data is already there from bootApp, just mark as done
+        MOCK.adminDocsSyncDone = true;
+    }
+    
     if (!MOCK.adminDocsSyncDone) {
         window.syncAdminDocuments().then(() => {
             MOCK.adminDocsSyncDone = true;
