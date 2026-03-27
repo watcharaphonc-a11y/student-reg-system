@@ -2,7 +2,7 @@
 // Google Sheets API Integration
 // ============================
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyRPhkG1zKjpiiUvSU2GzKtTf9z8ejvhFTWlL5Y4wElapv5TEQfWVOnw38iXHYLrM13/exec'.trim();
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx8MRS4_Kk9LIJaVJBd8xA-wvNj3EVS1Bq_I8f5ax1FrzpGgGEzrV597fJ9842YTEoS/exec'.trim();
 
 // Loading overlay to block UI during API calls
 function showApiLoading(message = 'กำลังโหลดข้อมูล...') {
@@ -96,4 +96,31 @@ window.uploadFile = async function (file, metadata) {
         reader.onerror = error => reject(error);
         reader.readAsDataURL(file); // This converts file to base64 string
     });
+};
+
+// Upload Multiple Files (Batch)
+window.uploadFilesBatch = async function (fileList, metadataBase) {
+    const promises = Array.from(fileList).map(file => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                resolve({
+                    ...metadataBase,
+                    fileName: file.name,
+                    mimeType: file.type,
+                    base64Data: reader.result
+                });
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    });
+
+    try {
+        const payloads = await Promise.all(promises);
+        return await postData('uploadBatch', payloads);
+    } catch (err) {
+        console.error('Batch Reading Error:', err);
+        throw err;
+    }
 };

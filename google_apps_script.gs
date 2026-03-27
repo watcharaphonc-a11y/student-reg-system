@@ -148,6 +148,8 @@ function doPost(e) {
         break;
       case 'uploadDocument':
         return uploadDocumentToDrive(payload);
+      case 'uploadBatch':
+        return uploadBatch(payload);
       case 'updateDocumentStatus':
         return updateDocumentStatus(payload);
       case 'importGrades':
@@ -319,6 +321,49 @@ function uploadDocumentToDrive(payload) {
   appendRow(SHEETS.DOCUMENTS, newRowPayload);
   
   return createResponse({ status: 'success', id: newId, fileUrl: fileUrl, action: 'insert' });
+}
+
+/**
+ * Handle Batch File Uploads for Speed
+ */
+function uploadBatch(payloads) {
+  if (!Array.isArray(payloads)) return createResponse({ status: 'error', message: 'Payload must be an array' });
+  
+  const folderName = "Student_Documents";
+  let folder;
+  const folders = DriveApp.getFoldersByName(folderName);
+  folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+  
+  const results = payloads.map(payload => {
+    try {
+      let data = payload.base64Data;
+      if (data && data.indexOf(',') > -1) data = data.split(',')[1];
+      
+      const blob = Utilities.newBlob(Utilities.base64Decode(data), payload.mimeType || 'application/pdf', payload.fileName || 'document.pdf');
+      const file = folder.createFile(blob);
+      file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      const fileUrl = file.getUrl();
+      
+      const newId = payload.id || ('DOC-' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000));
+      const newRowPayload = {
+        'รหัสติดตาม': newId,
+        'รหัสนักศึกษา': payload.studentId || '',
+        'ชื่อผู้ส่ง': payload.senderName || '',
+        'ประเภทเอกสาร': payload.documentType || 'ทั่วไป',
+        'ชื่อไฟล์': payload.fileName || '',
+        'ลิงก์เอกสาร': fileUrl,
+        'วันที่ส่ง': new Date().toLocaleString('th-TH'),
+        'สถานะ': 'รอตรวจสอบ'
+      };
+      
+      appendRow(SHEETS.DOCUMENTS, newRowPayload);
+      return { status: 'success', id: newId, fileName: payload.fileName, fileUrl: fileUrl };
+    } catch (err) {
+      return { status: 'error', fileName: payload.fileName, message: err.toString() };
+    }
+  });
+  
+  return createResponse({ status: 'success', results: results });
 }
 
 /**

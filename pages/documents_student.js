@@ -481,62 +481,59 @@ window.submitStudentDocument = function () {
         note = `[แก้ไขอ้างอิง ${window.selectedRefDocId}] ` + note;
     }
     const files = Array.from(fileInput.files);
-    showApiLoading(`กำลังส่งเอกสาร (${files.length} ไฟล์) และบันทึกข้อมูล...`);
+    showApiLoading(`กำลังส่งเอกสาร (${files.length} ไฟล์) ในครั้งเดียว...`);
 
-    // We'll upload all files. To keep tracking simple, we'll use the same metadata
-    // but GAS will create separate rows or we can handle it.
-    // Given the current GAS script, it creates one row per uploadDocument call.
-    
-    const uploadPromises = files.map(file => {
-        const metadata = {
-            studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
-            senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
-            documentType: template.name,
-            major: majorId,
-            note: note
-        };
-        return window.uploadFile(file, metadata);
-    });
+    const metadataBase = {
+        studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
+        senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
+        documentType: template.name,
+        major: majorId,
+        note: note
+    };
 
-    Promise.all(uploadPromises)
-        .then(responses => {
+    window.uploadFilesBatch(files, metadataBase)
+        .then(response => {
             hideApiLoading();
-            const successResponses = responses.filter(r => r && r.status === 'success');
-            
-            if (successResponses.length > 0) {
-                // Update local MOCK for immediate UI feedback (show only the first one or a summary)
-                const firstResp = successResponses[0];
-                const docId = firstResp.id || ('DOC-SUB' + Math.floor(Math.random() * 9000 + 1000));
-                const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+            if (response && response.status === 'success' && response.results) {
+                const results = response.results;
+                const successResults = results.filter(r => r.status === 'success');
+                
+                if (successResults.length > 0) {
+                    const firstSuccess = successResults[0];
+                    const docId = firstSuccess.id || 'DOC-BATCH';
+                    const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
 
-                const newDoc = {
-                    id: docId,
-                    formId: formId,
-                    formName: template.name,
-                    status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
-                    submitDate: today,
-                    lastUpdate: today,
-                    attachment: files.length === 1 ? files[0].name : `${files[0].name} (และอีก ${files.length - 1} ไฟล์)`,
-                    fileUrl: firstResp.fileUrl
-                };
+                    const newDoc = {
+                        id: docId,
+                        formId: formId,
+                        formName: template.name,
+                        status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
+                        submitDate: today,
+                        lastUpdate: today,
+                        attachment: files.length === 1 ? files[0].name : `${files[0].name} (และอีก ${files.length - 1} ไฟล์)`,
+                        fileUrl: firstSuccess.fileUrl
+                    };
 
-                if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
-                MOCK.studentDocuments.unshift(newDoc);
+                    if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
+                    MOCK.studentDocuments.unshift(newDoc);
 
-                alert(`ส่งเอกสารสำเร็จ ${successResponses.length}/${files.length} ไฟล์\nรหัสติดตาม: ${docId}`);
+                    alert(`ส่งเอกสารสำเร็จ ${successResults.length}/${files.length} ไฟล์\nรหัสติดตามชุดแรก: ${docId}`);
 
-                if (typeof navigateTo === 'function') {
-                    navigateTo('documents-status');
+                    if (typeof navigateTo === 'function') {
+                        navigateTo('documents-status');
+                    } else {
+                        renderPage();
+                    }
                 } else {
-                    renderPage();
+                    alert('เกิดข้อผิดพลาดในการส่งทุกไฟล์: ' + (results[0] ? results[0].message : 'Unknown error'));
                 }
             } else {
-                alert('เกิดข้อผิดพลาดในการส่งเอกสาร: ' + (responses[0] ? responses[0].message : 'Unknown error'));
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ API หรือการส่งข้อมูลชุดรวม');
             }
         })
         .catch(err => {
             hideApiLoading();
-            console.error('Upload Error:', err);
+            console.error('Batch Upload Error:', err);
             alert('ไม่สามารถเชื่อมต่อกับ Google Sheets API ได้: ' + err.message);
         });
 };
