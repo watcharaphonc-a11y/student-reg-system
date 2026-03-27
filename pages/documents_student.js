@@ -481,59 +481,57 @@ window.submitStudentDocument = function () {
         note = `[แก้ไขอ้างอิง ${window.selectedRefDocId}] ` + note;
     }
     const files = Array.from(fileInput.files);
-    showApiLoading(`กำลังส่งเอกสาร (${files.length} ไฟล์) ในครั้งเดียว...`);
+    showApiLoading(`กำลังส่งเอกสาร (${files.length} ไฟล์) โปรดรอมักครู่...`);
 
-    const metadataBase = {
-        studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
-        senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
-        documentType: template.name,
-        major: majorId,
-        note: note
-    };
+    const uploadPromises = files.map(file => {
+        const metadata = {
+            studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
+            senderName: MOCK.student ? (MOCK.student.prefix + MOCK.student.firstName + ' ' + MOCK.student.lastName) : 'Unknown',
+            documentType: template.name,
+            major: majorId,
+            note: note
+        };
+        return window.uploadFile(file, metadata);
+    });
 
-    window.uploadFilesBatch(files, metadataBase)
-        .then(response => {
+    Promise.all(uploadPromises)
+        .then(responses => {
             hideApiLoading();
-            if (response && response.status === 'success' && response.results) {
-                const results = response.results;
-                const successResults = results.filter(r => r.status === 'success');
-                
-                if (successResults.length > 0) {
-                    const firstSuccess = successResults[0];
-                    const docId = firstSuccess.id || 'DOC-BATCH';
-                    const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
+            const successResults = responses.filter(r => r && r.status === 'success');
+            
+            if (successResults.length > 0) {
+                const firstSuccess = successResults[0];
+                const docId = firstSuccess.id || 'DOC-SUB';
+                const today = new Date().toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
 
-                    const newDoc = {
-                        id: docId,
-                        formId: formId,
-                        formName: template.name,
-                        status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
-                        submitDate: today,
-                        lastUpdate: today,
-                        attachment: files.length === 1 ? files[0].name : `${files[0].name} (และอีก ${files.length - 1} ไฟล์)`,
-                        fileUrl: firstSuccess.fileUrl
-                    };
+                const newDoc = {
+                    id: docId,
+                    formId: formId,
+                    formName: template.name,
+                    status: 'รอเจ้าหน้าที่งานบัณฑิตศึกษาตรวจสอบ',
+                    submitDate: today,
+                    lastUpdate: today,
+                    attachment: files.length === 1 ? files[0].name : `${files[0].name} (และอีก ${files.length - 1} ไฟล์)`,
+                    fileUrl: firstSuccess.fileUrl
+                };
 
-                    if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
-                    MOCK.studentDocuments.unshift(newDoc);
+                if (!MOCK.studentDocuments) MOCK.studentDocuments = [];
+                MOCK.studentDocuments.unshift(newDoc);
 
-                    alert(`ส่งเอกสารสำเร็จ ${successResults.length}/${files.length} ไฟล์\nรหัสติดตามชุดแรก: ${docId}`);
+                alert(`ส่งเอกสารสำเร็จ ${successResults.length}/${files.length} ไฟล์\nรหัสติดตาม: ${docId}`);
 
-                    if (typeof navigateTo === 'function') {
-                        navigateTo('documents-status');
-                    } else {
-                        renderPage();
-                    }
+                if (typeof navigateTo === 'function') {
+                    navigateTo('documents-status');
                 } else {
-                    alert('เกิดข้อผิดพลาดในการส่งทุกไฟล์: ' + (results[0] ? results[0].message : 'Unknown error'));
+                    renderPage();
                 }
             } else {
-                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ API หรือการส่งข้อมูลชุดรวม');
+                alert('เกิดข้อผิดพลาดในการส่งทุกไฟล์ กรุณาลดขนาดไฟล์หรือตรวจสอบการเชื่อมต่ออินเทอร์เน็ตครับ');
             }
         })
         .catch(err => {
             hideApiLoading();
-            console.error('Batch Upload Error:', err);
-            alert('ไม่สามารถเชื่อมต่อกับ Google Sheets API ได้: ' + err.message);
+            console.error('Parallel Upload Error:', err);
+            alert('ไม่สามารถส่งเอกสารได้: ' + err.message);
         });
 };

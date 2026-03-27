@@ -334,6 +334,12 @@ function uploadBatch(payloads) {
   const folders = DriveApp.getFoldersByName(folderName);
   folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
   
+  const sheet = SS.getSheetByName(SHEETS.DOCUMENTS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Documents sheet not found' });
+  
+  // Get headers to ensure correct column mapping
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  
   const results = payloads.map(payload => {
     try {
       let data = payload.base64Data;
@@ -356,9 +362,13 @@ function uploadBatch(payloads) {
         'สถานะ': 'รอตรวจสอบ'
       };
       
-      appendRow(SHEETS.DOCUMENTS, newRowPayload);
+      // Efficient append: build row based on headers
+      const row = headers.map(h => newRowPayload[h] || '');
+      sheet.appendRow(row); 
+      
       return { status: 'success', id: newId, fileName: payload.fileName, fileUrl: fileUrl };
     } catch (err) {
+      console.error('Upload Error for ' + payload.fileName, err);
       return { status: 'error', fileName: payload.fileName, message: err.toString() };
     }
   });

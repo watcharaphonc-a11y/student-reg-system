@@ -72,55 +72,57 @@ async function postData(action, payload) {
     }
 }
 
-// Upload File (POST with Base64)
-// parameters: file (File object), metadata (object with studentId, etc.)
+// Upload Single File (Robust for large files)
 window.uploadFile = async function (file, metadata) {
+    const MAX_FILE_SIZE = 40 * 1024 * 1024; // 40MB limit per file (approx 53MB in base64)
+    if (file.size > MAX_FILE_SIZE) {
+        throw new Error(`ไฟล์ "${file.name}" มีขนาดใหญ่เกินไป (${(file.size / (1024 * 1024)).toFixed(2)}MB) ระบบรองรับสูงสุด 40MB ต่อไฟล์ กรุณาลดขนาดไฟล์ก่อนส่งครับ`);
+    }
+
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = async () => {
-            const base64Data = reader.result;
-            const payload = {
-                ...metadata,
-                fileName: file.name,
-                mimeType: file.type,
-                base64Data: base64Data
-            };
-
             try {
-                const response = await postData('uploadDocument', payload);
-                resolve(response);
+                const payload = {
+                    ...metadata,
+                    fileName: file.name,
+                    mimeType: file.type,
+                    base64Data: reader.result
+                };
+                const result = await postData('uploadDocument', payload, 300000); // 5 minute timeout
+                resolve(result);
             } catch (err) {
                 reject(err);
             }
         };
-        reader.onerror = error => reject(error);
-        reader.readAsDataURL(file); // This converts file to base64 string
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
     });
 };
 
-// Upload Multiple Files (Batch)
-window.uploadFilesBatch = async function (fileList, metadataBase) {
-    const promises = Array.from(fileList).map(file => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = () => {
-                resolve({
-                    ...metadataBase,
-                    fileName: file.name,
-                    mimeType: file.type,
-                    base64Data: reader.result
-                });
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-        });
-    });
+// Generic POST helper with custom timeout
+async function postData(action, payload, timeoutMs = 120000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-        const payloads = await Promise.all(promises);
-        return await postData('uploadBatch', payloads);
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: action, payload: payload }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+        }
+        
+        return await response.json();
     } catch (err) {
-        console.error('Batch Reading Error:', err);
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+            throw new Error(`การเชื่อมต่อหมดเวลา (Timeout) หลังจากรอ ${timeoutMs/1000} วินาที อาจเกิดจากไฟล์มีขนาดใหญ่หรืออินเทอร์เน็ตไม่เสถียรครับ`);
+        }
         throw err;
     }
-};
+}
