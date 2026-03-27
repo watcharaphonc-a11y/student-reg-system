@@ -402,7 +402,14 @@ function saveDocumentRecord(payload) {
       'ชื่อไฟล์': payload.fileNames || '', // Combined names
       'ลิงก์เอกสาร': payload.fileUrls || '', // Combined URLs
       'วันที่ส่ง': Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm'),
-      'สถานะ': 'รอตรวจสอบ'
+      'สถานะ': 'รอตรวจสอบ',
+      'ประวัติการดำเนินการ': JSON.stringify([{
+        event: 'ยื่นคำร้อง',
+        status: 'รอตรวจสอบ',
+        actor: payload.senderName || 'นักศึกษา',
+        timestamp: Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm'),
+        note: payload.note || 'ยื่นคำร้องผ่านระบบ'
+      }])
     };
     
     appendRow(SHEETS.DOCUMENTS, newRowPayload);
@@ -449,7 +456,14 @@ function uploadBatch(payloads) {
         'ชื่อไฟล์': payload.fileName || '',
         'ลิงก์เอกสาร': fileUrl,
         'วันที่ส่ง': Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm'),
-        'สถานะ': 'รอตรวจสอบ'
+        'สถานะ': 'รอตรวจสอบ',
+        'ประวัติการดำเนินการ': JSON.stringify([{
+          event: 'ยื่นคำร้อง (อัปโหลดไฟล์)',
+          status: 'รอตรวจสอบ',
+          actor: payload.senderName || 'นักศึกษา',
+          timestamp: Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm'),
+          note: payload.note || 'ยื่นคำร้องและอัปโหลดไฟล์ผ่านระบบ'
+        }])
       };
       
       // Efficient append: build row based on headers
@@ -542,6 +556,30 @@ function updateDocumentStatus(payload) {
       sheet.getRange(rowIndex, colIndex).setValue(updateMap[headerName]);
     }
   });
+
+  // Update History (ประวัติการดำเนินการ)
+  const histCol = headers.indexOf('ประวัติการดำเนินการ');
+  if (histCol !== -1) {
+    let history = [];
+    const histVal = rows[rowIndex - 2][histCol];
+    if (histVal) {
+      try {
+        history = JSON.parse(histVal);
+      } catch (e) {
+        history = [{ event: 'ข้อมูลเดิม', status: rows[rowIndex-2][headers.indexOf('สถานะ')], timestamp: '-', note: histVal }];
+      }
+    }
+    
+    history.push({
+      event: 'ปรับปรุงสถานะ',
+      status: payload.status,
+      actor: 'เจ้าหน้าที่',
+      timestamp: Utilities.formatDate(new Date(), 'Asia/Bangkok', 'dd/MM/yyyy HH:mm'),
+      note: payload.note || ''
+    });
+    
+    sheet.getRange(rowIndex, histCol + 1).setValue(JSON.stringify(history));
+  }
   
   return createResponse({ status: 'success' });
 }
@@ -685,7 +723,7 @@ function setupInitialSheets() {
     [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
     [SHEETS.PAYMENTS]: ['รหัสนักศึกษา', 'รายการ', 'จำนวนเงิน', 'สถานะ', 'วันที่'],
     [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
-    [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ'],
+    [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ', 'ประวัติการดำเนินการ'],
     [SHEETS.ANNOUNCEMENTS]: ['รหัสประกาศ', 'ประเภท', 'หัวข้อ', 'เนื้อหา', 'วันที่ประกาศ', 'ไอคอน', 'ผู้ประกาศ'],
     [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data'],
     [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note'],

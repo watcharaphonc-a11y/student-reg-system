@@ -110,7 +110,8 @@ window.syncAdminDocuments = async function() {
                     attachment: row['ชื่อไฟล์'] || '-',
                     fileUrl: row['ลิงก์เอกสาร'] || null,
                     signedFileUrl: row['ลิงก์เอกสารที่ลงนาม'] || null,
-                    note: row['หมายเหตุ'] || ''
+                    note: row['หมายเหตุ'] || '',
+                    history: row['ประวัติการดำเนินการ'] || '[]'
                 };
             });
             
@@ -287,6 +288,7 @@ window.previewAdminDoc = function(docId) {
                 </div>
                 
                 ${previewContent}
+                ${timelineHtml}
 
                 <div style="margin-top:15px; padding:15px; background:var(--bg-secondary); border-radius:var(--radius-sm); border:1px solid var(--border-color);">
                     <p style="margin:0 0 4px; font-size:0.95rem;"><strong>ชื่อนักศึกษา:</strong> ${doc.senderName}</p>

@@ -254,7 +254,8 @@ window.syncStudentDocuments = async function() {
                         attachment: row['ชื่อไฟล์'] || '-',
                         fileUrl: row['ลิงก์เอกสาร'] || null,
                         signedFileUrl: row['ลิงก์เอกสารที่ลงนาม'] || null,
-                        note: row['หมายเหตุ'] || ''
+                        note: row['หมายเหตุ'] || '',
+                        history: row['ประวัติการดำเนินการ'] || '[]'
                     };
                 });
             
@@ -338,12 +339,50 @@ window.previewStudentDoc = function(docId) {
             const iframeHtml = `<iframe src="${embedUrl}" style="width:100%; height:450px; border:none; border-radius:var(--radius-sm);" allow="autoplay"></iframe>`;
 
             previewContent = filesListHtml + iframeHtml;
-        } else {
-            previewContent = `
-                <div class="animate-in" style="background:#f1f5f9; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; text-align:center; min-height:400px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom:15px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-                    <div style="color:var(--text-primary); font-weight:500; font-size:1.1rem; margin-bottom:5px;">ไม่พบไฟล์เอกสาร</div>
-                    <div style="color:var(--text-muted); font-size:0.9rem;">(เอกสารนี้อาจถูกส่งก่อนที่จะมีการอัปเกรดระบบจัดเก็บไฟล์)</div>
+        }
+
+        // 3. Document Timeline (ประวัติการดำเนินการ)
+        let history = [];
+        try { history = JSON.parse(doc.history || '[]'); } catch(e) { history = []; }
+        
+        let timelineHtml = '';
+        if (history.length > 0) {
+            timelineHtml = `
+                <div style="margin-top:25px; padding-top:20px; border-top:1px solid var(--border-color);">
+                    <h4 style="margin:0 0 15px; color:var(--text-primary); font-size:1rem; display:flex; align-items:center; gap:8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        เส้นเวลาการดำเนินงาน (Timeline)
+                    </h4>
+                    <div class="timeline">
+                        ${history.map((h, idx) => {
+                            const isActive = (idx === history.length - 1);
+                            let statusBadge = '';
+                            if (h.status) {
+                                let badgeClass = 'neutral';
+                                if (h.status.includes('อนุมัติ')) badgeClass = 'success';
+                                if (h.status.includes('ปฏิเสธ')) badgeClass = 'danger';
+                                if (h.status.includes('รอ') || h.status.includes('กำลัง')) badgeClass = 'warning';
+                                statusBadge = `<span class="timeline-status badge ${badgeClass}">${h.status}</span>`;
+                            }
+
+                            return `
+                                <div class="timeline-item ${isActive ? 'active' : ''}">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-header">
+                                            <div class="timeline-title">${h.event || 'เปลี่ยนสถานะ'}</div>
+                                            <div class="timeline-time">${h.timestamp || ''}</div>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                                            ${statusBadge}
+                                            <div style="font-size:0.75rem; color:var(--text-muted);">โดย: ${h.actor || '-'}</div>
+                                        </div>
+                                        ${h.note ? `<div class="timeline-note">${h.note}</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).reverse().join('')}
+                    </div>
                 </div>
             `;
         }
@@ -358,6 +397,7 @@ window.previewStudentDoc = function(docId) {
                 </div>
                 
                 ${previewContent}
+                ${timelineHtml}
             </div>
         `;
         openModal('พรีวิวเอกสารคำร้อง', modalHtml, '800px');
