@@ -195,7 +195,8 @@ async function bootApp() {
                             term: sem,
                             gpa: 0, 
                             totalCredits: 0, 
-                            totalPoints: 0, 
+                            gpaCredits: 0,
+                            gpaPoints: 0,
                             courses: [] 
                         };
                     }
@@ -211,7 +212,21 @@ async function bootApp() {
 
                     // All credits count toward total (including Thesis)
                     gradesMap[semKey].totalCredits += cCredits;
-                    gradesMap[semKey].totalPoints += (point * cCredits);
+
+                    // Exclude Thesis and non-GPA grades from GPA calculation
+                    const courseName = String(e['course_name'] || e['ชื่อวิชา'] || '').trim();
+                    const courseCode = String(e['course_code'] || e['รหัสวิชา'] || '').trim();
+                    const isThesis = courseName.includes('วิทยานิพนธ์') || 
+                                     courseName.toLowerCase().includes('thesis') ||
+                                     courseCode.startsWith('1005002') ||
+                                     courseCode.startsWith('1005003') ||
+                                     courseCode.startsWith('1005004');
+                    const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(cGrade.toUpperCase());
+
+                    if (!isThesis && !isNonGPA) {
+                        gradesMap[semKey].gpaCredits += cCredits;
+                        gradesMap[semKey].gpaPoints += (point * cCredits);
+                    }
                 });
 
                 const finalGrades = Object.values(gradesMap)
@@ -224,16 +239,24 @@ async function bootApp() {
                         year: g.year,
                         term: g.term,
                         totalCredits: g.totalCredits,
-                        totalPoints: g.totalPoints,
-                        gpa: g.totalCredits > 0 ? (g.totalPoints / g.totalCredits) : 0,
+                        gpa: g.gpaCredits > 0 ? (g.gpaPoints / g.gpaCredits) : 0,
                         courses: g.courses
                     }));
 
                 // Overall Stats
                 const allCourses = finalGrades.flatMap(g => g.courses);
                 const overallCredits = allCourses.reduce((sum, c) => sum + (c.credits || 0), 0);
-                const overallPoints = allCourses.reduce((sum, c) => sum + (c.point * c.credits), 0);
-                const overallGpa = overallCredits > 0 ? (overallPoints / overallCredits) : 0;
+                
+                // GPA excludes Thesis and non-GPA grades
+                const gpaCourses = allCourses.filter(c => {
+                    const isThesis = (c.name || '').includes('วิทยานิพนธ์') || (c.name || '').toLowerCase().includes('thesis') ||
+                                     (c.code || '').startsWith('1005002') || (c.code || '').startsWith('1005003') || (c.code || '').startsWith('1005004');
+                    const isNonGPA = ['P', 'S', 'U', 'W', 'I'].includes(String(c.grade || '').toUpperCase());
+                    return !isThesis && !isNonGPA;
+                });
+                const overallGpaCredits = gpaCourses.reduce((sum, c) => sum + (c.credits || 0), 0);
+                const overallGpaPoints = gpaCourses.reduce((sum, c) => sum + ((c.point || 0) * (c.credits || 0)), 0);
+                const overallGpa = overallGpaCredits > 0 ? (overallGpaPoints / overallGpaCredits) : 0;
 
                 return {
                     id: sId || s['เลขประจำตัวประชาชน'] || s['เลขบัตรประชาชน'] || s.id,
