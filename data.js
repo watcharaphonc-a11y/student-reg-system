@@ -61,6 +61,15 @@ const MOCK = {
     // แบบประเมินการสอน (จาก API)
     evaluations: [],
 
+    // คำถามประเมินแยกตามวิชา (จาก API — EvalQuestions sheet)
+    evalQuestions: [],
+
+    // อาจารย์ที่สอนแต่ละวิชา (จาก API — CourseInstructors sheet)
+    courseInstructors: [],
+
+    // คำถามประเมินอาจารย์ (จาก API — EvalInstructorQuestions sheet)
+    evalInstructorQuestions: [],
+
     // แผนการศึกษาคณะพยาบาลศาสตร์
     studyPlans: [
         {

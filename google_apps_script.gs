@@ -24,7 +24,10 @@ const SHEETS = {
   DOCUMENTS: 'Documents',
   ANNOUNCEMENTS: 'Announcements',
   PERMISSIONS: 'Permissions',
-  EXAMS: 'Exams'
+  EXAMS: 'Exams',
+  EVAL_QUESTIONS: 'EvalQuestions',
+  COURSE_INSTRUCTORS: 'CourseInstructors',
+  EVAL_INSTRUCTOR_QUESTIONS: 'EvalInstructorQuestions'
 };
 
 /**
@@ -69,6 +72,9 @@ function doGet(e) {
           enrollments: getSheetData(SHEETS.ENROLLMENTS),
           payments: getSheetData(SHEETS.PAYMENTS),
           evaluations: getSheetData(SHEETS.EVALUATIONS),
+          evalQuestions: getSheetData(SHEETS.EVAL_QUESTIONS),
+          courseInstructors: getSheetData(SHEETS.COURSE_INSTRUCTORS),
+          evalInstructorQuestions: getSheetData(SHEETS.EVAL_INSTRUCTOR_QUESTIONS),
           documents: getSheetData(SHEETS.DOCUMENTS),
           announcements: getSheetData(SHEETS.ANNOUNCEMENTS),
           permissions: getSheetData(SHEETS.PERMISSIONS),
@@ -80,6 +86,15 @@ function doGet(e) {
         break;
       case 'getExams':
         data = getSheetData(SHEETS.EXAMS);
+        break;
+      case 'getEvalQuestions':
+        data = getSheetData(SHEETS.EVAL_QUESTIONS);
+        break;
+      case 'getCourseInstructors':
+        data = getSheetData(SHEETS.COURSE_INSTRUCTORS);
+        break;
+      case 'getEvalInstructorQuestions':
+        data = getSheetData(SHEETS.EVAL_INSTRUCTOR_QUESTIONS);
         break;
       default:
         return createResponse({ status: 'error', message: 'Unknown action' });
@@ -141,6 +156,8 @@ function doPost(e) {
         return updateExamResult(payload);
       case 'importExams':
         return importExamsBatch(payload);
+      case 'submitEvaluation':
+        return submitEvaluationResult(payload);
       default:
         return createResponse({ status: 'error', message: 'Unknown POST action' });
     }
@@ -522,7 +539,10 @@ function setupInitialSheets() {
     [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ'],
     [SHEETS.ANNOUNCEMENTS]: ['รหัสประกาศ', 'ประเภท', 'หัวข้อ', 'เนื้อหา', 'วันที่ประกาศ', 'ไอคอน', 'ผู้ประกาศ'],
     [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data'],
-    [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note']
+    [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note'],
+    [SHEETS.EVAL_QUESTIONS]: ['course_code', 'section', 'category', 'question_id', 'question_text'],
+    [SHEETS.COURSE_INSTRUCTORS]: ['course_code', 'course_name', 'instructor_name', 'group', 'semester', 'academic_year'],
+    [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text']
   };
 
   const defaultPermissions = [
@@ -683,4 +703,46 @@ function importExamsBatch(payload) {
   }
 
   return createResponse({ status: 'success', count: data.length });
+}
+
+/**
+ * Submit Evaluation Result (Course or Instructor)
+ */
+function submitEvaluationResult(payload) {
+  const sheet = SS.getSheetByName(SHEETS.EVALUATIONS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Evaluations sheet not found' });
+  
+  const evalId = 'EVAL-' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000);
+  const dateStr = new Date().toISOString().split('T')[0];
+  
+  const rowPayload = {
+    'id': evalId,
+    'type': payload.type || 'course',
+    'student_id': payload.studentId || '',
+    'course_code': payload.courseCode || '',
+    'course_name': payload.courseName || '',
+    'instructor': payload.instructor || '',
+    'scores': JSON.stringify(payload.scores || {}),
+    'comment': payload.comment || '',
+    'skipped': payload.skipped ? 'true' : 'false',
+    'date': dateStr
+  };
+  
+  // Ensure headers exist
+  const currentHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0].map(h => String(h).trim());
+  const requiredHeaders = Object.keys(rowPayload);
+  
+  requiredHeaders.forEach(h => {
+    if (currentHeaders.indexOf(h) === -1) {
+      sheet.getRange(1, sheet.getLastColumn() + 1).setValue(h);
+      currentHeaders.push(h);
+    }
+  });
+  
+  // Build row based on actual header order
+  const updatedHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  const newRow = updatedHeaders.map(h => rowPayload[h] || '');
+  sheet.appendRow(newRow);
+  
+  return createResponse({ status: 'success', id: evalId });
 }

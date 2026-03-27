@@ -1,11 +1,37 @@
 // ============================
-// Course Evaluation Page (ประเมินการจัดการเรียนการสอนของรายวิชา)
+// Course Evaluation Page — Wizard-style per-course assessment
+// (ประเมินการจัดการเรียนการสอนของรายวิชา)
 // ============================
+
 pages['eval-course'] = function() {
     const evals = MOCK.evaluations || [];
-    const enrolled = MOCK.enrolledCourses || [];
-    const total = enrolled.length;
-    const completed = enrolled.filter(c => evals.some(e => e.courseCode === c.code && e.type === 'course')).length;
+    const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
+    
+    // Build enrolled courses from student's grades (from Enrollments sheet)
+    const enrolled = (MOCK.grades || []).flatMap(sem => 
+        (sem.courses || []).map(c => ({ 
+            code: c.code, 
+            name: c.name, 
+            credits: c.credits,
+            semester: sem.term,
+            year: sem.year
+        }))
+    );
+    
+    // Deduplicate by course code
+    const uniqueEnrolled = [];
+    const seenCodes = new Set();
+    enrolled.forEach(c => {
+        if (!seenCodes.has(c.code)) {
+            seenCodes.add(c.code);
+            uniqueEnrolled.push(c);
+        }
+    });
+    
+    const total = uniqueEnrolled.length;
+    const completed = uniqueEnrolled.filter(c => 
+        evals.some(e => e.courseCode === c.code && e.type === 'course' && e.studentId === studentId)
+    ).length;
     const pending = total - completed;
     const percent = total > 0 ? Math.round((completed / total) * 100) : 0;
 
@@ -13,7 +39,7 @@ pages['eval-course'] = function() {
     <div class="animate-in">
         <div class="page-header">
             <h1 class="page-title">ประเมินการจัดการเรียนการสอนของรายวิชา</h1>
-            <p class="page-subtitle">ประเมินคุณภาพของรายวิชา เนื้อหา สื่อการเรียน และการจัดการเรียนการสอน</p>
+            <p class="page-subtitle">เลือกรายวิชาที่ต้องการประเมินจากรายวิชาที่ท่านลงทะเบียนเรียน</p>
         </div>
         
         <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
@@ -42,7 +68,7 @@ pages['eval-course'] = function() {
 
         <div class="card animate-in animate-delay-4">
             <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
-                <h3 class="card-title">รายวิชาที่ลงทะเบียน — ภาคฤดูร้อน/2568</h3>
+                <h3 class="card-title">เลือกรายวิชาที่ต้องการประเมิน</h3>
                 <div style="display:flex;align-items:center;gap:12px;font-size:0.9rem;">
                     <span style="color:var(--text-muted)">ความคืบหน้า:</span>
                     <div style="width:100px;height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden;">
@@ -52,34 +78,42 @@ pages['eval-course'] = function() {
                 </div>
             </div>
             <div class="card-body" style="padding:0">
-                <div class="table-wrapper">
-                    <table class="data-table">
-                        <thead>
-                            <tr><th>รหัสวิชา</th><th>ชื่อวิชา</th><th>หน่วยกิต</th><th>สถานะ</th><th>การดำเนินการ</th></tr>
-                        </thead>
-                        <tbody>
-                            ${enrolled.map(course => {
-                                const isEval = evals.find(e => e.courseCode === course.code && e.type === 'course');
-                                return `
-                                <tr>
-                                    <td style="font-weight:600;color:var(--accent-primary)">${course.code}</td>
-                                    <td>${course.name}</td>
-                                    <td style="text-align:center">${course.credits || '-'}</td>
-                                    <td>
-                                        ${isEval 
-                                            ? '<span class="badge success">ประเมินแล้ว</span>' 
-                                            : '<span class="badge warning">รอการประเมิน</span>'}
-                                    </td>
-                                    <td>
-                                        ${isEval
-                                            ? `<button class="btn btn-sm" disabled style="opacity:0.5;cursor:not-allowed">ประเมินแล้ว ✓</button>`
-                                            : `<button class="btn btn-primary btn-sm" onclick="openCourseEvalModal('${course.code}', '${course.name}', '${course.instructor || '-'}')">ประเมินรายวิชา</button>`
-                                        }
-                                    </td>
-                                </tr>`;
-                            }).join('')}
-                        </tbody>
-                    </table>
+                <div style="display:grid; grid-template-columns: 1fr; gap:0;">
+                    ${uniqueEnrolled.map(course => {
+                        const isEval = evals.find(e => e.courseCode === course.code && e.type === 'course' && e.studentId === studentId);
+                        // Check if course has questions in EvalQuestions sheet
+                        const hasQuestions = (MOCK.evalQuestions || []).some(q => 
+                            String(q.course_code || '').trim() === String(course.code).trim()
+                        );
+                        // Get instructors for this course
+                        const instructors = (MOCK.courseInstructors || [])
+                            .filter(ci => String(ci.course_code || '').trim() === String(course.code).trim())
+                            .map(ci => ci.instructor_name);
+                        
+                        return `
+                        <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border-color); ${isEval ? 'background:rgba(40,167,69,0.05)' : ''}">
+                            <div style="flex:1;">
+                                <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+                                    <span style="font-weight:700; color:var(--accent-primary); font-size:0.95rem;">${course.code}</span>
+                                    ${isEval ? '<span class="badge success" style="font-size:0.7rem;">ประเมินแล้ว ✓</span>' : '<span class="badge warning" style="font-size:0.7rem;">รอประเมิน</span>'}
+                                </div>
+                                <div style="font-weight:500; font-size:1rem; margin-bottom:2px;">${course.name}</div>
+                                <div style="font-size:0.8rem; color:var(--text-muted);">
+                                    หน่วยกิต: ${course.credits || '-'} 
+                                    ${instructors.length > 0 ? ' · อาจารย์: ' + instructors.slice(0,3).join(', ') + (instructors.length > 3 ? ` +${instructors.length-3}` : '') : ''}
+                                </div>
+                            </div>
+                            <div>
+                                ${isEval
+                                    ? '<button class="btn btn-sm" disabled style="opacity:0.5;cursor:not-allowed;background:var(--success);color:white;border:none;">ประเมินแล้ว</button>'
+                                    : `<button class="btn btn-primary btn-sm" onclick="startCourseEvalWizard('${course.code}', '${course.name.replace(/'/g, "\\\\'")}')">
+                                        ${hasQuestions ? 'เริ่มประเมิน →' : 'ประเมินรายวิชา →'}
+                                       </button>`
+                                }
+                            </div>
+                        </div>`;
+                    }).join('')}
+                    ${uniqueEnrolled.length === 0 ? '<div style="padding:40px;text-align:center;color:var(--text-muted);">ไม่พบรายวิชาที่ลงทะเบียน</div>' : ''}
                 </div>
             </div>
         </div>
@@ -87,34 +121,53 @@ pages['eval-course'] = function() {
 };
 
 // ============================
-// Instructor Evaluation Page (ประเมินอาจารย์ผู้สอน)
+// Instructor Evaluation Page
 // ============================
 pages['eval-instructor'] = function() {
     const evals = MOCK.evaluations || [];
-    const enrolled = MOCK.enrolledCourses || [];
+    const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
     
-    // Evaluate per-instructor-per-course
-    const evalItems = enrolled.filter(c => c.availableInstructors && c.availableInstructors.length > 0);
+    // Group instructors by course from CourseInstructors sheet
+    const courseInstructors = MOCK.courseInstructors || [];
+    const courseMap = {};
+    courseInstructors.forEach(ci => {
+        const code = String(ci.course_code || '').trim();
+        if (!courseMap[code]) {
+            courseMap[code] = {
+                code: code,
+                name: ci.course_name || '',
+                instructors: []
+            };
+        }
+        const instName = String(ci.instructor_name || '').trim();
+        if (instName && !courseMap[code].instructors.includes(instName)) {
+            courseMap[code].instructors.push(instName);
+        }
+    });
+
+    // Filter to only enrolled courses
+    const enrolledCodes = new Set();
+    (MOCK.grades || []).flatMap(sem => sem.courses || []).forEach(c => enrolledCodes.add(c.code));
+    
+    const evalItems = Object.values(courseMap).filter(c => enrolledCodes.has(c.code));
     
     let totalInstructors = 0;
     let completedInstructors = 0;
-
     evalItems.forEach(item => {
-        item.availableInstructors.forEach(ins => {
+        item.instructors.forEach(ins => {
             totalInstructors++;
-            if (evals.some(e => e.instructor === ins && e.courseCode === item.code && e.type === 'instructor')) {
+            if (evals.some(e => e.instructor === ins && e.courseCode === item.code && e.type === 'instructor' && e.studentId === studentId)) {
                 completedInstructors++;
             }
         });
     });
-    
     const pendingInstructors = totalInstructors - completedInstructors;
 
     return `
     <div class="animate-in">
         <div class="page-header">
             <h1 class="page-title">ประเมินอาจารย์ผู้สอน</h1>
-            <p class="page-subtitle">แสดงรายการวิชาและรายชื่ออาจารย์ผู้สอนทั้งหมด ให้นักศึกษาเลือกประเมินเฉพาะอาจารย์ที่ตนเองเรียนด้วย</p>
+            <p class="page-subtitle">เลือกประเมินเฉพาะอาจารย์ที่ท่านเรียนด้วยในแต่ละวิชา</p>
         </div>
 
         <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
@@ -142,8 +195,7 @@ pages['eval-instructor'] = function() {
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr; gap:20px;">
-        ${evalItems.map((item, idx) => {
-            return `
+        ${evalItems.length > 0 ? evalItems.map((item, idx) => `
             <div class="card animate-in animate-delay-${Math.min(idx+2,4)}">
                 <div class="card-body">
                     <div style="margin-bottom:16px; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
@@ -152,12 +204,12 @@ pages['eval-instructor'] = function() {
                         <p style="margin:4px 0 0; font-size:0.85rem; color:var(--text-muted)">เลือกประเมินเฉพาะอาจารย์ที่ท่านเรียนด้วยในวิชานี้</p>
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:12px;">
-                    ${item.availableInstructors.map(ins => {
-                        const isEval = evals.find(e => e.instructor === ins && e.courseCode === item.code && e.type === 'instructor');
+                    ${item.instructors.map(ins => {
+                        const isEval = evals.find(e => e.instructor === ins && e.courseCode === item.code && e.type === 'instructor' && e.studentId === studentId);
                         return `
                         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border: 1px solid ${isEval ? 'var(--success)' : 'transparent'};">
                             <div style="display:flex; align-items:center; gap:12px;">
-                                <div style="width:40px;height:40px;border-radius:50%;background:${isEval ? 'var(--success)' : 'var(--border-color)'};display:flex;align-items:center;justify-content:center;color:${isEval ? 'white' : 'var(--text-muted)'};font-weight:600;font-size:1rem;">${ins[0]}</div>
+                                <div style="width:40px;height:40px;border-radius:50%;background:${isEval ? 'var(--success)' : 'var(--border-color)'};display:flex;align-items:center;justify-content:center;color:${isEval ? 'white' : 'var(--text-muted)'};font-weight:600;font-size:1rem;">${ins[0] || '?'}</div>
                                 <div>
                                     <div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'};">${ins}</div>
                                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
@@ -167,176 +219,472 @@ pages['eval-instructor'] = function() {
                             </div>
                             <div>
                                 ${isEval 
-                                    ? `<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed;">ประเมินแล้ว</button>`
-                                    : `<button class="btn btn-primary btn-sm" onclick="openInstructorEvalModal('${ins.replace(/'/g,"\\'")}', '${item.code}', '${item.name.replace(/'/g,"\\'")}')">ทำแบบประเมิน</button>`
+                                    ? '<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed;">ประเมินแล้ว</button>'
+                                    : `<button class="btn btn-primary btn-sm" onclick="openInstructorEvalModal('${ins.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ทำแบบประเมิน</button>`
                                 }
                             </div>
                         </div>`;
                     }).join('')}
                     </div>
                 </div>
-            </div>`;
-        }).join('')}
+            </div>`).join('') : `
+            <div class="card"><div class="card-body" style="text-align:center; padding:40px; color:var(--text-muted);">
+                <p>ยังไม่มีข้อมูลอาจารย์ผู้สอนในระบบ</p>
+                <p style="font-size:0.85rem;">กรุณาเพิ่มข้อมูลใน Sheet "CourseInstructors"</p>
+            </div></div>`}
         </div>
     </div>`;
 };
 
 // ============================
-// Shared Evaluation Modal Logic
+// Wizard State Management
 // ============================
-let currentEval = {};
+let wizardState = {};
 
-// Dynamic criteria from MOCK data (can be imported via CSV)
-function getCourseEvalCriteria() {
-    return (MOCK.courseEvalQuestions || [
-        { id: 1, question: 'ความเหมาะสมของเนื้อหารายวิชา' },
-        { id: 2, question: 'ความชัดเจนของวัตถุประสงค์รายวิชา' },
-        { id: 3, question: 'ความเหมาะสมของสื่อการเรียนการสอน' },
-        { id: 4, question: 'ความเหมาะสมของวิธีการวัดผลประเมินผล' },
-        { id: 5, question: 'ความพึงพอใจโดยรวมต่อรายวิชา' }
-    ]).map(q => q.question);
-}
-
-function getInstructorEvalCriteria() {
-    return (MOCK.instructorEvalQuestions || [
-        { id: 1, question: 'การเตรียมความพร้อมในการสอน' },
-        { id: 2, question: 'ความสามารถในการถ่ายทอดความรู้' },
-        { id: 3, question: 'การเปิดโอกาสให้ผู้เรียนมีส่วนร่วม' },
-        { id: 4, question: 'การให้คำปรึกษานอกเวลาเรียน' },
-        { id: 5, question: 'ความตรงต่อเวลาในการสอน' },
-        { id: 6, question: 'ความพึงพอใจโดยรวมต่ออาจารย์ผู้สอน' }
-    ]).map(q => q.question);
-}
-
-window.openCourseEvalModal = function(code, name, instructor) {
-    currentEval = { code, name, instructor, type: 'course', scores: {} };
-    const criteria = getCourseEvalCriteria();
+window.startCourseEvalWizard = function(courseCode, courseName) {
+    // Get per-course questions from EvalQuestions sheet
+    const allQuestions = (MOCK.evalQuestions || []).filter(q => 
+        String(q.course_code || '').trim() === String(courseCode).trim()
+    );
     
-    const modalHtml = `
-        <div style="padding:8px">
-            <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);margin-bottom:20px;">
-                <p style="margin:0 0 4px;font-size:0.82rem;color:var(--text-muted)">ประเมินรายวิชา:</p>
-                <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${code} ${name}</div>
-                <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">อาจารย์ผู้สอน: ${instructor}</div>
-            </div>
-            ${criteria.map((c, i) => `
-                <div style="margin-bottom:16px;">
-                    <label style="font-size:0.9rem; font-weight:500; display:block; margin-bottom:6px;">${i+1}. ${c}</label>
-                    <div style="display:flex;gap:6px;" id="evalStars_${i}">
-                        ${[1,2,3,4,5].map(s => `
-                            <button type="button" onclick="setEvalCriteriaScore(${i},${s})" 
-                                    style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--border-color);transition:transform 0.15s;"
-                                    onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">☆</button>
-                        `).join('')}
-                        <span id="evalScoreLabel_${i}" style="font-size:0.8rem; color:var(--text-muted); margin-left:8px; align-self:center;"></span>
-                    </div>
-                </div>
-            `).join('')}
-            <div class="form-group" style="margin-top:8px;">
-                <label class="form-label">ข้อเสนอแนะเพิ่มเติม</label>
-                <textarea id="evalComment" class="form-textarea" placeholder="สิ่งที่ควรปรับปรุงหรือข้อเสนอแนะ..." rows="3"></textarea>
-            </div>
-            <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:1rem;" onclick="submitCourseEval()">ส่งแบบประเมินรายวิชา</button>
-        </div>
-    `;
-    openModal('ประเมินการจัดการเรียนการสอน', modalHtml);
-};
+    // Group questions by category/section
+    const sections = {};
+    const sectionOrder = ['course_structure', 'pre_learning', 'post_learning', 'clo', 'llo'];
+    const sectionLabels = {
+        'course_structure': 'โครงสร้างรายวิชา',
+        'pre_learning': 'คำถามก่อนเรียน',
+        'post_learning': 'คำถามหลังเรียน ท่านคิดว่าท่านมีความสามารถตามผลลัพธ์การเรียนรู้ที่คาดหวังของรายวิชาในแต่ละข้อ เท่าใด',
+        'clo': 'CLO (Course Learning Outcomes)',
+        'llo': 'LLO (Lesson Learning Outcomes)'
+    };
 
-window.openInstructorEvalModal = function(instructor, courseCode, courseName) {
-    currentEval = { instructor, courseCode, courseName, type: 'instructor', scores: {} };
-    const criteria = getInstructorEvalCriteria();
-    
-    const modalHtml = `
-        <div style="padding:8px">
-            <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);margin-bottom:20px;">
-                <p style="margin:0 0 4px;font-size:0.82rem;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
-                <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${instructor}</div>
-                <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">วิชาที่สอน: ${courseCode} ${courseName}</div>
-            </div>
-            ${criteria.map((c, i) => `
-                <div style="margin-bottom:16px;">
-                    <label style="font-size:0.9rem; font-weight:500; display:block; margin-bottom:6px;">${i+1}. ${c}</label>
-                    <div style="display:flex;gap:6px;" id="evalStars_${i}">
-                        ${[1,2,3,4,5].map(s => `
-                            <button type="button" onclick="setEvalCriteriaScore(${i},${s})" 
-                                    style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--border-color);transition:transform 0.15s;"
-                                    onmouseover="this.style.transform='scale(1.15)'" onmouseout="this.style.transform='scale(1)'">☆</button>
-                        `).join('')}
-                        <span id="evalScoreLabel_${i}" style="font-size:0.8rem; color:var(--text-muted); margin-left:8px; align-self:center;"></span>
-                    </div>
-                </div>
-            `).join('')}
-            <div class="form-group" style="margin-top:8px;">
-                <label class="form-label">ข้อเสนอแนะเพิ่มเติม</label>
-                <textarea id="evalComment" class="form-textarea" placeholder="สิ่งที่ชอบในการสอน หรือสิ่งที่ควรปรับปรุง..." rows="3"></textarea>
-            </div>
-            <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:1rem;" onclick="submitInstructorEval()">ส่งแบบประเมินอาจารย์</button>
-        </div>
-    `;
-    openModal('ประเมินอาจารย์ผู้สอน', modalHtml);
-};
-
-const scoreLabels = ["ต้องปรับปรุง", "พอใช้", "ปานกลาง", "ดี", "ดีมาก"];
-
-window.setEvalCriteriaScore = function(criteriaIdx, score) {
-    currentEval.scores[criteriaIdx] = score;
-    const container = document.getElementById('evalStars_' + criteriaIdx);
-    if (!container) return;
-    const stars = container.querySelectorAll('button');
-    stars.forEach((btn, idx) => {
-        btn.style.color = idx < score ? 'var(--warning)' : 'var(--border-color)';
-        btn.innerHTML = idx < score ? '★' : '☆';
+    allQuestions.forEach(q => {
+        const cat = String(q.category || q.section || 'course_structure').trim().toLowerCase().replace(/\s+/g, '_');
+        if (!sections[cat]) {
+            sections[cat] = {
+                label: sectionLabels[cat] || q.section || cat,
+                questions: []
+            };
+        }
+        sections[cat].questions.push({
+            id: q.question_id,
+            text: q.question_text
+        });
     });
-    const label = document.getElementById('evalScoreLabel_' + criteriaIdx);
-    if (label) label.textContent = scoreLabels[score - 1] + ' (' + score + ')';
-};
 
-window.submitCourseEval = async function() {
-    const comment = document.getElementById('evalComment').value;
-    showApiLoading('กำลังบันทึกผลการประเมินรายวิชา...');
+    // If sheet has no questions, use fallback questions
+    const orderedSections = [];
+    sectionOrder.forEach(key => {
+        if (sections[key]) orderedSections.push({ key, ...sections[key] });
+    });
+    // Add any remaining sections not in sectionOrder
+    Object.keys(sections).forEach(key => {
+        if (!sectionOrder.includes(key)) orderedSections.push({ key, ...sections[key] });
+    });
+
+    // Fallback if no questions found
+    if (orderedSections.length === 0) {
+        orderedSections.push({
+            key: 'course_structure',
+            label: 'โครงสร้างรายวิชา',
+            questions: [
+                { id: 1, text: 'ผลลัพธ์การเรียนรู้รายวิชาชัดเจน' },
+                { id: 2, text: 'หน่วยกิตของรายวิชามีความเหมาะสม' },
+                { id: 3, text: 'การปฐมนิเทศรายวิชามีความชัดเจน' },
+                { id: 4, text: 'รายวิชาจัดให้มีการประเมินผู้เรียนก่อนเข้าเรียน (Placement test)' },
+                { id: 5, text: 'ความพึงพอใจโดยรวมต่อรายวิชา' }
+            ]
+        });
+    }
+
+    // Get instructors for this course
+    const instructors = (MOCK.courseInstructors || [])
+        .filter(ci => String(ci.course_code || '').trim() === String(courseCode).trim())
+        .map(ci => String(ci.instructor_name || '').trim())
+        .filter(n => n);
+    const uniqueInstructors = [...new Set(instructors)];
+
+    // Add instructor evaluation sections
+    const instQuestions = MOCK.evalInstructorQuestions || [];
+    if (instQuestions.length === 0) {
+        // Default instructor questions
+        instQuestions.push(
+            { question_id: 1, question_text: 'เนื้อหาตอดคล้องกับวัตถุประสงค์' },
+            { question_id: 2, question_text: 'เนื้อหาเหมาะสมกับเวลา' },
+            { question_id: 3, question_text: 'สื่อการสอนชัดเจนและตอดคล้องกับเนื้อหา' },
+            { question_id: 4, question_text: 'ชี้แจงผลลัพธ์การเรียนรู้ กิจกรรมการเรียนการสอน และการประเมินผลลัพธ์การเรียนรู้' },
+            { question_id: 5, question_text: 'การสอนของอาจารย์ทำให้นักศึกษาบรรลุผลลัพธ์การเรียนรู้รายวิชา' },
+            { question_id: 6, question_text: 'เทคนิคการสอนทำให้นักศึกษาเข้าใจง่าย' }
+        );
+    }
+
+    // Build wizard pages: course sections + instructor sections
+    const wizardPages = [];
     
-    const payload = {
-        type: 'course',
-        studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
-        courseCode: currentEval.code,
-        courseName: currentEval.name,
-        instructor: currentEval.instructor, // Saved explicitly
-        scores: currentEval.scores,
-        comment: comment,
-        date: new Date().toISOString().split('T')[0]
+    // Course evaluation pages
+    orderedSections.forEach(section => {
+        wizardPages.push({
+            type: 'course',
+            key: section.key,
+            label: section.label,
+            questions: section.questions
+        });
+    });
+
+    // Instructor evaluation pages  
+    uniqueInstructors.forEach(ins => {
+        wizardPages.push({
+            type: 'instructor',
+            key: 'instructor_' + ins,
+            label: 'การประเมินอาจารย์ผู้สอน: ' + ins,
+            instructorName: ins,
+            questions: instQuestions.map(q => ({
+                id: q.question_id,
+                text: q.question_text
+            }))
+        });
+    });
+
+    wizardState = {
+        courseCode,
+        courseName,
+        pages: wizardPages,
+        currentPage: 0,
+        scores: {},
+        instructorSkipped: {},
+        comments: {}
     };
 
-    await postData('submitEvaluation', payload);
-    hideApiLoading();
-
-    // Save locally regardless of API result
-    if (!MOCK.evaluations) MOCK.evaluations = [];
-    MOCK.evaluations.push(payload);
-    closeModal();
-    renderPage();
+    renderWizardPage();
 };
 
-window.submitInstructorEval = async function() {
-    const comment = document.getElementById('evalComment').value;
+function renderWizardPage() {
+    const ws = wizardState;
+    const page = ws.pages[ws.currentPage];
+    const totalPages = ws.pages.length;
+    const pageNum = ws.currentPage + 1;
+    const progressPercent = Math.round((pageNum / totalPages) * 100);
+
+    const isInstructor = page.type === 'instructor';
+    const isSkipped = isInstructor && ws.instructorSkipped[page.instructorName];
+
+    let questionsHtml = '';
+    if (isInstructor) {
+        questionsHtml = `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md); margin-bottom:20px;">
+            <span style="font-weight:500;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
+            <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
+                <input type="checkbox" ${isSkipped ? 'checked' : ''} onchange="toggleInstructorSkip('${page.instructorName.replace(/'/g, "\\\\'")}', this.checked)" style="opacity:0;width:0;height:0;">
+                <span style="position:absolute;inset:0;background:${isSkipped ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:26px;transition:0.3s;"></span>
+                <span style="position:absolute;left:${isSkipped ? '24px' : '3px'};top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+            </label>
+        </div>`;
+    }
+
+    if (!isSkipped) {
+        page.questions.forEach((q, i) => {
+            const scoreKey = `${page.key}_${q.id}`;
+            const currentScore = ws.scores[scoreKey] || 0;
+            questionsHtml += `
+            <div style="margin-bottom:20px; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-md);">
+                <label style="font-size:0.9rem; font-weight:500; display:block; margin-bottom:10px;">${i+1}. ${q.text} *</label>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;" id="likert_${i}">
+                    ${[1,2,3,4,5].map(s => `
+                        <button type="button" onclick="setWizardScore('${scoreKey}', ${s}, ${i})" 
+                                style="width:52px; height:44px; border:2px solid ${currentScore === s ? 'var(--accent-primary)' : 'var(--border-color)'}; 
+                                       background:${currentScore === s ? 'var(--accent-primary)' : 'var(--bg-card)'}; 
+                                       color:${currentScore === s ? 'white' : 'inherit'};
+                                       border-radius:var(--radius-sm); font-weight:700; font-size:1rem; cursor:pointer; 
+                                       transition:all 0.15s;">
+                            ${s}
+                        </button>
+                    `).join('')}
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-top:4px; padding:0 4px;">
+                    <span>น้อยที่สุด</span><span>น้อย</span><span>ปานกลาง</span><span>มาก</span><span>มากที่สุด</span>
+                </div>
+            </div>`;
+        });
+    } else {
+        questionsHtml += `
+        <div style="padding:40px; text-align:center; color:var(--text-muted);">
+            <div style="font-size:2rem; margin-bottom:12px;">⏭️</div>
+            <p>ข้ามการประเมินอาจารย์ท่านนี้</p>
+        </div>`;
+    }
+
+    const sectionColor = isInstructor ? '#e74c3c' : '#3498db';
+
+    const modalHtml = `
+    <div style="padding:8px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:0.85rem; color:var(--text-muted);">หน้า ${pageNum}/${totalPages} (${progressPercent}%)</span>
+        </div>
+        <div style="width:100%; height:6px; background:var(--bg-tertiary); border-radius:3px; margin-bottom:16px; overflow:hidden;">
+            <div style="width:${progressPercent}%; height:100%; background:var(--accent-primary); border-radius:3px; transition:width 0.3s;"></div>
+        </div>
+
+        <div style="background:var(--bg-tertiary);padding:12px 16px;border-radius:var(--radius-md);margin-bottom:16px;border-left:4px solid ${sectionColor};">
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:2px;">${ws.courseCode} — ${ws.courseName}</div>
+            <div style="font-weight:600;font-size:1.05rem;color:${sectionColor};">${page.label}</div>
+        </div>
+
+        <div style="max-height:400px; overflow-y:auto; padding-right:4px;">
+            ${questionsHtml}
+        </div>
+
+        <div style="display:flex; justify-content:space-between; margin-top:16px; gap:12px;">
+            <button class="btn btn-secondary" onclick="${ws.currentPage > 0 ? 'wizardPrev()' : 'closeModal()'}" style="flex:1;">
+                ${ws.currentPage > 0 ? '← ย้อนกลับ' : '✕ ยกเลิก'}
+            </button>
+            <button class="btn btn-primary" onclick="${ws.currentPage < totalPages - 1 ? 'wizardNext()' : 'submitWizardEval()'}" style="flex:1;">
+                ${ws.currentPage < totalPages - 1 ? 'หน้าถัดไป →' : '✓ ส่งแบบประเมิน'}
+            </button>
+        </div>
+    </div>`;
+
+    openModal(`การประเมินรายวิชา (หน้า ${pageNum}/${totalPages})`, modalHtml);
+};
+
+window.setWizardScore = function(scoreKey, score, questionIdx) {
+    wizardState.scores[scoreKey] = score;
+    // Re-render buttons for this question
+    const container = document.getElementById('likert_' + questionIdx);
+    if (container) {
+        container.querySelectorAll('button').forEach((btn, idx) => {
+            const s = idx + 1;
+            btn.style.borderColor = score === s ? 'var(--accent-primary)' : 'var(--border-color)';
+            btn.style.background = score === s ? 'var(--accent-primary)' : 'var(--bg-card)';
+            btn.style.color = score === s ? 'white' : 'inherit';
+        });
+    }
+};
+
+window.toggleInstructorSkip = function(instructorName, checked) {
+    wizardState.instructorSkipped[instructorName] = checked;
+    renderWizardPage();
+};
+
+window.wizardNext = function() {
+    // Validate current page
+    const page = wizardState.pages[wizardState.currentPage];
+    const isSkipped = page.type === 'instructor' && wizardState.instructorSkipped[page.instructorName];
+    
+    if (!isSkipped) {
+        const unanswered = page.questions.filter(q => {
+            const scoreKey = `${page.key}_${q.id}`;
+            return !wizardState.scores[scoreKey];
+        });
+        if (unanswered.length > 0) {
+            alert(`กรุณาตอบคำถามให้ครบทุกข้อ (เหลืออีก ${unanswered.length} ข้อ)`);
+            return;
+        }
+    }
+
+    wizardState.currentPage++;
+    renderWizardPage();
+};
+
+window.wizardPrev = function() {
+    if (wizardState.currentPage > 0) {
+        wizardState.currentPage--;
+        renderWizardPage();
+    }
+};
+
+window.submitWizardEval = async function() {
+    // Validate last page
+    const lastPage = wizardState.pages[wizardState.currentPage];
+    const isSkipped = lastPage.type === 'instructor' && wizardState.instructorSkipped[lastPage.instructorName];
+    
+    if (!isSkipped) {
+        const unanswered = lastPage.questions.filter(q => {
+            const scoreKey = `${lastPage.key}_${q.id}`;
+            return !wizardState.scores[scoreKey];
+        });
+        if (unanswered.length > 0) {
+            alert(`กรุณาตอบคำถามให้ครบทุกข้อ (เหลืออีก ${unanswered.length} ข้อ)`);
+            return;
+        }
+    }
+
+    const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
+    showApiLoading('กำลังบันทึกผลการประเมิน...');
+
+    try {
+        // Submit course evaluation (all course-type scores)
+        const courseScores = {};
+        wizardState.pages.filter(p => p.type === 'course').forEach(p => {
+            p.questions.forEach(q => {
+                const key = `${p.key}_${q.id}`;
+                courseScores[key] = wizardState.scores[key] || 0;
+            });
+        });
+
+        await postData('submitEvaluation', {
+            type: 'course',
+            studentId: studentId,
+            courseCode: wizardState.courseCode,
+            courseName: wizardState.courseName,
+            scores: courseScores,
+            comment: ''
+        });
+
+        // Save locally
+        if (!MOCK.evaluations) MOCK.evaluations = [];
+        MOCK.evaluations.push({
+            type: 'course',
+            studentId: studentId,
+            courseCode: wizardState.courseCode,
+            courseName: wizardState.courseName,
+            scores: JSON.stringify(courseScores),
+            date: new Date().toISOString().split('T')[0]
+        });
+
+        // Submit instructor evaluations
+        for (const page of wizardState.pages.filter(p => p.type === 'instructor')) {
+            const skipped = wizardState.instructorSkipped[page.instructorName];
+            const instScores = {};
+            if (!skipped) {
+                page.questions.forEach(q => {
+                    const key = `${page.key}_${q.id}`;
+                    instScores[key] = wizardState.scores[key] || 0;
+                });
+            }
+
+            await postData('submitEvaluation', {
+                type: 'instructor',
+                studentId: studentId,
+                courseCode: wizardState.courseCode,
+                courseName: wizardState.courseName,
+                instructor: page.instructorName,
+                scores: instScores,
+                skipped: skipped,
+                comment: ''
+            });
+
+            MOCK.evaluations.push({
+                type: 'instructor',
+                studentId: studentId,
+                courseCode: wizardState.courseCode,
+                courseName: wizardState.courseName,
+                instructor: page.instructorName,
+                scores: JSON.stringify(instScores),
+                skipped: skipped,
+                date: new Date().toISOString().split('T')[0]
+            });
+        }
+
+        hideApiLoading();
+        closeModal();
+        
+        // Show success
+        openModal('สำเร็จ', `
+            <div style="text-align:center;padding:20px;">
+                <div style="font-size:3rem;margin-bottom:12px">✅</div>
+                <h3 style="margin-bottom:8px">ส่งแบบประเมินสำเร็จ</h3>
+                <p style="color:var(--text-muted)">ขอขอบคุณที่ให้ข้อเสนอแนะเพื่อพัฒนาการเรียนการสอน</p>
+                <button class="btn btn-primary" style="margin-top:16px" onclick="closeModal(); renderPage();">ปิด</button>
+            </div>
+        `);
+    } catch (err) {
+        hideApiLoading();
+        alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+    }
+};
+
+// ============================
+// Instructor Modal (Standalone)
+// ============================
+window.openInstructorEvalModal = function(instructor, courseCode, courseName) {
+    const instQuestions = MOCK.evalInstructorQuestions || [];
+    const questions = instQuestions.length > 0 
+        ? instQuestions.map(q => ({ id: q.question_id, text: q.question_text }))
+        : [
+            { id: 1, text: 'เนื้อหาตอดคล้องกับวัตถุประสงค์' },
+            { id: 2, text: 'เนื้อหาเหมาะสมกับเวลา' },
+            { id: 3, text: 'สื่อการสอนชัดเจนและตอดคล้องกับเนื้อหา' },
+            { id: 4, text: 'ชี้แจงผลลัพธ์การเรียนรู้ กิจกรรมการเรียนการสอน และการประเมินผลลัพธ์การเรียนรู้' },
+            { id: 5, text: 'การสอนของอาจารย์ทำให้นักศึกษาบรรลุผลลัพธ์การเรียนรู้รายวิชา' },
+            { id: 6, text: 'เทคนิคการสอนทำให้นักศึกษาเข้าใจง่าย' }
+        ];
+
+    let currentScores = {};
+    let skipped = false;
+
+    const buildHtml = () => `
+    <div style="padding:8px">
+        <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);margin-bottom:20px;">
+            <p style="margin:0 0 4px;font-size:0.82rem;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
+            <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${instructor}</div>
+            <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">วิชาที่สอน: ${courseCode} ${courseName}</div>
+        </div>
+        
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md); margin-bottom:20px;">
+            <span style="font-weight:500;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
+            <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
+                <input type="checkbox" id="instSkipToggle" ${skipped ? 'checked' : ''} onchange="window._instSkipped=this.checked; document.getElementById('instQuestionsArea').style.display=this.checked?'none':'block';" style="opacity:0;width:0;height:0;">
+                <span style="position:absolute;inset:0;background:${skipped ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:26px;transition:0.3s;"></span>
+                <span style="position:absolute;left:${skipped ? '24px' : '3px'};top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+            </label>
+        </div>
+
+        <div id="instQuestionsArea">
+            ${questions.map((q, i) => `
+            <div style="margin-bottom:16px; padding:12px; background:var(--bg-secondary); border-radius:var(--radius-md);">
+                <label style="font-size:0.9rem; font-weight:500; display:block; margin-bottom:8px;">${i+1}. ${q.text} *</label>
+                <div style="display:flex;gap:8px;" id="instLikert_${i}">
+                    ${[1,2,3,4,5].map(s => `
+                        <button type="button" onclick="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=${s}; document.querySelectorAll('#instLikert_${i} button').forEach((b,idx)=>{b.style.borderColor=idx===${s-1}?'var(--accent-primary)':'var(--border-color)';b.style.background=idx===${s-1}?'var(--accent-primary)':'var(--bg-card)';b.style.color=idx===${s-1}?'white':'inherit';})" 
+                                style="width:48px;height:40px;border:2px solid var(--border-color);background:var(--bg-card);border-radius:var(--radius-sm);font-weight:700;cursor:pointer;transition:all 0.15s;">
+                            ${s}
+                        </button>
+                    `).join('')}
+                </div>
+                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-top:3px;">
+                    <span>น้อยที่สุด</span><span>มากที่สุด</span>
+                </div>
+            </div>`).join('')}
+        </div>
+
+        <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:1rem;" onclick="submitStandaloneInstructorEval('${instructor.replace(/'/g,"\\\\'")}', '${courseCode}', '${courseName.replace(/'/g,"\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
+    </div>`;
+
+    window._instScores = {};
+    window._instSkipped = false;
+    openModal('ประเมินอาจารย์ผู้สอน', buildHtml());
+};
+
+window.submitStandaloneInstructorEval = async function(instructor, courseCode, courseName) {
+    const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
+    const skipped = window._instSkipped || false;
+    const scores = window._instScores || {};
+    
     showApiLoading('กำลังบันทึกผลการประเมินอาจารย์...');
-    
-    const payload = {
-        type: 'instructor',
-        studentId: MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown',
-        instructor: currentEval.instructor,
-        courseCode: currentEval.courseCode,
-        courseName: currentEval.courseName,
-        scores: currentEval.scores,
-        comment: comment,
-        date: new Date().toISOString().split('T')[0]
-    };
 
-    await postData('submitEvaluation', payload);
+    await postData('submitEvaluation', {
+        type: 'instructor',
+        studentId: studentId,
+        courseCode: courseCode,
+        courseName: courseName,
+        instructor: instructor,
+        scores: scores,
+        skipped: skipped,
+        comment: ''
+    });
+
     hideApiLoading();
 
-    // Save locally regardless of API result
     if (!MOCK.evaluations) MOCK.evaluations = [];
-    MOCK.evaluations.push(payload);
+    MOCK.evaluations.push({
+        type: 'instructor',
+        studentId: studentId,
+        courseCode: courseCode,
+        instructor: instructor,
+        scores: JSON.stringify(scores),
+        skipped: skipped,
+        date: new Date().toISOString().split('T')[0]
+    });
     closeModal();
     renderPage();
 };

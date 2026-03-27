@@ -145,7 +145,10 @@ async function bootApp() {
             evaluations: evaluationsData,
             documents: documentsData,
             announcements: announcementsData,
-            exams: examsData
+            exams: examsData,
+            evalQuestions: evalQuestionsData,
+            courseInstructors: courseInstructorsData,
+            evalInstructorQuestions: evalInstructorQuestionsData
         } = allData;
 
         MOCK.allExams = examsData || []; // Global for admin view
@@ -355,11 +358,32 @@ async function bootApp() {
 
         if (evaluationsData && evaluationsData.length > 0) {
             MOCK.evaluations = evaluationsData.map(e => ({
-                courseCode: e['รหัสวิชา'] || e.courseCode,
-                score: parseFloat(e['คะแนน (1-5)'] || e.score) || 5,
-                comment: e['ความคิดเห็น'] || e.comment || '',
-                date: e['วันที่ประเมิน'] || e.date || ''
+                id: e.id || e['id'],
+                type: e.type || e['type'] || 'course',
+                studentId: e.student_id || e['student_id'] || e.studentId,
+                courseCode: e.course_code || e['course_code'] || e['รหัสวิชา'] || e.courseCode,
+                courseName: e.course_name || e['course_name'],
+                instructor: e.instructor || e['instructor'],
+                scores: e.scores || e['scores'] || '{}',
+                comment: e.comment || e['comment'] || '',
+                skipped: e.skipped === 'true' || e.skipped === true,
+                date: e.date || e['date'] || ''
             }));
+        }
+
+        // Load evaluation questions (per-course)
+        if (evalQuestionsData && evalQuestionsData.length > 0) {
+            MOCK.evalQuestions = evalQuestionsData;
+        }
+
+        // Load course-instructor mapping
+        if (courseInstructorsData && courseInstructorsData.length > 0) {
+            MOCK.courseInstructors = courseInstructorsData;
+        }
+
+        // Load instructor evaluation questions
+        if (evalInstructorQuestionsData && evalInstructorQuestionsData.length > 0) {
+            MOCK.evalInstructorQuestions = evalInstructorQuestionsData;
         }
 
         if (documentsData && documentsData.length > 0) {
