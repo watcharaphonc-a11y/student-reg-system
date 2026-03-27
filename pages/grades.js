@@ -276,13 +276,20 @@ function renderStudentGradesDetail(st, grades) {
                 </div>
                 <div class="card-body" style="padding:0">
                     <div class="table-wrapper">
-                        <table class="data-table">
+                        <table class="data-table" style="table-layout:fixed; width:100%;">
+                            <colgroup>
+                                <col style="width:15%">
+                                <col style="width:45%">
+                                <col style="width:12%">
+                                <col style="width:13%">
+                                <col style="width:15%">
+                            </colgroup>
                             <thead><tr><th>รหัสวิชา</th><th>ชื่อวิชา</th><th>หน่วยกิต</th><th>เกรด</th><th>คะแนน</th></tr></thead>
                             <tbody>
                                 ${(sem.courses || []).map(c => `
                                     <tr>
                                         <td style="color:var(--accent-primary-hover);font-weight:600">${c.code}</td>
-                                        <td>${c.name}</td>
+                                        <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c.name}">${c.name}</td>
                                         <td style="text-align:center">${c.credits}</td>
                                         <td><span class="badge ${c.grade==='A'?'success':c.grade==='B+'||c.grade==='B'?'info':c.grade?'warning':'neutral'}">${c.grade || 'รอผล'}</span></td>
                                         <td>${c.point !== null && c.point !== undefined ? c.point.toFixed(2) : '-'}</td>
