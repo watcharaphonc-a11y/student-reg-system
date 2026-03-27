@@ -34,6 +34,7 @@ const SHEETS = {
  * Handle GET Requests
  */
 function doGet(e) {
+  setupInitialSheets(); // Ensure all sheets and headers exist
   const action = e.parameter.action;
   let data = [];
   
@@ -95,6 +96,9 @@ function doGet(e) {
         break;
       case 'getEvalInstructorQuestions':
         data = getSheetData(SHEETS.EVAL_INSTRUCTOR_QUESTIONS);
+        break;
+      case 'getDocuments':
+        data = getSheetData(SHEETS.DOCUMENTS);
         break;
       default:
         return createResponse({ status: 'error', message: 'Unknown action' });
@@ -562,15 +566,13 @@ function setupInitialSheets() {
         defaultPermissions.forEach(p => sheet.appendRow(p));
       }
     } else {
-      // Check if we need to add missing columns
-      if (sheetName === SHEETS.DOCUMENTS || sheetName === SHEETS.PERMISSIONS) {
-        const currentHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-        defaultHeaders[sheetName].forEach(h => {
-          if (currentHeaders.indexOf(h) === -1) {
-            sheet.getRange(1, sheet.getLastColumn() + 1).setValue(h);
-          }
-        });
-      }
+      // Check if we need to add missing columns to existing sheets
+      const currentHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0].map(h => String(h).trim());
+      defaultHeaders[sheetName].forEach(h => {
+        if (currentHeaders.indexOf(h) === -1) {
+          sheet.getRange(1, sheet.getLastColumn() + 1).setValue(h);
+        }
+      });
     }
   });
 

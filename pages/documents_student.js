@@ -231,14 +231,16 @@ window.syncStudentDocuments = async function() {
         const data = await fetchData('getDocuments');
         if (data && Array.isArray(data)) {
             // Filter for current student
-            const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : 'Unknown';
+            const studentId = String(MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '').trim();
             
             // Map Sheet data to MOCK format
-            // Sheet headers: ['รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ']
             const mappedDocs = data
-                .filter(row => row['รหัสนักศึกษา'] == studentId)
+                .filter(row => {
+                    const rowSId = String(row['รหัสนักศึกษา'] || row['studentId'] || '').trim();
+                    return rowSId === studentId && studentId !== '';
+                })
                 .map((row, index) => {
-                    const docId = row['รหัสติดตาม'] || ('DOC-L' + (1000 + index));
+                    const docId = row['รหัสติดตาม'] || row['id'] || ('DOC-L' + (1000 + index));
                     return {
                         id: docId,
                         formName: row['ประเภทเอกสาร'] || 'คำร้องทั่วไป',

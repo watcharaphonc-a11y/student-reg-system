@@ -388,7 +388,7 @@ async function bootApp() {
 
         if (documentsData && documentsData.length > 0) {
             MOCK.documents = documentsData.map(d => {
-                const sId = d['รหัสนักศึกษา'] || d['รหัสประจำตัว'] || d.studentId || d.id;
+                const sId = String(d['รหัสนักศึกษา'] || d['รหัสประจำตัว'] || d.studentId || d.id || '').trim();
                 const name = d['ชื่อผู้ส่ง'] || d['ชื่อ-นามสกุล'] || d.senderName;
                 const type = d['ประเภทเอกสาร'] || d['ประเภท'] || d.documentType;
                 const dateRaw = d['วันที่ส่ง'] || d['วันที่'] || d.date;
@@ -409,9 +409,26 @@ async function bootApp() {
                 };
             });
 
+            // Populate studentDocuments if student is logged in
+            if (window.currentUserRole === 'student' && window.currentUserData) {
+                const sId = String(window.currentUserData.username || window.currentUserData.id || '').trim();
+                MOCK.studentDocuments = MOCK.documents
+                    .filter(d => String(d.studentId || '').trim() === sId)
+                    .map(d => ({
+                        id: d.id,
+                        formName: d.documentType,
+                        submitDate: d.date,
+                        lastUpdate: d.date,
+                        status: d.status,
+                        attachment: d.fileName,
+                        fileUrl: d.fileUrl,
+                        signedFileUrl: d.signedFileUrl,
+                        note: d.note
+                    }));
+            }
+
             // Sync for Admin view
-            MOCK.adminDocuments = MOCK.documents.map((d, index) => {
-                // Determine a nice display date
+            MOCK.adminDocuments = MOCK.documents.map((d) => {
                 let displayDate = String(d.date || '-');
                 try {
                     const dateObj = new Date(d.date);
@@ -419,17 +436,13 @@ async function bootApp() {
                         const day = String(dateObj.getDate()).padStart(2, '0');
                         const month = String(dateObj.getMonth() + 1).padStart(2, '0');
                         let year = dateObj.getFullYear();
-                        // Thai Buddhist Year conversion (AD to BE)
                         if (year < 2400) year += 543;
-
                         const hours = String(dateObj.getHours()).padStart(2, '0');
                         const minutes = String(dateObj.getMinutes()).padStart(2, '0');
                         displayDate = `${day}/${month}/${year} ${hours}:${minutes} น.`;
                     }
-                } catch (e) {
-                    console.warn('Date formatting failed:', e);
-                }
-
+                } catch (e) {}
+                
                 return {
                     ...d,
                     formName: d.documentType,
@@ -673,17 +686,20 @@ window.syncActiveStudentData = async function () {
         // 3. Sync Documents
         if (documents && documents.length > 0) {
             MOCK.studentDocuments = documents
-                .filter(d => String(d['รหัสนักศึกษา'] || d.studentId || '').trim() === sId)
+                .filter(d => {
+                    const dSId = String(d['รหัสนักศึกษา'] || d['studentId'] || d.student_id || '').trim();
+                    return dSId === sId && sId !== '';
+                })
                 .map((d, index) => ({
-                    id: 'DOC-S' + (1000 + index),
-                    formName: d['ประเภทเอกสาร'] || d.documentType,
-                    submitDate: d['วันที่ส่ง'] || d.date,
-                    lastUpdate: d['วันที่ส่ง'] || d.date,
-                    status: d['สถานะ'] || d.status,
-                    attachment: d['ชื่อไฟล์'] || d.fileName,
-                    fileUrl: d['ลิงก์เอกสาร'] || d.fileUrl,
-                    signedFileUrl: d['ลิงก์เอกสารที่ลงนาม'] || d.signedFileUrl,
-                    note: d['หมายเหตุ'] || d.note
+                    id: d['รหัสติดตาม'] || d['id'] || ('DOC-S' + (1000 + index)),
+                    formName: d['ประเภทเอกสาร'] || d.documentType || 'คำร้องทั่วไป',
+                    submitDate: d['วันที่ส่ง'] || d.date || '-',
+                    lastUpdate: d['วันที่ส่ง'] || d.date || '-',
+                    status: d['สถานะ'] || d.status || 'รอตรวจสอบ',
+                    attachment: d['ชื่อไฟล์'] || d.fileName || '-',
+                    fileUrl: d['ลิงก์เอกสาร'] || d.fileUrl || '',
+                    signedFileUrl: d['ลิงก์เอกสารที่ลงนาม'] || d.signedFileUrl || '',
+                    note: d['หมายเหตุ'] || d.note || ''
                 }));
         }
 
