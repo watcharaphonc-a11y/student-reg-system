@@ -349,7 +349,7 @@ function renderAdminGradesOverview() {
 
         <div class="card animate-in animate-delay-2" style="margin-top: 25px;">
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 class="card-title">รายชื่อนักศึกษาตามลำดับผลการเรียน</h3>
+                <h3 class="card-title">รายชื่อนักศึกษาตามรหัสนักศึกษา</h3>
                 <div style="max-width: 300px;">
                     <input type="text" class="form-input" placeholder="ค้นหาชื่อ หรือรหัสนักศึกษา..." oninput="filterGradesOverview(this.value)" style="margin:0;">
                 </div>
@@ -368,7 +368,7 @@ function renderAdminGradesOverview() {
                             </tr>
                         </thead>
                         <tbody>
-                            ${students.sort((a,b)=>b.gpa - a.gpa).map(st => `
+                            ${students.sort((a,b)=> String(a.studentId || a.id || '').localeCompare(String(b.studentId || b.id || ''))).map(st => `
                                 <tr class="grade-row" data-search="${st.studentId} ${st.firstName} ${st.lastName}">
                                     <td style="font-weight:600; color:var(--accent-primary);">${st.studentId || st.id}</td>
                                     <td>${st.prefix || ''}${st.firstName || ''} ${st.lastName || ''}</td>
