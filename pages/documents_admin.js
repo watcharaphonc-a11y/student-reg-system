@@ -213,11 +213,37 @@ window.previewAdminDoc = function(docId) {
         const displayUrl = doc.signedFileUrl || doc.fileUrl;
 
         if (displayUrl) {
-            let embedUrl = displayUrl;
-            if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
-                embedUrl = embedUrl.replace('/view', '/preview');
+            const urls = displayUrl.split(',').map(u => u.trim());
+            const names = (doc.attachment || '').split(',').map(n => n.trim());
+
+            if (urls.length > 1) {
+                // Multiple files: Show list of links
+                previewContent = `
+                    <div style="background:#f8fafc; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px;">
+                        <h4 style="margin-top:0; margin-bottom:15px; color:var(--text-primary); border-bottom:1px solid var(--border-color); padding-bottom:10px;">📄 รายการไฟล์แนบ (${urls.length} ไฟล์)</h4>
+                        <div style="display:flex; flex-direction:column; gap:12px;">
+                            ${urls.map((url, idx) => {
+                                const name = names[idx] || `ไฟล์ที่ ${idx + 1}`;
+                                return `
+                                    <a href="${url}" target="_blank" style="display:flex; align-items:center; gap:10px; padding:12px; background:white; border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--accent-primary); text-decoration:none; font-weight:500; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.background='rgba(var(--accent-primary-rgb), 0.02)';" onmouseout="this.style.borderColor='var(--border-color)'; this.style.background='white';">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                        <span style="flex:1;">${name}</span>
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                    </a>
+                                `;
+                            }).join('')}
+                        </div>
+                        <p style="margin-top:20px; font-size:0.85rem; color:var(--text-muted); text-align:center;">* คลิกที่ชื่อไฟล์เพื่อเปิดดูหรือดาวน์โหลด</p>
+                    </div>
+                `;
+            } else {
+                // Single file: Show iframe preview
+                let embedUrl = urls[0];
+                if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
+                    embedUrl = embedUrl.replace('/view', '/preview');
+                }
+                previewContent = `<iframe src="${embedUrl}" style="width:100%; height:550px; border:none; border-radius:var(--radius-sm);" allow="autoplay"></iframe>`;
             }
-            previewContent = `<iframe src="${embedUrl}" style="width:100%; height:550px; border:none; border-radius:var(--radius-sm);" allow="autoplay"></iframe>`;
         } else {
             previewContent = `
                 <div class="animate-in" style="background:#f1f5f9; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:20px; text-align:center; min-height:450px; display:flex; flex-direction:column; justify-content:center; align-items:center;">
@@ -228,6 +254,17 @@ window.previewAdminDoc = function(docId) {
             `;
         }
 
+        let downloadBtn = '';
+        if (doc.fileUrl) {
+            const firstUrl = doc.fileUrl.split(',')[0].trim();
+            downloadBtn = `
+                <button class="btn btn-primary btn-sm" onclick="window.open('${firstUrl}', '_blank')">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    เปิดไฟล์ต้นฉบับ
+                </button>
+            `;
+        }
+
         const modalHtml = `
             <div style="padding:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
@@ -235,11 +272,7 @@ window.previewAdminDoc = function(docId) {
                         <h3 style="margin:0; color:var(--accent-primary); font-size:1.1rem;">${doc.id}</h3>
                         <div style="font-size:0.9rem; color:var(--text-muted);">${doc.formName}</div>
                     </div>
-                    ${doc.fileUrl ? `
-                    <button class="btn btn-primary btn-sm" onclick="window.open('${doc.fileUrl}', '_blank')">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        เปิดไฟล์ต้นฉบับ
-                    </button>` : ''}
+                    ${downloadBtn}
                 </div>
                 
                 ${previewContent}
