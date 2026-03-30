@@ -413,14 +413,13 @@ function renderWizardPage() {
                 ` : `
                     <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; max-width:100%;" id="likert_${i}">
                         ${[1,2,3,4,5].map(s => `
-                            <button type="button" onclick="setWizardScore('${scoreKey}', ${s}, ${i}); document.getElementById('q_container_${i}').style.borderColor='transparent'; document.getElementById('q_container_${i}').style.background='var(--bg-secondary)';" 
-                                    style="height:54px; border:2px solid ${currentVal === s ? 'var(--accent-primary)' : 'var(--border-color)'}; 
+                            <button type="button" class="likert-btn"
+                                    onclick="setWizardScore('${scoreKey}', ${s}, ${i}); document.getElementById('q_container_${i}').style.borderColor='transparent'; document.getElementById('q_container_${i}').style.background='var(--bg-secondary)';" 
+                                    style="border:2px solid ${currentVal === s ? 'var(--accent-primary)' : 'var(--border-color)'}; 
                                            background:${currentVal === s ? 'var(--accent-primary)' : 'var(--bg-card)'}; 
-                                           color:${currentVal === s ? 'white' : 'inherit'};
-                                           border-radius:var(--radius-sm); cursor:pointer; 
-                                           transition:all 0.15s; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px;">
+                                           color:${currentVal === s ? 'white' : 'inherit'};">
                                 <span style="font-weight:700; font-size:1.15rem; line-height:1;">${s}</span>
-                                <span style="font-size:0.65rem; font-weight:normal; margin-top:4px; opacity:0.9; text-align:center; line-height:1.1;">${likertLabels[s-1]}</span>
+                                <span class="likert-btn-label">${likertLabels[s-1]}</span>
                             </button>
                         `).join('')}
                     </div>
@@ -720,10 +719,11 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
                 ` : `
                     <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; max-width:100%;" id="instLikert_${i}">
                         ${[1,2,3,4,5].map(s => `
-                            <button type="button" onclick="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=${s}; document.getElementById('inst_q_container_${i}').style.borderColor='transparent'; document.getElementById('inst_q_container_${i}').style.background='var(--bg-secondary)'; document.querySelectorAll('#instLikert_${i} button').forEach((b,idx)=>{b.style.borderColor=idx===${s-1}?'var(--accent-primary)':'var(--border-color)';b.style.background=idx===${s-1}?'var(--accent-primary)':'var(--bg-card)';b.style.color=idx===${s-1}?'white':'inherit';})" 
-                                    style="height:54px; border:2px solid var(--border-color); background:var(--bg-card); border-radius:var(--radius-sm); cursor:pointer; transition:all 0.15s; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px;">
+                            <button type="button" class="likert-btn"
+                                    onclick="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=${s}; document.getElementById('inst_q_container_${i}').style.borderColor='transparent'; document.getElementById('inst_q_container_${i}').style.background='var(--bg-secondary)'; document.querySelectorAll('#instLikert_${i} button').forEach((b,idx)=>{b.style.borderColor=idx===${s-1}?'var(--accent-primary)':'var(--border-color)';b.style.background=idx===${s-1}?'var(--accent-primary)':'var(--bg-card)';b.style.color=idx===${s-1}?'white':'inherit';})" 
+                                    style="border:2px solid var(--border-color); background:var(--bg-card);">
                                 <span style="font-weight:700; font-size:1.15rem; line-height:1;">${s}</span>
-                                <span style="font-size:0.65rem; font-weight:normal; margin-top:4px; opacity:0.9; text-align:center; line-height:1.1;">${likertLabels[s-1]}</span>
+                                <span class="likert-btn-label">${likertLabels[s-1]}</span>
                             </button>
                         `).join('')}
                     </div>
