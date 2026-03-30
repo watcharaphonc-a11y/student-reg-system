@@ -653,12 +653,20 @@ window.syncActiveStudentData = async function () {
 
         if (!MOCK.student) return;
 
-        const sId = String(MOCK.student.studentId || MOCK.student.id || '').trim();
+        const sId = String(MOCK.student.studentId || '').trim();
+        const sDbId = String(MOCK.student.id || '').trim();
+        const sCitizenId = String(MOCK.student.citizenId || MOCK.student['เลขประจำตัวประชาชน'] || '').trim();
+        
+        const isMatch = (rowId) => {
+            if (!rowId) return false;
+            const rId = String(rowId).trim();
+            return (sId !== '' && rId === sId) || (sDbId !== '' && rId === sDbId) || (sCitizenId !== '' && rId === sCitizenId);
+        };
 
         // 1. Sync Grades
         const studentEnrollments = (enrollments || []).filter(e => {
-            const rowSId = String(e['รหัสนักศึกษา'] || e['student_id'] || e.studentId || '').trim();
-            return rowSId === sId && sId !== '';
+            const rowId = String(e['รหัสนักศึกษา'] || e['student_id'] || e.studentId || e.id || '').trim();
+            return isMatch(rowId);
         });
         
         console.log(`[syncActiveStudentData] Found ${studentEnrollments.length} enrollments for student ${sId}`);
@@ -770,7 +778,10 @@ window.syncActiveStudentData = async function () {
         // 2. Sync Payments
         if (payments && payments.length > 0) {
             MOCK.studentPayments = payments
-                .filter(p => String(p['รหัสนักศึกษา'] || p.studentId || '').trim() === sId)
+                .filter(p => {
+                    const rowId = String(p['รหัสนักศึกษา'] || p.studentId || p.student_id || p.id || '').trim();
+                    return isMatch(rowId);
+                })
                 .map(p => ({
                     id: p['รหัสอ้างอิง'] || p.id,
                     description: p['รายการ'] || p.description,
@@ -784,8 +795,8 @@ window.syncActiveStudentData = async function () {
         if (documents && documents.length > 0) {
             MOCK.studentDocuments = documents
                 .filter(d => {
-                    const rowSId = String(d['รหัสนักศึกษา'] || d['studentId'] || d['student_id'] || '').trim();
-                    return rowSId === sId && sId !== '';
+                    const rowId = String(d['รหัสนักศึกษา'] || d['studentId'] || d['student_id'] || d.id || '').trim();
+                    return isMatch(rowId);
                 })
                 .map((d, index) => ({
                     id: d['รหัสติดตาม'] || d['id'] || ('DOC-S' + (1000 + index)),
@@ -803,7 +814,10 @@ window.syncActiveStudentData = async function () {
 
         // 4. Sync Exams
         if (exams && exams.length > 0) {
-            MOCK.studentExams = exams.filter(ex => String(ex.student_id || '').trim() === sId);
+            MOCK.studentExams = exams.filter(ex => {
+                const rowId = String(ex.student_id || ex['รหัสนักศึกษา'] || ex.studentId || ex.id || '').trim();
+                return isMatch(rowId);
+            });
             MOCK.student.exams = MOCK.studentExams;
         }
     } catch (err) {
