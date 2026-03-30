@@ -203,10 +203,11 @@ pages['documents-status'] = function() {
                                 if (d.status.includes('รอ') || d.status.includes('กำลัง')) badgeClass = 'warning';
 
                                 return `
-                                <tr class="student-doc-row" data-search="${[d.id, d.formName, d.status].join(' ').toLowerCase()}">
+                                <tr class="student-doc-row" data-search="${[d.id, d.formName, d.status, d.studentId, d.senderName].join(' ').toLowerCase()}">
                                     <td style="font-weight:700; color:var(--accent-primary)">${d.id}</td>
                                     <td>
                                         <div style="font-weight:600; margin-bottom:4px;">${d.formName}</div>
+                                        ${window.currentUserRole !== 'student' && d.senderName ? `<div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">${d.senderName} (${d.studentId})</div>` : ''}
                                         ${d.attachment ? `<div style="font-size:0.85rem; color:var(--text-muted); display:flex; align-items:center; gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${d.attachment}</div>` : ''}
                                     </td>
                                     <td style="font-size:0.95rem;">${d.submitDate}</td>
@@ -236,10 +237,12 @@ window.syncStudentDocuments = async function() {
         if (data && Array.isArray(data)) {
             // Filter for current student
             const studentId = String(MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '').trim();
+            const isStudent = window.currentUserRole === 'student';
             
             // Map Sheet data to MOCK format
             const mappedDocs = data
                 .filter(row => {
+                    if (!isStudent) return true;
                     const rowSId = String(row['รหัสนักศึกษา'] || row['studentId'] || '').trim();
                     return rowSId === studentId && studentId !== '';
                 })
@@ -247,6 +250,8 @@ window.syncStudentDocuments = async function() {
                     const docId = row['รหัสติดตาม'] || row['id'] || ('DOC-L' + (1000 + index));
                     return {
                         id: docId,
+                        studentId: row['รหัสนักศึกษา'] || row['studentId'] || '',
+                        senderName: row['ชื่อผู้ส่ง'] || row['senderName'] || 'ไม่ระบุ',
                         formName: row['ประเภทเอกสาร'] || 'คำร้องทั่วไป',
                         submitDate: row['วันที่ส่ง'] || '-',
                         lastUpdate: row['วันที่ส่ง'] || '-',
