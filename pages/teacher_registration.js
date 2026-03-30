@@ -45,6 +45,13 @@ pages['teacher-registration'] = function() {
                         <div class="form-group"><label class="form-label">เบอร์โทรศัพท์</label><input id="t_phone" class="form-input" placeholder="0xx-xxx-xxxx"/></div>
                     </div>
                     <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">ประเภทอาจารย์</label>
+                            <select id="t_type" class="form-select">
+                                <option value="อาจารย์ประจำ">อาจารย์ประจำ</option>
+                                <option value="อาจารย์พิเศษ">อาจารย์พิเศษ</option>
+                            </select>
+                        </div>
                         <div class="form-group"><label class="form-label">คณะ / สังกัด</label><input id="t_faculty" class="form-input" value="คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก" readonly style="background:var(--bg-tertiary); color:var(--text-muted);"/></div>
                         <div class="form-group"><label class="form-label">จำนวนนักศึกษาในกำกับ</label><input id="t_studentCount" class="form-input" type="number" placeholder="0" value="0"/></div>
                     </div>
@@ -73,13 +80,13 @@ pages['teacher-registration'] = function() {
                             <thead><tr>
                                 <th>คำนำหน้า</th><th>ชื่อ</th><th>นามสกุล</th><th>ตำแหน่งทางวิชาการ</th>
                                 <th>ความเชี่ยวชาญ</th><th>อีเมล</th><th>เบอร์โทร</th><th>คณะ/สังกัด</th><th>นศ. ในกำกับ</th>
-                                <th>Username</th><th>Password</th>
+                                <th>Username</th><th>Password</th><th>ประเภทอาจารย์</th>
                             </tr></thead>
                             <tbody>
                                 <tr style="color:var(--text-muted);">
                                     <td>รศ.ดร.</td><td>สมศรี</td><td>ใจสว่าง</td><td>รองศาสตราจารย์</td>
                                     <td>การพยาบาลจิตเวชและสุขภาพจิต</td><td>somsri.j@pi.ac.th</td><td>02-123-4567</td><td>คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก</td><td>8</td>
-                                    <td>somsri.j</td><td>111111</td>
+                                    <td>somsri.j</td><td>111111</td><td>อาจารย์ประจำ</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -148,7 +155,8 @@ window.submitSingleTeacher = async function() {
         'คณะ/สังกัด': document.getElementById('t_faculty').value,
         'นศ. ในกำกับ': parseInt(document.getElementById('t_studentCount').value) || 0,
         'Username': document.getElementById('t_email').value.split('@')[0],
-        'Password': '111111'
+        'Password': '111111',
+        'ประเภทอาจารย์': document.getElementById('t_type').value
     };
 
     if (!payload.firstName || !payload.lastName) {
@@ -176,12 +184,12 @@ window.downloadTeacherTemplate = function() {
     const headers = [
         'คำนำหน้า','ชื่อ','นามสกุล','ตำแหน่งทางวิชาการ',
         'ความเชี่ยวชาญ','อีเมล','เบอร์โทร','คณะ/สังกัด','นศ. ในกำกับ',
-        'Username','Password'
+        'Username','Password','ประเภทอาจารย์'
     ];
     const sampleRow = [
         'รศ.ดร.','สมศรี','ใจสว่าง','รองศาสตราจารย์',
         'การพยาบาลจิตเวชและสุขภาพจิต','somsri.j@pi.ac.th','02-123-4567 ต่อ 201','คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก','8',
-        'somsri.j','111111'
+        'somsri.j','111111','อาจารย์ประจำ'
     ];
     const BOM = '\uFEFF';
     const csv = BOM + headers.join(',') + '\n' + sampleRow.join(',') + '\n';
@@ -285,7 +293,8 @@ window.submitTeacherBulkImport = async function() {
             'คณะ/สังกัด': row['คณะ/สังกัด'] || 'คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก',
             'นศ. ในกำกับ': parseInt(row['นศ. ในกำกับ']) || 0,
             'Username': row['Username'] || (row['อีเมล'] ? row['อีเมล'].split('@')[0] : ''),
-            'Password': row['Password'] || '111111'
+            'Password': row['Password'] || '111111',
+            'ประเภทอาจารย์': row['ประเภทอาจารย์'] || 'อาจารย์ประจำ'
         };
         const res = await postData('registerTeacher', payload);
         if (res && res.status === 'success') {

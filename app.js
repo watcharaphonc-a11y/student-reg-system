@@ -296,7 +296,7 @@ async function bootApp() {
         }
 
         if (teachersData && teachersData.length > 0) {
-            MOCK.academicAdvisors = teachersData.map(t => ({
+            const allMappedTeachers = teachersData.map(t => ({
                 name: (t['คำนำหน้า'] || '') + (t['ชื่อ'] ? (' ' + t['ชื่อ']) : '') + (t['นามสกุล'] ? (' ' + t['นามสกุล']) : '') || t.name,
                 position: t['ตำแหน่งทางวิชาการ'] || t['ตำแหน่ง'] || t.position || 'อาจารย์',
                 expertise: t['ความเชี่ยวชาญ'] || t.expertise || '-',
@@ -305,8 +305,17 @@ async function bootApp() {
                 studentCount: parseInt(t['นศ. ในที่ปรึกษา'] || t['นศ.ในที่ปรึกษา'] || t.studentCount) || 0,
                 faculty: t['คณะ/สังกัด'] || t['คณะ'] || t.faculty || 'คณะพยาบาลศาสตร์',
                 username: t['Username'] || t.username,
-                password: t['Password'] || t.password
+                password: t['Password'] || t.password,
+                type: t['ประเภทอาจารย์'] || t.type || 'อาจารย์ประจำ'
             }));
+
+            // Filter for different roles/views
+            MOCK.academicAdvisors = allMappedTeachers.filter(t => t.type === 'อาจารย์ประจำ');
+            MOCK.specialLecturers = allMappedTeachers.filter(t => t.type === 'อาจารย์พิเศษ');
+            
+            // If academic advisors list is empty (e.g. initial setup), fall back to all teachers for compatibility
+            if (MOCK.academicAdvisors.length === 0) MOCK.academicAdvisors = allMappedTeachers;
+            
             MOCK.thesisAdvisors = [...MOCK.academicAdvisors];
         }
 
