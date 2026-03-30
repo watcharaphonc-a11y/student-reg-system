@@ -214,6 +214,7 @@ pages['documents-status'] = function() {
                                     <td>
                                         <div style="display:flex; flex-direction:column; gap:8px;">
                                             <span class="badge ${badgeClass}" style="padding:6px 12px; font-size:0.85rem;">${d.status}</span>
+                                            ${d.lastUpdate && d.lastUpdate !== d.submitDate && d.lastUpdate !== '-' ? `<div style="font-size:0.75rem; color:var(--text-muted); display:flex; align-items:center; gap:4px;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>อัปเดต: ${d.lastUpdate}</div>` : ''}
                                             <button class="btn btn-sm" style="background:var(--bg-tertiary); color:var(--accent-primary); border:1px solid var(--border-color); padding: 5px 10px; font-size: 0.85rem; width: fit-content;" onclick="previewStudentDoc('${d.id}')">
                                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                                 ดูรายละเอียด
@@ -248,19 +249,42 @@ window.syncStudentDocuments = async function() {
                 })
                 .map((row, index) => {
                     const docId = row['รหัสติดตาม'] || row['id'] || ('DOC-L' + (1000 + index));
+                    let displayDate = String(row['วันที่ส่ง'] || '-');
+                    try {
+                        const dateObj = new Date(displayDate);
+                        if (!isNaN(dateObj.getTime())) {
+                            const day = String(dateObj.getDate()).padStart(2, '0');
+                            const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                            let year = dateObj.getFullYear();
+                            if (year < 2400) year += 543;
+                            const hours = String(dateObj.getHours()).padStart(2, '0');
+                            const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                            displayDate = `${day}/${month}/${year} ${hours}:${minutes} น.`;
+                        }
+                    } catch (e) {}
+
+                    let historyJson = row['ประวัติการดำเนินการ'] || '[]';
+                    let lastUpdate = displayDate;
+                    try {
+                        const hist = JSON.parse(historyJson);
+                        if (hist.length > 0 && hist[hist.length - 1].timestamp) {
+                            lastUpdate = hist[hist.length - 1].timestamp;
+                        }
+                    } catch(e) {}
+
                     return {
                         id: docId,
                         studentId: row['รหัสนักศึกษา'] || row['studentId'] || '',
                         senderName: row['ชื่อผู้ส่ง'] || row['senderName'] || 'ไม่ระบุ',
                         formName: row['ประเภทเอกสาร'] || 'คำร้องทั่วไป',
-                        submitDate: row['วันที่ส่ง'] || '-',
-                        lastUpdate: row['วันที่ส่ง'] || '-',
+                        submitDate: displayDate,
+                        lastUpdate: lastUpdate,
                         status: row['สถานะ'] || 'รอตรวจสอบ',
                         attachment: row['ชื่อไฟล์'] || '-',
                         fileUrl: row['ลิงก์เอกสาร'] || null,
                         signedFileUrl: row['ลิงก์เอกสารที่ลงนาม'] || null,
                         note: row['หมายเหตุ'] || '',
-                        history: row['ประวัติการดำเนินการ'] || '[]'
+                        history: historyJson
                     };
                 });
             

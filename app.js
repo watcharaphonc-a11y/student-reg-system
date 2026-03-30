@@ -442,20 +442,44 @@ async function bootApp() {
                 const sId = String(window.currentUserData.username || window.currentUserData.id || '').trim();
                 docsToMap = MOCK.documents.filter(d => String(d.studentId || '').trim() === sId);
             }
-            MOCK.studentDocuments = docsToMap.map(d => ({
-                id: d.id,
-                studentId: d.studentId,
-                senderName: d.senderName,
-                formName: d.documentType,
-                submitDate: d.date,
-                lastUpdate: d.date,
-                status: d.status,
-                attachment: d.fileName,
-                fileUrl: d.fileUrl,
-                signedFileUrl: d.signedFileUrl,
-                note: d.note,
-                history: d.history
-            }));
+            MOCK.studentDocuments = docsToMap.map(d => {
+                let displayDate = String(d.date || '-');
+                try {
+                    const dateObj = new Date(d.date);
+                    if (!isNaN(dateObj.getTime())) {
+                        const day = String(dateObj.getDate()).padStart(2, '0');
+                        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                        let year = dateObj.getFullYear();
+                        if (year < 2400) year += 543;
+                        const hours = String(dateObj.getHours()).padStart(2, '0');
+                        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                        displayDate = `${day}/${month}/${year} ${hours}:${minutes} น.`;
+                    }
+                } catch (e) {}
+
+                let lastUpdate = displayDate;
+                try {
+                    const hist = JSON.parse(d.history || '[]');
+                    if (hist.length > 0 && hist[hist.length - 1].timestamp) {
+                        lastUpdate = hist[hist.length - 1].timestamp;
+                    }
+                } catch (e) {}
+
+                return {
+                    id: d.id,
+                    studentId: d.studentId,
+                    senderName: d.senderName,
+                    formName: d.documentType,
+                    submitDate: displayDate,
+                    lastUpdate: lastUpdate,
+                    status: d.status,
+                    attachment: d.fileName,
+                    fileUrl: d.fileUrl,
+                    signedFileUrl: d.signedFileUrl,
+                    note: d.note,
+                    history: d.history
+                };
+            });
 
             // Sync for Admin view
             MOCK.adminDocuments = MOCK.documents.map((d) => {
