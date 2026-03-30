@@ -439,16 +439,16 @@ function renderWizardPage() {
 
     const modalHtml = `
     <div>
-        <div style="position: sticky; top: -16px; z-index: 100; background: var(--bg-modal); padding: 16px 20px 12px 20px; margin: -16px -20px 0 -20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-                <span style="font-size:0.8rem; color:var(--text-muted);">หน้า ${pageNum}/${totalPages} (${progressPercent}%)</span>
+        <div style="position: sticky; top: -16px; z-index: 100; background: var(--bg-modal); padding: 4px 20px 4px 20px; margin: -16px -20px 0 -20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
+                <span style="font-size:0.75rem; color:var(--text-muted);">หน้า ${pageNum}/${totalPages} (${progressPercent}%)</span>
             </div>
-            <div style="width:100%; height:4px; background:var(--bg-tertiary); border-radius:2px; margin-bottom:12px; overflow:hidden;">
+            <div style="width:100%; height:3px; background:var(--bg-tertiary); border-radius:2px; margin-bottom:6px; overflow:hidden;">
                 <div style="width:${progressPercent}%; height:100%; background:var(--accent-primary); border-radius:2px; transition:width 0.3s;"></div>
             </div>
 
-            <div style="background:var(--bg-tertiary);padding:12px 16px;border-radius:var(--radius-md);border-left:4px solid ${sectionColor}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <div style="font-weight:700;font-size:1.1rem;color:var(--text-primary);margin-bottom:2px;line-height:1.2;">${ws.courseCode} — ${ws.courseName}</div>
+            <div style="background:var(--bg-tertiary);padding:6px 12px;border-radius:var(--radius-sm);border-left:4px solid ${sectionColor}; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                <div style="font-weight:700;font-size:1.1rem;color:var(--text-primary);margin-bottom:0;line-height:1.2;">${ws.courseCode} — ${ws.courseName}</div>
                 <div style="font-size:1rem;color:${sectionColor};font-weight:600;display:flex;align-items:center;gap:6px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                     <span>หัวข้อ: ${page.label}</span>
@@ -692,10 +692,10 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
 
     const buildHtml = () => `
     <div>
-        <div style="position: sticky; top: -16px; z-index: 100; background: var(--bg-modal); padding: 16px 20px 12px 20px; margin: -16px -20px 0 -20px;">
-            <div style="background:var(--bg-tertiary);padding:12px 16px;border-radius:var(--radius-md);margin-bottom:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <p style="margin:0 0 2px;font-size:0.8rem;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
-                <div style="font-weight:600;font-size:1.05rem;color:var(--accent-primary)">${instName}</div>
+        <div style="position: sticky; top: -16px; z-index: 100; background: var(--bg-modal); padding: 4px 20px 4px 20px; margin: -16px -20px 0 -20px;">
+            <div style="background:var(--bg-tertiary);padding:6px 12px;border-radius:var(--radius-sm);margin-bottom:6px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                <p style="margin:0 0 2px;font-size:0.95rem;font-weight:600;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
+                <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${instName}</div>
                 <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">ID: ${instructorId} · วิชา: ${courseCode} ${courseName}</div>
             </div>
             
