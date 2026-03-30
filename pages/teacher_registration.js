@@ -73,7 +73,10 @@ pages['teacher-registration'] = function() {
                                 <option value="อาจารย์พิเศษ">อาจารย์พิเศษ</option>
                             </select>
                         </div>
-                        <div class="form-group"><label class="form-label">คณะ / สังกัด</label><input id="t_faculty" class="form-input" value="คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก" readonly style="background:var(--bg-tertiary); color:var(--text-muted);"/></div>
+                        <div class="form-group">
+                            <label class="form-label">คณะ / สังกัด</label>
+                            <input id="t_faculty" class="form-input" value="คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก" placeholder="สังกัด/หน่วยงานต้นสังกัด..."/>
+                        </div>
                         <div class="form-group"><label class="form-label">จำนวนนักศึกษาในกำกับ</label><input id="t_studentCount" class="form-input" type="number" placeholder="0" value="0"/></div>
                     </div>
                     <div style="display:flex; justify-content:flex-end; margin-top:20px;">
