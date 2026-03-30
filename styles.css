@@ -1552,8 +1552,8 @@ input, select, textarea {
     background: var(--bg-modal);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    width: 100%;
-    max-width: 560px;
+    width: 96%;
+    max-width: 760px;
     max-height: 92vh;
     overflow: hidden;
     animation: modalIn 0.3s ease;
@@ -1595,7 +1595,7 @@ input, select, textarea {
 }
 
 .modal-body {
-    padding: 24px;
+    padding: 16px 20px;
     overflow-y: auto;
     max-height: 75vh;
 }

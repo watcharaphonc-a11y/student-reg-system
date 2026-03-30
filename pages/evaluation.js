@@ -386,8 +386,8 @@ function renderWizardPage() {
     let questionsHtml = '';
     if (isInstructor) {
         questionsHtml = `
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md); margin-bottom:20px;">
-            <span style="font-weight:500;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md); margin-bottom:12px;">
+            <span style="font-weight:500; font-size:0.95rem;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
             <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
                 <input type="checkbox" ${isSkipped ? 'checked' : ''} onchange="toggleInstructorSkip('${currentInstId.replace(/'/g, "\\\\'")}', this.checked)" style="opacity:0;width:0;height:0;">
                 <span style="position:absolute;inset:0;background:${isSkipped ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:26px;transition:0.3s;"></span>
@@ -404,17 +404,17 @@ function renderWizardPage() {
             const likertLabels = ['น้อยที่สุด', 'น้อย', 'ปานกลาง', 'มาก', 'มากที่สุด'];
             
             questionsHtml += `
-            <div id="q_container_${i}" style="margin-bottom:20px; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-md); border:2px solid transparent; transition:0.3s;">
-                <label style="font-size:0.95rem; font-weight:500; display:block; margin-bottom:12px; color:var(--text-primary); line-height:1.4;">
+            <div id="q_container_${i}" style="margin-bottom:12px; padding:12px 16px; background:var(--bg-secondary); border-radius:var(--radius-md); border:2px solid transparent; transition:0.3s;">
+                <label style="font-size:0.92rem; font-weight:500; display:block; margin-bottom:8px; color:var(--text-primary); line-height:1.3;">
                     ${i+1}. ${q.text} <span style="color:var(--danger)">${isText ? '(ไม่บังคับ)' : '*'}</span>
                 </label>
                 ${isText ? `
-                    <textarea class="form-control" placeholder="ข้อเสนอแนะเพิ่มเติม..." rows="3" onchange="setWizardText('${scoreKey}', this.value, ${i})" style="width:100%; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:12px;">${currentVal || ''}</textarea>
+                    <textarea class="form-control" placeholder="ข้อเสนอแนะเพิ่มเติม..." rows="2" onchange="setWizardText('${scoreKey}', this.value, ${i})" style="width:100%; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:10px; font-size:0.9rem;">${currentVal || ''}</textarea>
                 ` : `
                     <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; max-width:100%;" id="likert_${i}">
                         ${[1,2,3,4,5].map(s => `
                             <button type="button" onclick="setWizardScore('${scoreKey}', ${s}, ${i}); document.getElementById('q_container_${i}').style.borderColor='transparent'; document.getElementById('q_container_${i}').style.background='var(--bg-secondary)';" 
-                                    style="height:64px; border:2px solid ${currentVal === s ? 'var(--accent-primary)' : 'var(--border-color)'}; 
+                                    style="height:54px; border:2px solid ${currentVal === s ? 'var(--accent-primary)' : 'var(--border-color)'}; 
                                            background:${currentVal === s ? 'var(--accent-primary)' : 'var(--bg-card)'}; 
                                            color:${currentVal === s ? 'white' : 'inherit'};
                                            border-radius:var(--radius-sm); cursor:pointer; 
@@ -439,16 +439,16 @@ function renderWizardPage() {
 
     const modalHtml = `
     <div>
-        <div style="position: sticky; top: -24px; z-index: 100; background: var(--bg-modal); padding: 24px 24px 16px 24px; margin: -24px -24px 0 -24px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-size:0.85rem; color:var(--text-muted);">หน้า ${pageNum}/${totalPages} (${progressPercent}%)</span>
+        <div style="position: sticky; top: -16px; z-index: 100; background: var(--bg-modal); padding: 16px 20px 12px 20px; margin: -16px -20px 0 -20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <span style="font-size:0.8rem; color:var(--text-muted);">หน้า ${pageNum}/${totalPages} (${progressPercent}%)</span>
             </div>
-            <div style="width:100%; height:6px; background:var(--bg-tertiary); border-radius:3px; margin-bottom:16px; overflow:hidden;">
-                <div style="width:${progressPercent}%; height:100%; background:var(--accent-primary); border-radius:3px; transition:width 0.3s;"></div>
+            <div style="width:100%; height:4px; background:var(--bg-tertiary); border-radius:2px; margin-bottom:12px; overflow:hidden;">
+                <div style="width:${progressPercent}%; height:100%; background:var(--accent-primary); border-radius:2px; transition:width 0.3s;"></div>
             </div>
 
-            <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);border-left:4px solid ${sectionColor}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <div style="font-weight:700;font-size:1.25rem;color:var(--text-primary);margin-bottom:4px;line-height:1.3;">${ws.courseCode} — ${ws.courseName}</div>
+            <div style="background:var(--bg-tertiary);padding:12px 16px;border-radius:var(--radius-md);border-left:4px solid ${sectionColor}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <div style="font-weight:700;font-size:1.1rem;color:var(--text-primary);margin-bottom:2px;line-height:1.2;">${ws.courseCode} — ${ws.courseName}</div>
                 <div style="font-size:1rem;color:${sectionColor};font-weight:600;display:flex;align-items:center;gap:6px;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
                     <span>หัวข้อ: ${page.label}</span>
@@ -460,7 +460,7 @@ function renderWizardPage() {
             ${questionsHtml}
         </div>
 
-        <div style="position: sticky; bottom: -24px; z-index: 100; background: var(--bg-modal); padding: 16px 24px 24px 24px; margin: 0 -24px -24px -24px; display:flex; justify-content:space-between; gap:12px; border-top: 1px solid var(--border-color);">
+        <div style="position: sticky; bottom: -16px; z-index: 100; background: var(--bg-modal); padding: 12px 20px 16px 20px; margin: 0 -20px -16px -20px; display:flex; justify-content:space-between; gap:12px; border-top: 1px solid var(--border-color);">
             <button class="btn btn-secondary" onclick="${ws.currentPage > 0 ? 'wizardPrev()' : 'closeModal()'}" style="flex:1;">
                 ${ws.currentPage > 0 ? '← ย้อนกลับ' : '✕ ยกเลิก'}
             </button>
@@ -692,15 +692,15 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
 
     const buildHtml = () => `
     <div>
-        <div style="position: sticky; top: -24px; z-index: 100; background: var(--bg-modal); padding: 24px 24px 16px 24px; margin: -24px -24px 0 -24px;">
-            <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);margin-bottom:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-                <p style="margin:0 0 4px;font-size:0.82rem;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
-                <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${instName}</div>
+        <div style="position: sticky; top: -16px; z-index: 100; background: var(--bg-modal); padding: 16px 20px 12px 20px; margin: -16px -20px 0 -20px;">
+            <div style="background:var(--bg-tertiary);padding:12px 16px;border-radius:var(--radius-md);margin-bottom:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <p style="margin:0 0 2px;font-size:0.8rem;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
+                <div style="font-weight:600;font-size:1.05rem;color:var(--accent-primary)">${instName}</div>
                 <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">ID: ${instructorId} · วิชา: ${courseCode} ${courseName}</div>
             </div>
             
-            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
-                <span style="font-weight:500;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
+                <span style="font-weight:500; font-size:0.95rem;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
                 <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
                     <input type="checkbox" id="instSkipToggle" ${skipped ? 'checked' : ''} onchange="window._instSkipped=this.checked; document.getElementById('instQuestionsArea').style.display=this.checked?'none':'block'; document.getElementById('instSkipBg').style.background=this.checked?'var(--accent-primary)':'var(--border-color)'; document.getElementById('instSkipKnob').style.left=this.checked?'24px':'3px';" style="opacity:0;width:0;height:0;">
                     <span id="instSkipBg" style="position:absolute;inset:0;background:${skipped ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:26px;transition:0.3s;"></span>
@@ -714,17 +714,17 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
                 const likertLabels = ['น้อยที่สุด', 'น้อย', 'ปานกลาง', 'มาก', 'มากที่สุด'];
                 const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
                 return `
-            <div id="inst_q_container_${i}" style="margin-bottom:16px; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-md); border:2px solid transparent; transition:0.3s;">
-                <label style="font-size:0.95rem; font-weight:500; display:block; margin-bottom:12px; line-height:1.4;">
+            <div id="inst_q_container_${i}" style="margin-bottom:12px; padding:12px 16px; background:var(--bg-secondary); border-radius:var(--radius-md); border:2px solid transparent; transition:0.3s;">
+                <label style="font-size:0.92rem; font-weight:500; display:block; margin-bottom:8px; line-height:1.3;">
                     ${i+1}. ${q.text} <span style="color:var(--danger)">${isText ? '(ไม่บังคับ)' : '*'}</span>
                 </label>
                 ${isText ? `
-                    <textarea class="form-control" placeholder="ข้อเสนอแนะเพิ่มเติม..." rows="3" onchange="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=this.value;" style="width:100%; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:12px;"></textarea>
+                    <textarea class="form-control" placeholder="ข้อเสนอแนะเพิ่มเติม..." rows="2" onchange="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=this.value;" style="width:100%; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:10px; font-size:0.9rem;"></textarea>
                 ` : `
                     <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; max-width:100%;" id="instLikert_${i}">
                         ${[1,2,3,4,5].map(s => `
                             <button type="button" onclick="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=${s}; document.getElementById('inst_q_container_${i}').style.borderColor='transparent'; document.getElementById('inst_q_container_${i}').style.background='var(--bg-secondary)'; document.querySelectorAll('#instLikert_${i} button').forEach((b,idx)=>{b.style.borderColor=idx===${s-1}?'var(--accent-primary)':'var(--border-color)';b.style.background=idx===${s-1}?'var(--accent-primary)':'var(--bg-card)';b.style.color=idx===${s-1}?'white':'inherit';})" 
-                                    style="height:64px; border:2px solid var(--border-color); background:var(--bg-card); border-radius:var(--radius-sm); cursor:pointer; transition:all 0.15s; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px;">
+                                    style="height:54px; border:2px solid var(--border-color); background:var(--bg-card); border-radius:var(--radius-sm); cursor:pointer; transition:all 0.15s; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:4px;">
                                 <span style="font-weight:700; font-size:1.15rem; line-height:1;">${s}</span>
                                 <span style="font-size:0.65rem; font-weight:normal; margin-top:4px; opacity:0.9; text-align:center; line-height:1.1;">${likertLabels[s-1]}</span>
                             </button>
@@ -734,8 +734,8 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
             </div>`}).join('')}
         </div>
 
-        <div style="position: sticky; bottom: -24px; z-index: 100; background: var(--bg-modal); padding: 16px 24px 24px 24px; margin: 0 -24px -24px -24px; border-top: 1px solid var(--border-color);">
-            <button class="btn btn-primary" style="width:100%;font-size:1.1rem;padding:12px;" onclick="submitStandaloneInstructorEval('${instructorId.replace(/'/g,"\\\\'")}', '${courseCode}', '${courseName.replace(/'/g,"\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
+        <div style="position: sticky; bottom: -16px; z-index: 100; background: var(--bg-modal); padding: 12px 20px 16px 20px; margin: 0 -20px -16px -20px; border-top: 1px solid var(--border-color);">
+            <button class="btn btn-primary" style="width:100%;font-size:1.05rem;padding:10px;" onclick="submitStandaloneInstructorEval('${instructorId.replace(/'/g,"\\\\'")}', '${courseCode}', '${courseName.replace(/'/g,"\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
         </div>
     </div>`;
 
