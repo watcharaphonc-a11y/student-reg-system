@@ -159,8 +159,8 @@ pages['student-profile'] = function () {
                         <div class="transcript-info-item"><span class="label">สถานที่ปฏิบัติงาน:</span><span>${workplace}</span></div>
                         <div class="transcript-info-item"><span class="label">ตำแหน่ง:</span><span>${position}</span></div>
                         <div class="transcript-info-item"><span class="label">ที่อยู่:</span><span>${address}</span></div>
-                        <div class="transcript-info-item"><span class="label">ผู้ปกครอง:</span><span>${parentName}</span></div>
-                        <div class="transcript-info-item"><span class="label">เบอร์ผู้ปกครอง:</span><span>${parentPhone}</span></div>
+                        <div class="transcript-info-item"><span class="label">บุคคลที่ติดต่อได้:</span><span>${parentName}</span></div>
+                        <div class="transcript-info-item"><span class="label">เบอร์โทรติดต่อได้:</span><span>${parentPhone}</span></div>
                     </div>
                 </div>
             </div>
