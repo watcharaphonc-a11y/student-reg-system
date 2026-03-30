@@ -160,7 +160,13 @@ window.init_petitions_student = function () {
 // Student Documents Status Tracking Page
 // ============================
 pages['documents-status'] = function() {
-    const docs = MOCK.studentDocuments || [];
+    let docs = MOCK.studentDocuments || [];
+    
+    // UI-layer failsafe filtering: Students MUST ONLY see their own documents
+    if (window.currentUserRole === 'student' && window.currentUserData) {
+        const studentId = String(window.currentUserData.username || window.currentUserData.id || '').trim();
+        docs = docs.filter(d => String(d.studentId || '').trim() === studentId);
+    }
 
     return `
     <div class="animate-in">
