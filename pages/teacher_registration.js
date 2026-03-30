@@ -32,12 +32,33 @@ pages['teacher-registration'] = function() {
                 <div class="card-header"><h3 class="card-title">กรอกข้อมูลอาจารย์</h3></div>
                 <div class="card-body">
                     <div class="form-row">
-                        <div class="form-group"><label class="form-label">คำนำหน้า</label><select id="t_prefix" class="form-select"><option>รศ.ดร.</option><option>ผศ.ดร.</option><option>อ.ดร.</option><option>ศ.ดร.</option><option>รศ.</option><option>ผศ.</option><option>อ.</option></select></div>
+                        <div class="form-group">
+                            <label class="form-label">คำนำหน้า</label>
+                            <input id="t_prefix" class="form-input" list="prefix-list" placeholder="ระบุคำนำหน้าชื่อ..."/>
+                            <datalist id="prefix-list">
+                                <option value="รศ.ดร."></option>
+                                <option value="ผศ.ดร."></option>
+                                <option value="อ.ดร."></option>
+                                <option value="ศ.ดร."></option>
+                                <option value="รศ."></option>
+                                <option value="ผศ."></option>
+                                <option value="อ."></option>
+                            </datalist>
+                        </div>
                         <div class="form-group"><label class="form-label">ชื่อ</label><input id="t_firstName" class="form-input" placeholder="ชื่อ"/></div>
-                        <div class="form-group"><label class="form-label">นามสกุล</label><input id="r_lastName" class="form-input" placeholder="นามสกุล"/></div>
+                        <div class="form-group"><label class="form-label">นามสกุล</label><input id="t_lastName" class="form-input" placeholder="นามสกุล"/></div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group"><label class="form-label">ตำแหน่งทางวิชาการ</label><select id="t_position" class="form-select"><option>รองศาสตราจารย์</option><option>ผู้ช่วยศาสตราจารย์</option><option>อาจารย์</option><option>ศาสตราจารย์</option></select></div>
+                        <div class="form-group">
+                            <label class="form-label">ตำแหน่งทางวิชาการ</label>
+                            <input id="t_position" class="form-input" list="position-list" placeholder="ระบุตำแหน่ง..."/>
+                            <datalist id="position-list">
+                                <option value="รองศาสตราจารย์"></option>
+                                <option value="ผู้ช่วยศาสตราจารย์"></option>
+                                <option value="อาจารย์"></option>
+                                <option value="ศาสตราจารย์"></option>
+                            </datalist>
+                        </div>
                         <div class="form-group"><label class="form-label">ความเชี่ยวชาญ / สาขาวิชา</label><input id="t_expertise" class="form-input" placeholder="เช่น การพยาบาลจิตเวชและสุขภาพจิต"/></div>
                     </div>
                     <div class="form-row">
@@ -144,10 +165,19 @@ window.switchTeacherRegMode = function(mode) {
 
 // ====== Single Teacher Submit ======
 window.submitSingleTeacher = async function() {
+    const firstName = document.getElementById('t_firstName').value.trim();
+    const lastName = document.getElementById('t_lastName').value.trim();
+    const prefix = document.getElementById('t_prefix').value.trim();
+    
+    if (!firstName || !lastName) {
+        alert('กรุณากรอกชื่อและนามสกุลของอาจารย์');
+        return;
+    }
+
     const payload = {
-        'คำนำหน้า': document.getElementById('t_prefix').value,
-        'ชื่อ': document.getElementById('t_firstName').value,
-        'นามสกุล': document.getElementById('t_lastName').value,
+        'คำนำหน้า': prefix,
+        'ชื่อ': firstName,
+        'นามสกุล': lastName,
         'ตำแหน่งทางวิชาการ': document.getElementById('t_position').value,
         'ความเชี่ยวชาญ': document.getElementById('t_expertise').value,
         'อีเมล': document.getElementById('t_email').value,
@@ -156,13 +186,9 @@ window.submitSingleTeacher = async function() {
         'นศ. ในกำกับ': parseInt(document.getElementById('t_studentCount').value) || 0,
         'Username': document.getElementById('t_email').value.split('@')[0],
         'Password': '111111',
-        'ประเภทอาจารย์': document.getElementById('t_type').value
+        'ประเภทอาจารย์': document.getElementById('t_type').value,
+        'name': (prefix ? prefix + ' ' : '') + firstName + ' ' + lastName
     };
-
-    if (!payload.firstName || !payload.lastName) {
-        alert('กรุณากรอกชื่อและนามสกุลของอาจารย์');
-        return;
-    }
 
     showApiLoading('กำลังบันทึกข้อมูลอาจารย์...');
     const res = await postData('registerTeacher', payload);
@@ -171,10 +197,18 @@ window.submitSingleTeacher = async function() {
     if (res && res.status === 'success') {
         openModal('สำเร็จ!', `<div style="text-align:center;padding:20px"><div style="font-size:3rem;margin-bottom:12px">🎉</div><h3 style="margin-bottom:8px">บันทึกข้อมูลอาจารย์สำเร็จ</h3><p style="color:var(--text-muted)">${payload.name}</p><button class="btn btn-primary" style="margin-top:16px" onclick="closeModal();if(typeof bootApp==='function') bootApp();">ตกลง</button></div>`);
     } else {
-        // Still add to local mock for demo purposes
+        // Still add to local mock for demo purposes if API fails or for offline demo
         if (!MOCK.teachers) MOCK.teachers = [];
         MOCK.teachers.push(payload);
-        MOCK.academicAdvisors.push(payload);
+        
+        // Add to display list based on type
+        if (payload['ประเภทอาจารย์'] === 'อาจารย์พิเศษ') {
+            if (!MOCK.specialLecturers) MOCK.specialLecturers = [];
+            MOCK.specialLecturers.push(payload);
+        } else {
+            MOCK.academicAdvisors.push(payload);
+        }
+        
         openModal('สำเร็จ!', `<div style="text-align:center;padding:20px"><div style="font-size:3rem;margin-bottom:12px">🎉</div><h3 style="margin-bottom:8px">บันทึกข้อมูลอาจารย์สำเร็จ</h3><p style="color:var(--text-muted)">${payload.name}</p><p style="color:var(--text-muted); font-size:0.82rem;">(บันทึกในระบบภายในเรียบร้อย)</p><button class="btn btn-primary" style="margin-top:16px" onclick="closeModal();navigateTo('dashboard');">ตกลง</button></div>`);
     }
 };
