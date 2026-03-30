@@ -431,27 +431,31 @@ async function bootApp() {
                     status: d['สถานะ'] || d.status || 'รอตรวจสอบ',
                     nextStep: d['ผู้รับผิดชอบถัดไป'] || d.nextStep || 'เจ้าหน้าที่งานทะเบียน',
                     note: d['หมายเหตุ'] || d.note || '',
+                    history: d['ประวัติการดำเนินการ'] || d.history || '[]',
                     id: trackId || ('DOC-' + new Date().getTime())
                 };
             });
 
-            // Populate studentDocuments if student is logged in
+            // Populate studentDocuments for all users, but filter if student is logged in
+            let docsToMap = MOCK.documents;
             if (window.currentUserRole === 'student' && window.currentUserData) {
                 const sId = String(window.currentUserData.username || window.currentUserData.id || '').trim();
-                MOCK.studentDocuments = MOCK.documents
-                    .filter(d => String(d.studentId || '').trim() === sId)
-                    .map(d => ({
-                        id: d.id,
-                        formName: d.documentType,
-                        submitDate: d.date,
-                        lastUpdate: d.date,
-                        status: d.status,
-                        attachment: d.fileName,
-                        fileUrl: d.fileUrl,
-                        signedFileUrl: d.signedFileUrl,
-                        note: d.note
-                    }));
+                docsToMap = MOCK.documents.filter(d => String(d.studentId || '').trim() === sId);
             }
+            MOCK.studentDocuments = docsToMap.map(d => ({
+                id: d.id,
+                studentId: d.studentId,
+                senderName: d.senderName,
+                formName: d.documentType,
+                submitDate: d.date,
+                lastUpdate: d.date,
+                status: d.status,
+                attachment: d.fileName,
+                fileUrl: d.fileUrl,
+                signedFileUrl: d.signedFileUrl,
+                note: d.note,
+                history: d.history
+            }));
 
             // Sync for Admin view
             MOCK.adminDocuments = MOCK.documents.map((d) => {
