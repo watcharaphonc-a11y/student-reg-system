@@ -106,6 +106,7 @@ pages['eval-course'] = function() {
                                     ${isEval ? '<span class="badge success" style="font-size:0.7rem;">ประเมินแล้ว ✓</span>' : '<span class="badge warning" style="font-size:0.7rem;">รอประเมิน</span>'}
                                 </div>
                                 <div style="font-weight:500; font-size:1rem; margin-bottom:2px;">${course.name}</div>
+                                ${course.semester && course.year ? `<div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">ภาคเรียนที่ ${course.semester}/${course.year}</div>` : ''}
                                 <div style="font-size:0.8rem; color:var(--text-muted);">
                                     หน่วยกิต: ${course.credits || '-'} 
                                     ${instructors.length > 0 ? ' · อาจารย์: ' + instructors.slice(0,3).join(', ') + (instructors.length > 3 ? ` +${instructors.length-3}` : '') : ''}
@@ -144,6 +145,8 @@ pages['eval-instructor'] = function() {
             courseMap[code] = {
                 code: code,
                 name: ci.course_name || '',
+                semester: ci.semester || '',
+                academicYear: ci.academic_year || ci.year || '',
                 instructors: [] // Store as objects {id, name}
             };
         }
@@ -211,6 +214,7 @@ pages['eval-instructor'] = function() {
                     <div style="margin-bottom:16px; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
                         <span style="font-weight:600; font-size:1.15rem; color:var(--accent-primary);">${item.code}</span>
                         <span style="font-size:1.1rem; margin-left:8px;">${item.name}</span>
+                        ${item.semester && item.academicYear ? `<div style="font-size:0.9rem; color:var(--text-muted); margin-top:4px; font-weight:500;">ภาคเรียนที่ ${item.semester}/${item.academicYear}</div>` : ''}
                         <p style="margin:4px 0 0; font-size:0.85rem; color:var(--text-muted)">เลือกประเมินเฉพาะอาจารย์ที่ท่านเรียนด้วยในวิชานี้</p>
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:12px;">
@@ -698,9 +702,9 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
             <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
                 <span style="font-weight:500;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
                 <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
-                    <input type="checkbox" id="instSkipToggle" ${skipped ? 'checked' : ''} onchange="window._instSkipped=this.checked; document.getElementById('instQuestionsArea').style.display=this.checked?'none':'block';" style="opacity:0;width:0;height:0;">
-                    <span style="position:absolute;inset:0;background:${skipped ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:26px;transition:0.3s;"></span>
-                    <span style="position:absolute;left:${skipped ? '24px' : '3px'};top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+                    <input type="checkbox" id="instSkipToggle" ${skipped ? 'checked' : ''} onchange="window._instSkipped=this.checked; document.getElementById('instQuestionsArea').style.display=this.checked?'none':'block'; document.getElementById('instSkipBg').style.background=this.checked?'var(--accent-primary)':'var(--border-color)'; document.getElementById('instSkipKnob').style.left=this.checked?'24px':'3px';" style="opacity:0;width:0;height:0;">
+                    <span id="instSkipBg" style="position:absolute;inset:0;background:${skipped ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:26px;transition:0.3s;"></span>
+                    <span id="instSkipKnob" style="position:absolute;left:${skipped ? '24px' : '3px'};top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
                 </label>
             </div>
         </div>
