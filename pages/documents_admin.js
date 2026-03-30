@@ -277,6 +277,52 @@ window.previewAdminDoc = function(docId) {
             `;
         }
 
+        // 3. Document Timeline (ประวัติการดำเนินการ)
+        let history = [];
+        try { history = JSON.parse(doc.history || '[]'); } catch(e) { history = []; }
+        
+        let timelineHtml = '';
+        if (history.length > 0) {
+            timelineHtml = `
+                <div style="margin-top:25px; padding-top:20px; border-top:1px solid var(--border-color);">
+                    <h4 style="margin:0 0 15px; color:var(--text-primary); font-size:1rem; display:flex; align-items:center; gap:8px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                        เส้นเวลาการดำเนินงาน (Timeline)
+                    </h4>
+                    <div class="timeline">
+                        ${history.map((h, idx) => {
+                            const isActive = (idx === history.length - 1);
+                            let statusBadge = '';
+                            if (h.status) {
+                                let badgeClass = 'neutral';
+                                if (h.status.includes('อนุมัติ')) badgeClass = 'success';
+                                if (h.status.includes('ปฏิเสธ')) badgeClass = 'danger';
+                                if (h.status.includes('รอ') || h.status.includes('กำลัง')) badgeClass = 'warning';
+                                statusBadge = `<span class="timeline-status badge ${badgeClass}">${h.status}</span>`;
+                            }
+
+                            return `
+                                <div class="timeline-item ${isActive ? 'active' : ''}">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-header">
+                                            <div class="timeline-title">${h.event || 'เปลี่ยนสถานะ'}</div>
+                                            <div class="timeline-time">${h.timestamp || ''}</div>
+                                        </div>
+                                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                                            ${statusBadge}
+                                            <div style="font-size:0.75rem; color:var(--text-muted);">โดย: ${h.actor || '-'}</div>
+                                        </div>
+                                        ${h.note ? `<div class="timeline-note">${h.note}</div>` : ''}
+                                    </div>
+                                </div>
+                            `;
+                        }).reverse().join('')}
+                    </div>
+                </div>
+            `;
+        }
+
         const modalHtml = `
             <div style="padding:10px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding-bottom:10px; border-bottom:1px solid var(--border-color);">
