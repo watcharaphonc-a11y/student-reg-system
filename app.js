@@ -275,7 +275,7 @@ async function bootApp() {
                     program: s['หลักสูตร'] || s.program,
                     year: parseInt(s['ชั้นปี'] || s.year) || 1,
                     status: s['สถานะ'] || s.status || 'กำลังศึกษา',
-                    admissionYear: s['ปีการศึกษา'] || s['ปีที่เข้าศึกษา'] || s.admissionYear,
+                    admissionYear: s['admissionYear'] || s['ปีการศึกษา'] || s['ปีที่เข้าศึกษา'] || s.admissionYear,
                     advisor: s['อาจารย์ที่ปรึกษา'] || s.advisor || '-',
                     email: s['อีเมล'] || s.email || '-',
                     personalEmail: s['อีเมลส่วนตัว'] || s.personalEmail || '-',

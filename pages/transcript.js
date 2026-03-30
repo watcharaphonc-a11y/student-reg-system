@@ -237,7 +237,7 @@ pages.transcript = function() {
                 <div>รายงานผลการเรียนนักศึกษารายปีการศึกษา</div>
                 <div>หลักสูตร${studentProgram}</div>
                 <div>${departmentName}</div>
-                <div>ปีการศึกษา ${admissionYear}</div>
+                <div>ปีที่เข้าศึกษา ${admissionYear}</div>
                 <div style="margin-top:10px;">รหัสนักศึกษา ${studentId} ชื่อ-สกุลนักศึกษา ${studentPrefix}${studentFirstName} ${studentLastName}</div>
             </div>
             

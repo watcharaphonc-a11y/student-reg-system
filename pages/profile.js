@@ -140,7 +140,7 @@ pages['student-profile'] = function () {
                     </div>
                     <div class="profile-meta-item">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        ชั้นปีที่ ${year}
+                        ปีที่เข้าศึกษา ${admissionYear}
                     </div>
                     <div class="profile-meta-item">${getStatusBadge(status)}</div>
                 </div>
@@ -325,8 +325,8 @@ window.saveElectiveSelection = function (slotId) {
 };
 
 window.exportProfileTemplate = function () {
-    const headers = ['รหัสนักศึกษา', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'คณะ', 'สาขาวิชา', 'หลักสูตร', 'ชั้นปี', 'สถานะ', 'อีเมล', 'โทรศัพท์', 'GPA', 'หน่วยกิตสะสม'];
-    const sample = ['6801012630', 'นางสาว', 'พิมพ์ใจ', 'รักดี', 'คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก', 'สาขาวิชาการพยาบาลจิตเวชและสุขภาพจิต', 'พยาบาลศาสตรมหาบัณฑิต (พย.ม.)', '1', 'กำลังศึกษา', 'pimjai.r@pi.ac.th', '081-234-5678', '3.45', '96'];
+    const headers = ['รหัสนักศึกษา', 'คำนำหน้า', 'ชื่อ', 'นามสกุล', 'คณะ', 'สาขาวิชา', 'หลักสูตร', 'ปีที่เข้าศึกษา', 'สถานะ', 'อีเมล', 'โทรศัพท์', 'GPA', 'หน่วยกิตสะสม'];
+    const sample = ['6801012630', 'นางสาว', 'พิมพ์ใจ', 'รักดี', 'คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก', 'สาขาวิชาการพยาบาลจิตเวชและสุขภาพจิต', 'พยาบาลศาสตรมหาบัณฑิต (พย.ม.)', '2568', 'กำลังศึกษา', 'pimjai.r@pi.ac.th', '081-234-5678', '3.45', '96'];
     downloadCSVTemplate('template_ข้อมูลนักศึกษา.csv', headers, sample);
 };
 
@@ -341,7 +341,7 @@ window.importProfile = function () {
             MOCK.student.faculty = row['คณะ'] || MOCK.student.faculty;
             MOCK.student.department = row['สาขาวิชา'] || MOCK.student.department;
             MOCK.student.program = row['หลักสูตร'] || MOCK.student.program;
-            MOCK.student.year = parseInt(row['ชั้นปี']) || MOCK.student.year;
+            MOCK.student.admissionYear = row['ปีที่เข้าศึกษา'] || MOCK.student.admissionYear;
             MOCK.student.status = row['สถานะ'] || MOCK.student.status;
             MOCK.student.email = row['อีเมล'] || MOCK.student.email;
             MOCK.student.phone = row['โทรศัพท์'] || MOCK.student.phone;
