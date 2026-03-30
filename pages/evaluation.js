@@ -6,7 +6,8 @@
 // Helper to resolve instructor name from ID (Username in Teachers sheet)
 function getInstructorDisplayName(id) {
     if (!id) return 'ไม่ระบุอาจารย์';
-    const teacher = (MOCK.academicAdvisors || []).find(t => String(t.username || '').trim() === String(id).trim());
+    const allTeachers = [...(MOCK.academicAdvisors || []), ...(MOCK.specialLecturers || [])];
+    const teacher = allTeachers.find(t => String(t.username || t.id || '').trim() === String(id).trim());
     return teacher ? teacher.name : id;
 }
 
