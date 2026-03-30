@@ -15,8 +15,8 @@ pages['eval-course'] = function() {
     const evals = MOCK.evaluations || [];
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
     
-    // Build enrolled courses from student's grades (from Enrollments sheet)
-    const enrolled = (MOCK.grades || []).flatMap(sem => 
+    // 1. Build enrolled courses from student's grades (official Enrollments)
+    let enrolled = (MOCK.grades || []).flatMap(sem => 
         (sem.courses || []).map(c => ({ 
             code: c.code, 
             name: c.name, 
@@ -25,6 +25,27 @@ pages['eval-course'] = function() {
             year: sem.year
         }))
     );
+
+    // 2. Smart Fallback: If no enrollments, populate from Study Plan
+    if (enrolled.length === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
+        const planInfo = window.getStudyPlanForStudent(MOCK.student);
+        (planInfo.data || []).forEach(sem => {
+            (sem.courses || []).forEach(cStr => {
+                const parts = cStr.split(' ');
+                const code = String(parts[0]).trim();
+                const name = parts.slice(1).join(' ');
+                if (code) {
+                    enrolled.push({
+                        code: code,
+                        name: name || 'รายวิชาตามแผนการศึกษา',
+                        credits: '',
+                        semester: sem.sem,
+                        year: ''
+                    });
+                }
+            });
+        });
+    }
     
     // Deduplicate by course code
     const uniqueEnrolled = [];
@@ -157,9 +178,21 @@ pages['eval-instructor'] = function() {
         }
     });
 
-    // Filter to only enrolled courses
+    // Filter to only enrolled courses (or Study Plan fallback)
     const enrolledCodes = new Set();
-    (MOCK.grades || []).flatMap(sem => sem.courses || []).forEach(c => enrolledCodes.add(c.code));
+    const enrolled = (MOCK.grades || []).flatMap(sem => sem.courses || []);
+    enrolled.forEach(c => enrolledCodes.add(c.code));
+
+    // Fallback to Study Plan if no enrollments
+    if (enrolledCodes.size === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
+        const planInfo = window.getStudyPlanForStudent(MOCK.student);
+        (planInfo.data || []).forEach(sem => {
+            (sem.courses || []).forEach(cStr => {
+                const code = String(cStr.split(' ')[0]).trim();
+                if (code) enrolledCodes.add(code);
+            });
+        });
+    }
     
     const evalItems = Object.values(courseMap).filter(c => enrolledCodes.has(c.code));
     
