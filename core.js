@@ -32,11 +32,14 @@ function gradeToPoint(grade) {
 // Modal functions (need to be available to page scripts)
 let modalOverlay, modalTitle, modalBody;
 
-function openModal(title, bodyHtml) {
+function openModal(title, bodyHtml, subtitleHtml = '') {
     if (!modalOverlay) modalOverlay = document.getElementById('modalOverlay');
     if (!modalTitle) modalTitle = document.getElementById('modalTitle');
     if (!modalBody) modalBody = document.getElementById('modalBody');
-    if (modalTitle) modalTitle.textContent = title;
+    if (modalTitle) {
+        modalTitle.innerHTML = `<span style="flex: 1;">${title}</span>` + 
+            (subtitleHtml ? `<span style="font-size:0.85rem; font-weight:normal; color:var(--text-muted); margin-left:auto; padding-right:12px; white-space: nowrap;">${subtitleHtml}</span>` : '');
+    }
     if (modalBody) modalBody.innerHTML = bodyHtml;
     if (modalOverlay) modalOverlay.classList.add('show');
 }

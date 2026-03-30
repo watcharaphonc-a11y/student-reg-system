@@ -440,9 +440,6 @@ function renderWizardPage() {
     const modalHtml = `
     <div>
         <div style="position: sticky; top: -16px; z-index: 100; background: var(--bg-modal); padding: 4px 20px 4px 20px; margin: -16px -20px 0 -20px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2px;">
-                <span style="font-size:0.75rem; color:var(--text-muted);">หน้า ${pageNum}/${totalPages} (${progressPercent}%)</span>
-            </div>
             <div style="width:100%; height:3px; background:var(--bg-tertiary); border-radius:2px; margin-bottom:6px; overflow:hidden;">
                 <div style="width:${progressPercent}%; height:100%; background:var(--accent-primary); border-radius:2px; transition:width 0.3s;"></div>
             </div>
@@ -470,8 +467,9 @@ function renderWizardPage() {
         </div>
     </div>`;
 
-    openModal(`การประเมินรายวิชา (หน้า ${pageNum}/${totalPages})`, modalHtml);
-};
+    const mainTitle = ws.pages.length > 1 && ws.pages[ws.currentPage].type === 'instructor' ? 'ประเมินอาจารย์ผู้สอน' : 'ประเมินรายวิชา';
+    openModal(mainTitle, modalHtml, `หน้า ${pageNum}/${totalPages} (${progressPercent}%)`);
+}
 
 window.setWizardText = function(scoreKey, text, questionIdx) {
     wizardState.scores[scoreKey] = text;
@@ -694,7 +692,6 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
     <div>
         <div style="position: sticky; top: -16px; z-index: 100; background: var(--bg-modal); padding: 4px 20px 4px 20px; margin: -16px -20px 0 -20px;">
             <div style="background:var(--bg-tertiary);padding:6px 12px;border-radius:var(--radius-sm);margin-bottom:6px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                <p style="margin:0 0 2px;font-size:0.95rem;font-weight:600;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
                 <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${instName}</div>
                 <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">ID: ${instructorId} · วิชา: ${courseCode} ${courseName}</div>
             </div>
