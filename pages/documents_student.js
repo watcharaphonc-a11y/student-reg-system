@@ -189,9 +189,10 @@ pages['documents-status'] = function() {
                         <thead>
                             <tr>
                                 <th style="width: 140px;">รหัสเอกสาร</th>
+                                ${window.currentUserRole !== 'student' ? '<th style="width: 200px;">ข้อมูลผู้ส่ง</th>' : ''}
                                 <th>แบบฟอร์มคำร้อง</th>
-                                <th style="width: 180px;">วันที่ส่ง</th>
-                                <th style="width: 200px;">สถานะ</th>
+                                <th style="width: 160px;">วันที่ส่ง</th>
+                                <th style="width: 180px;">สถานะ</th>
                             </tr>
                         </thead>
                         <tbody id="studentDocTableBody">
@@ -205,9 +206,13 @@ pages['documents-status'] = function() {
                                 return `
                                 <tr class="student-doc-row" data-search="${[d.id, d.formName, d.status, d.studentId, d.senderName].join(' ').toLowerCase()}">
                                     <td style="font-weight:700; color:var(--accent-primary)">${d.id}</td>
+                                    ${window.currentUserRole !== 'student' ? `
+                                    <td>
+                                        <div style="font-weight:600; color:var(--text-primary); margin-bottom:4px;">${d.senderName || 'ไม่ระบุชื่อ'}</div>
+                                        <div style="font-size:0.85rem; color:var(--text-muted);">${d.studentId || '-'}</div>
+                                    </td>` : ''}
                                     <td>
                                         <div style="font-weight:600; margin-bottom:4px;">${d.formName}</div>
-                                        ${window.currentUserRole !== 'student' && d.senderName ? `<div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">${d.senderName} (${d.studentId})</div>` : ''}
                                         ${d.attachment ? `<div style="font-size:0.85rem; color:var(--text-muted); display:flex; align-items:center; gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${d.attachment}</div>` : ''}
                                     </td>
                                     <td style="font-size:0.95rem;">${d.submitDate}</td>

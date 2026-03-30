@@ -352,21 +352,6 @@ window.startCourseEvalWizard = function(courseCode, courseName) {
         });
     });
 
-    // Instructor evaluation pages  
-    uniqueInstructors.forEach(ins => {
-        wizardPages.push({
-            type: 'instructor',
-            key: 'instructor_' + ins.id,
-            label: 'การประเมินอาจารย์ผู้สอน: ' + ins.name,
-            instructorId: ins.id,
-            instructorName: ins.name,
-            questions: instQuestions.map(q => ({
-                id: q.question_id,
-                text: q.question_text
-            }))
-        });
-    });
-
     wizardState = {
         courseCode,
         courseName,
