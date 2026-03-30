@@ -1554,7 +1554,7 @@ input, select, textarea {
     border-radius: var(--radius-xl);
     width: 100%;
     max-width: 560px;
-    max-height: 80vh;
+    max-height: 92vh;
     overflow: hidden;
     animation: modalIn 0.3s ease;
 }
@@ -1597,7 +1597,7 @@ input, select, textarea {
 .modal-body {
     padding: 24px;
     overflow-y: auto;
-    max-height: 60vh;
+    max-height: 75vh;
 }
 
 /* ====== Animations ====== */

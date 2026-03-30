@@ -433,27 +433,29 @@ function renderWizardPage() {
     const sectionColor = isInstructor ? '#e74c3c' : '#3498db';
 
     const modalHtml = `
-    <div style="padding:8px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <span style="font-size:0.85rem; color:var(--text-muted);">หน้า ${pageNum}/${totalPages} (${progressPercent}%)</span>
-        </div>
-        <div style="width:100%; height:6px; background:var(--bg-tertiary); border-radius:3px; margin-bottom:16px; overflow:hidden;">
-            <div style="width:${progressPercent}%; height:100%; background:var(--accent-primary); border-radius:3px; transition:width 0.3s;"></div>
-        </div>
+    <div>
+        <div style="position: sticky; top: -24px; z-index: 100; background: var(--bg-modal); padding: 24px 24px 16px 24px; margin: -24px -24px 0 -24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:0.85rem; color:var(--text-muted);">หน้า ${pageNum}/${totalPages} (${progressPercent}%)</span>
+            </div>
+            <div style="width:100%; height:6px; background:var(--bg-tertiary); border-radius:3px; margin-bottom:16px; overflow:hidden;">
+                <div style="width:${progressPercent}%; height:100%; background:var(--accent-primary); border-radius:3px; transition:width 0.3s;"></div>
+            </div>
 
-        <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);margin-bottom:20px;border-left:4px solid ${sectionColor};">
-            <div style="font-weight:700;font-size:1.25rem;color:var(--text-primary);margin-bottom:4px;line-height:1.3;">${ws.courseCode} — ${ws.courseName}</div>
-            <div style="font-size:1rem;color:${sectionColor};font-weight:600;display:flex;align-items:center;gap:6px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                <span>หัวข้อ: ${page.label}</span>
+            <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);border-left:4px solid ${sectionColor}; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <div style="font-weight:700;font-size:1.25rem;color:var(--text-primary);margin-bottom:4px;line-height:1.3;">${ws.courseCode} — ${ws.courseName}</div>
+                <div style="font-size:1rem;color:${sectionColor};font-weight:600;display:flex;align-items:center;gap:6px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    <span>หัวข้อ: ${page.label}</span>
+                </div>
             </div>
         </div>
 
-        <div id="wizardQuestionsScrollArea" style="max-height:65vh; overflow-y:auto; padding-right:8px; padding-bottom:8px;">
+        <div id="wizardQuestionsScrollArea" style="padding: 12px 0;">
             ${questionsHtml}
         </div>
 
-        <div style="display:flex; justify-content:space-between; margin-top:20px; gap:12px;">
+        <div style="position: sticky; bottom: -24px; z-index: 100; background: var(--bg-modal); padding: 16px 24px 24px 24px; margin: 0 -24px -24px -24px; display:flex; justify-content:space-between; gap:12px; border-top: 1px solid var(--border-color);">
             <button class="btn btn-secondary" onclick="${ws.currentPage > 0 ? 'wizardPrev()' : 'closeModal()'}" style="flex:1;">
                 ${ws.currentPage > 0 ? '← ย้อนกลับ' : '✕ ยกเลิก'}
             </button>
@@ -684,23 +686,25 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
     let skipped = false;
 
     const buildHtml = () => `
-    <div style="padding:8px">
-        <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);margin-bottom:20px;">
-            <p style="margin:0 0 4px;font-size:0.82rem;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
-            <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${instName}</div>
-            <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">ID: ${instructorId} · วิชา: ${courseCode} ${courseName}</div>
-        </div>
-        
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md); margin-bottom:20px;">
-            <span style="font-weight:500;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
-            <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
-                <input type="checkbox" id="instSkipToggle" ${skipped ? 'checked' : ''} onchange="window._instSkipped=this.checked; document.getElementById('instQuestionsArea').style.display=this.checked?'none':'block';" style="opacity:0;width:0;height:0;">
-                <span style="position:absolute;inset:0;background:${skipped ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:26px;transition:0.3s;"></span>
-                <span style="position:absolute;left:${skipped ? '24px' : '3px'};top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
-            </label>
+    <div>
+        <div style="position: sticky; top: -24px; z-index: 100; background: var(--bg-modal); padding: 24px 24px 16px 24px; margin: -24px -24px 0 -24px;">
+            <div style="background:var(--bg-tertiary);padding:16px;border-radius:var(--radius-md);margin-bottom:12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                <p style="margin:0 0 4px;font-size:0.82rem;color:var(--text-muted)">ประเมินอาจารย์ผู้สอน:</p>
+                <div style="font-weight:600;font-size:1.1rem;color:var(--accent-primary)">${instName}</div>
+                <div style="font-size:0.82rem;color:var(--text-muted);margin-top:4px;">ID: ${instructorId} · วิชา: ${courseCode} ${courseName}</div>
+            </div>
+            
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
+                <span style="font-weight:500;">ฉันไม่ได้เรียนกับอาจารย์ท่านนี้</span>
+                <label style="position:relative; display:inline-block; width:48px; height:26px; cursor:pointer;">
+                    <input type="checkbox" id="instSkipToggle" ${skipped ? 'checked' : ''} onchange="window._instSkipped=this.checked; document.getElementById('instQuestionsArea').style.display=this.checked?'none':'block';" style="opacity:0;width:0;height:0;">
+                    <span style="position:absolute;inset:0;background:${skipped ? 'var(--accent-primary)' : 'var(--border-color)'};border-radius:26px;transition:0.3s;"></span>
+                    <span style="position:absolute;left:${skipped ? '24px' : '3px'};top:3px;width:20px;height:20px;background:white;border-radius:50%;transition:0.3s;box-shadow:0 1px 3px rgba(0,0,0,0.2);"></span>
+                </label>
+            </div>
         </div>
 
-        <div id="instQuestionsArea" style="max-height:65vh; overflow-y:auto; padding-right:8px; padding-bottom:8px;">
+        <div id="instQuestionsArea" style="padding: 12px 0;">
             ${questions.map((q, i) => {
                 const likertLabels = ['น้อยที่สุด', 'น้อย', 'ปานกลาง', 'มาก', 'มากที่สุด'];
                 const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
@@ -725,7 +729,9 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
             </div>`}).join('')}
         </div>
 
-        <button class="btn btn-primary" style="width:100%;margin-top:20px;font-size:1.1rem;padding:12px;" onclick="submitStandaloneInstructorEval('${instructorId.replace(/'/g,"\\\\'")}', '${courseCode}', '${courseName.replace(/'/g,"\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
+        <div style="position: sticky; bottom: -24px; z-index: 100; background: var(--bg-modal); padding: 16px 24px 24px 24px; margin: 0 -24px -24px -24px; border-top: 1px solid var(--border-color);">
+            <button class="btn btn-primary" style="width:100%;font-size:1.1rem;padding:12px;" onclick="submitStandaloneInstructorEval('${instructorId.replace(/'/g,"\\\\'")}', '${courseCode}', '${courseName.replace(/'/g,"\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
+        </div>
     </div>`;
 
     window._instScores = {};
