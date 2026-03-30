@@ -117,14 +117,30 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
 
 // ====== Boot ======
 async function bootApp() {
-    // Restore session UI if exists
-    if (window.tempSession) {
+    // Restore or Check Session
+    if (window.currentUserRole) {
+        // Session already active, do nothing
+    } else if (window.tempSession) {
+        // Restore from tempSession (initial script load)
         if (typeof applyLoginState === 'function') {
             applyLoginState(window.tempSession.role, window.tempSession.userData);
         }
         delete window.tempSession;
     } else {
-        if (typeof renderLoginUI === 'function') renderLoginUI();
+        // Try to restore from localStorage directly or show login
+        const savedUser = localStorage.getItem('currentUser');
+        if (savedUser) {
+            try {
+                const { role, userData } = JSON.parse(savedUser);
+                if (typeof applyLoginState === 'function') {
+                    applyLoginState(role, userData);
+                }
+            } catch (e) {
+                if (typeof renderLoginUI === 'function') renderLoginUI();
+            }
+        } else {
+            if (typeof renderLoginUI === 'function') renderLoginUI();
+        }
     }
 
     if (typeof showApiLoading === 'function') {
