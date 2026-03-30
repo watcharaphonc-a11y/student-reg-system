@@ -162,6 +162,7 @@ async function bootApp() {
             documents: documentsData,
             announcements: announcementsData,
             exams: examsData,
+            examCommittees: examCommitteesData,
             evalQuestions: evalQuestionsData,
             courseInstructors: courseInstructorsData,
             evalInstructorQuestions: evalInstructorQuestionsData
@@ -498,6 +499,39 @@ async function bootApp() {
                     badge.textContent = '!'; // Or calculate count
                 }
             }
+        }
+ 
+        // Sync Exam Committees
+        if (examCommitteesData && examCommitteesData.length > 0) {
+            const grouped = {};
+            examCommitteesData.forEach(m => {
+                const eId = String(m.ExamID || m['ExamID'] || '').trim();
+                const sId = String(m.StudentID || m['StudentID'] || '').trim();
+                if (!eId) return;
+
+                if (!grouped[eId]) {
+                    const examInfo = (examsData || []).find(ex => String(ex.id).trim() === eId);
+                    const student = (studentsData || []).find(s => String(s['รหัสนักศึกษา'] || s.studentId || '').trim() === sId);
+                    
+                    grouped[eId] = {
+                        id: eId,
+                        studentId: sId,
+                        type: examInfo ? (examInfo.exam_type || 'สอบวิทยานิพนธ์') : 'สอบวิทยานิพนธ์',
+                        status: examInfo ? (examInfo.status || 'approved') : 'approved',
+                        date: examInfo ? (examInfo.date || '-') : '-',
+                        thesisTitle: student ? (student['หัวข้อวิทยานิพนธ์'] || '-') : '-',
+                        members: []
+                    };
+                }
+                grouped[eId].members.push({
+                    name: (m.Prefix || '') + (m.FirstName || '') + ' ' + (m.LastName || ''),
+                    role: m.Role || 'กรรมการ',
+                    position: m.Position || '-',
+                    affiliation: m.Affiliation || '-'
+                });
+            });
+            MOCK.examCommittees = Object.values(grouped);
+            console.log('Exam Committees loaded:', MOCK.examCommittees);
         }
 
         // Calculate Dashboard Stats from Real Data

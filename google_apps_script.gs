@@ -25,6 +25,7 @@ const SHEETS = {
   ANNOUNCEMENTS: 'Announcements',
   PERMISSIONS: 'Permissions',
   EXAMS: 'Exams',
+  EXAM_COMMITTEES: 'ExamCommittees',
   EVAL_QUESTIONS: 'EvalQuestions',
   COURSE_INSTRUCTORS: 'CourseInstructors',
   EVAL_INSTRUCTOR_QUESTIONS: 'EvalInstructorQuestions'
@@ -82,7 +83,8 @@ function doGet(e) {
           documents: getSheetData(SHEETS.DOCUMENTS),
           announcements: getSheetData(SHEETS.ANNOUNCEMENTS),
           permissions: getSheetData(SHEETS.PERMISSIONS),
-          exams: getSheetData(SHEETS.EXAMS)
+          exams: getSheetData(SHEETS.EXAMS),
+          examCommittees: getSheetData(SHEETS.EXAM_COMMITTEES)
         };
         break;
       case 'getPermissions':
@@ -169,6 +171,8 @@ function doPost(e) {
         return updateExamResult(payload);
       case 'importExams':
         return importExamsBatch(payload);
+      case 'batchImportExamCommittee':
+        return batchImportExamCommittee(payload);
       case 'submitEvaluation':
         return submitEvaluationResult(payload);
       default:
@@ -481,6 +485,35 @@ function uploadBatch(payloads) {
 }
 
 /**
+ * Batch Import Exam Committee Members
+ */
+function batchImportExamCommittee(payload) {
+  try {
+    const sheet = SS.getSheetByName(SHEETS.EXAM_COMMITTEES);
+    if (!sheet) return createResponse({ status: 'error', message: 'ExamCommittees sheet not found' });
+    
+    // Get headers to ensure correct column mapping
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+    
+    if (Array.isArray(payload)) {
+      payload.forEach(m => {
+        const row = headers.map(h => {
+          // Map incoming data to sheet headers
+          // Headers are: ['ExamID', 'StudentID', 'Role', 'Prefix', 'FirstName', 'LastName', 'Position', 'Affiliation']
+          return m[h] || '';
+        });
+        sheet.appendRow(row);
+      });
+      return createResponse({ status: 'success' });
+    }
+    return createResponse({ status: 'error', message: 'Invalid payload format' });
+  } catch (err) {
+    console.error('batchImportExamCommittee Error:', err);
+    return createResponse({ status: 'error', message: err.toString() });
+  }
+}
+
+/**
  * Helper: Update Document Status in Sheets
  */
 function updateDocumentStatus(payload) {
@@ -727,6 +760,7 @@ function setupInitialSheets() {
     [SHEETS.ANNOUNCEMENTS]: ['รหัสประกาศ', 'ประเภท', 'หัวข้อ', 'เนื้อหา', 'วันที่ประกาศ', 'ไอคอน', 'ผู้ประกาศ'],
     [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data'],
     [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note'],
+    [SHEETS.EXAM_COMMITTEES]: ['ExamID', 'StudentID', 'Role', 'Prefix', 'FirstName', 'LastName', 'Position', 'Affiliation'],
     [SHEETS.EVAL_QUESTIONS]: ['course_code', 'section', 'category', 'question_id', 'question_text'],
     [SHEETS.COURSE_INSTRUCTORS]: ['course_code', 'course_name', 'instructor_id', 'instructor_name', 'group', 'semester', 'academic_year'],
     [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text']
