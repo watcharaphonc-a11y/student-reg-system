@@ -11,6 +11,9 @@ function getInstructorDisplayName(id) {
     return teacher ? teacher.name : id;
 }
 
+// Helper to normalize course codes (removes leading zeros and trims)
+const normalizeCode = (c) => String(c || '').trim().replace(/^0+/, '');
+
 pages['eval-course'] = function() {
     const evals = MOCK.evaluations || [];
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
@@ -47,12 +50,13 @@ pages['eval-course'] = function() {
         });
     }
     
-    // Deduplicate by course code
+    // Deduplicate by normalized course code
     const uniqueEnrolled = [];
     const seenCodes = new Set();
     enrolled.forEach(c => {
-        if (!seenCodes.has(c.code)) {
-            seenCodes.add(c.code);
+        const normCode = normalizeCode(c.code);
+        if (normCode && !seenCodes.has(normCode)) {
+            seenCodes.add(normCode);
             uniqueEnrolled.push(c);
         }
     });
@@ -112,11 +116,11 @@ pages['eval-course'] = function() {
                         const isEval = evals.find(e => e.courseCode === course.code && e.type === 'course' && e.studentId === studentId);
                         // Check if course has questions in EvalQuestions sheet
                         const hasQuestions = (MOCK.evalQuestions || []).some(q => 
-                            String(q.course_code || '').trim() === String(course.code).trim()
+                            normalizeCode(q.course_code) === normalizeCode(course.code)
                         );
                         // Get instructors for this course
                         const instructors = (MOCK.courseInstructors || [])
-                            .filter(ci => String(ci.course_code || '').trim() === String(course.code).trim())
+                            .filter(ci => normalizeCode(ci.course_code) === normalizeCode(course.code))
                             .map(ci => getInstructorDisplayName(ci.instructor_id));
                         
                         return `
@@ -162,9 +166,10 @@ pages['eval-instructor'] = function() {
     const courseMap = {};
     courseInstructors.forEach(ci => {
         const code = String(ci.course_code || '').trim();
-        if (!courseMap[code]) {
-            courseMap[code] = {
-                code: code,
+        const normCode = normalizeCode(code);
+        if (!courseMap[normCode]) {
+            courseMap[normCode] = {
+                code: code, // Original display code
                 name: ci.course_name || '',
                 semester: ci.semester || '',
                 academicYear: ci.academic_year || ci.year || '',
@@ -173,15 +178,15 @@ pages['eval-instructor'] = function() {
         }
         const instId = String(ci.instructor_id || ci.instructor_name || '').trim();
         const instName = getInstructorDisplayName(instId);
-        if (instId && !courseMap[code].instructors.find(ins => ins.id === instId)) {
-            courseMap[code].instructors.push({ id: instId, name: instName });
+        if (instId && !courseMap[normCode].instructors.find(ins => ins.id === instId)) {
+            courseMap[normCode].instructors.push({ id: instId, name: instName });
         }
     });
 
     // Filter to only enrolled courses (or Study Plan fallback)
     const enrolledCodes = new Set();
-    const enrolled = (MOCK.grades || []).flatMap(sem => sem.courses || []);
-    enrolled.forEach(c => enrolledCodes.add(c.code));
+    const enrolledArr = (MOCK.grades || []).flatMap(sem => sem.courses || []);
+    enrolledArr.forEach(c => enrolledCodes.add(normalizeCode(c.code)));
 
     // Fallback to Study Plan if no enrollments
     if (enrolledCodes.size === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
@@ -189,12 +194,13 @@ pages['eval-instructor'] = function() {
         (planInfo.data || []).forEach(sem => {
             (sem.courses || []).forEach(cStr => {
                 const code = String(cStr.split(' ')[0]).trim();
-                if (code) enrolledCodes.add(code);
+                const norm = normalizeCode(code);
+                if (norm) enrolledCodes.add(norm);
             });
         });
     }
     
-    const evalItems = Object.values(courseMap).filter(c => enrolledCodes.has(c.code));
+    const evalItems = Object.values(courseMap).filter(c => enrolledCodes.has(normalizeCode(c.code)));
     
     let totalInstructors = 0;
     let completedInstructors = 0;
