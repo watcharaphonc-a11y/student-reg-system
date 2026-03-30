@@ -516,10 +516,13 @@ async function bootApp() {
                     grouped[eId] = {
                         id: eId,
                         studentId: sId,
-                        type: examInfo ? (examInfo.exam_type || 'สอบวิทยานิพนธ์') : 'สอบวิทยานิพนธ์',
+                        type: m.ExamType || m['ExamType'] || (examInfo ? (examInfo.exam_type || 'สอบวิทยานิพนธ์') : 'สอบวิทยานิพนธ์'),
                         status: examInfo ? (examInfo.status || 'approved') : 'approved',
-                        date: examInfo ? (examInfo.date || '-') : '-',
-                        thesisTitle: student ? (student['หัวข้อวิทยานิพนธ์'] || '-') : '-',
+                        date: m.ExamDate || m['ExamDate'] || (examInfo ? (examInfo.date || '-') : '-'),
+                        time: m.ExamTime || m['ExamTime'] || '-',
+                        room: m.ExamRoom || m['ExamRoom'] || '-',
+                        advisor: m.Advisor || m['Advisor'] || '-',
+                        thesisTitle: m.ThesisTitle || m['ThesisTitle'] || (student ? (student['หัวข้อวิทยานิพนธ์'] || '-') : '-'),
                         members: []
                     };
                 }

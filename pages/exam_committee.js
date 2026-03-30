@@ -64,7 +64,15 @@ pages['exam-committee'] = function() {
                         </div>
                         <span class="badge neutral" style="font-size:0.75rem;">ExamID: ${exam.id}</span>
                     </div>
-                    ${exam.thesisTitle ? `<div style="margin-bottom:16px; padding:12px; background:var(--bg-secondary); border-radius:var(--radius-md); border-left:4px solid var(--accent-primary);">
+                    
+                    <div style="margin-bottom:16px; display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:12px; background:var(--bg-tertiary); border-radius:var(--radius-md);">
+                        ${exam.date && exam.date !== '-' ? `<div><span style="font-size:0.8rem; color:var(--text-muted);">วันที่สอบ:</span> <strong style="font-size:0.9rem;">${exam.date}</strong></div>` : ''}
+                        ${exam.time && exam.time !== '-' ? `<div><span style="font-size:0.8rem; color:var(--text-muted);">เวลาที่สอบ:</span> <strong style="font-size:0.9rem;">${exam.time}</strong></div>` : ''}
+                        ${exam.room && exam.room !== '-' ? `<div><span style="font-size:0.8rem; color:var(--text-muted);">สถานที่:</span> <strong style="font-size:0.9rem;">${exam.room}</strong></div>` : ''}
+                        ${exam.advisor && exam.advisor !== '-' ? `<div><span style="font-size:0.8rem; color:var(--text-muted);">อาจารย์ที่ปรึกษา:</span> <strong style="font-size:0.9rem;">${exam.advisor}</strong></div>` : ''}
+                    </div>
+
+                    ${exam.thesisTitle && exam.thesisTitle !== '-' ? `<div style="margin-bottom:16px; padding:12px; background:var(--bg-secondary); border-radius:var(--radius-md); border-left:4px solid var(--accent-primary);">
                         <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:4px;">หัวข้อวิทยานิพนธ์</div>
                         <div style="font-weight:500; font-size:0.95rem;">${exam.thesisTitle}</div>
                     </div>` : ''}
@@ -156,11 +164,11 @@ window.switchExamCommitteeRegMode = function(mode) {
 };
 
 window.downloadExamCommitteeTemplate = function() {
-    const headers = ['ExamID', 'StudentID', 'Role', 'Prefix', 'FirstName', 'LastName', 'Position', 'Affiliation'];
+    const headers = ['ExamID', 'StudentID', 'ExamType', 'ExamDate', 'ExamTime', 'ExamRoom', 'Advisor', 'ThesisTitle', 'Role', 'Prefix', 'FirstName', 'LastName', 'Position', 'Affiliation'];
     const sampleRows = [
-        ['EX-001', '661001', 'ประธานกรรมการ', 'รศ.ดร.', 'สมชาย', 'สายเสมอ', 'รองศาสตราจารย์', 'คณะพยาบาลศาสตร์'],
-        ['EX-001', '661001', 'กรรมการ', 'ผศ.ดร.', 'สมหญิง', 'ชูจิต', 'ผู้ช่วยศาสตราจารย์', 'คณะพยาบาลศาสตร์'],
-        ['EX-001', '661001', 'กรรมการผู้ทรงคุณวุฒิภายนอก', 'ดร.', 'มงคล', 'ดีเกื้อ', 'ผู้ทรงคุณวุฒิ', 'โรงพยาบาลศิริราช']
+        ['EX-001', '661001', 'สอบโครงร่างวิทยานิพนธ์', '15/10/2567', '09:00-12:00', 'ห้องประชุม 1', 'รศ.ดร. ใจดี มีทรัพย์', 'การพัฒนาปัจจัยที่ส่งผลต่อ...', 'ประธานกรรมการ', 'รศ.ดร.', 'สมชาย', 'สายเสมอ', 'รองศาสตราจารย์', 'คณะพยาบาลศาสตร์'],
+        ['EX-001', '661001', 'สอบโครงร่างวิทยานิพนธ์', '15/10/2567', '09:00-12:00', 'ห้องประชุม 1', 'รศ.ดร. ใจดี มีทรัพย์', 'การพัฒนาปัจจัยที่ส่งผลต่อ...', 'กรรมการ', 'ผศ.ดร.', 'สมหญิง', 'ชูจิต', 'ผู้ช่วยศาสตราจารย์', 'คณะพยาบาลศาสตร์'],
+        ['EX-001', '661001', 'สอบโครงร่างวิทยานิพนธ์', '15/10/2567', '09:00-12:00', 'ห้องประชุม 1', 'รศ.ดร. ใจดี มีทรัพย์', 'การพัฒนาปัจจัยที่ส่งผลต่อ...', 'กรรมการผู้ทรงคุณวุฒิภายนอก', 'ดร.', 'มงคล', 'ดีเกื้อ', 'ผู้ทรงคุณวุฒิ', 'โรงพยาบาลศิริราช']
     ];
     let csvContent = "\uFEFF" + headers.join(",") + "\n" + sampleRows.map(r => r.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
