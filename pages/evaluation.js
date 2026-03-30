@@ -394,25 +394,31 @@ function renderWizardPage() {
     if (!isSkipped) {
         page.questions.forEach((q, i) => {
             const scoreKey = `${page.key}_${q.id}`;
-            const currentScore = ws.scores[scoreKey] || 0;
+            const currentVal = ws.scores[scoreKey];
+            const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
+            
             questionsHtml += `
             <div style="margin-bottom:20px; padding:16px; background:var(--bg-secondary); border-radius:var(--radius-md);">
-                <label style="font-size:0.9rem; font-weight:500; display:block; margin-bottom:10px;">${i+1}. ${q.text} *</label>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;" id="likert_${i}">
-                    ${[1,2,3,4,5].map(s => `
-                        <button type="button" onclick="setWizardScore('${scoreKey}', ${s}, ${i})" 
-                                style="width:52px; height:44px; border:2px solid ${currentScore === s ? 'var(--accent-primary)' : 'var(--border-color)'}; 
-                                       background:${currentScore === s ? 'var(--accent-primary)' : 'var(--bg-card)'}; 
-                                       color:${currentScore === s ? 'white' : 'inherit'};
-                                       border-radius:var(--radius-sm); font-weight:700; font-size:1rem; cursor:pointer; 
-                                       transition:all 0.15s;">
-                            ${s}
-                        </button>
-                    `).join('')}
-                </div>
-                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-top:4px; padding:0 4px;">
-                    <span>น้อยที่สุด</span><span>น้อย</span><span>ปานกลาง</span><span>มาก</span><span>มากที่สุด</span>
-                </div>
+                <label style="font-size:0.9rem; font-weight:500; display:block; margin-bottom:10px;">${i+1}. ${q.text} ${isText ? '(ไม่บังคับ)' : '*'}</label>
+                ${isText ? `
+                    <textarea class="form-control" placeholder="ข้อเสนอแนะเพิ่มเติม..." rows="3" onchange="setWizardText('${scoreKey}', this.value, ${i})" style="width:100%; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:12px;">${currentVal || ''}</textarea>
+                ` : `
+                    <div style="display:flex; gap:8px; flex-wrap:wrap;" id="likert_${i}">
+                        ${[1,2,3,4,5].map(s => `
+                            <button type="button" onclick="setWizardScore('${scoreKey}', ${s}, ${i})" 
+                                    style="width:52px; height:44px; border:2px solid ${currentVal === s ? 'var(--accent-primary)' : 'var(--border-color)'}; 
+                                           background:${currentVal === s ? 'var(--accent-primary)' : 'var(--bg-card)'}; 
+                                           color:${currentVal === s ? 'white' : 'inherit'};
+                                           border-radius:var(--radius-sm); font-weight:700; font-size:1rem; cursor:pointer; 
+                                           transition:all 0.15s;">
+                                ${s}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--text-muted); margin-top:4px; padding:0 4px;">
+                        <span>น้อยที่สุด</span><span>น้อย</span><span>ปานกลาง</span><span>มาก</span><span>มากที่สุด</span>
+                    </div>
+                `}
             </div>`;
         });
     } else {
@@ -456,6 +462,10 @@ function renderWizardPage() {
     openModal(`การประเมินรายวิชา (หน้า ${pageNum}/${totalPages})`, modalHtml);
 };
 
+window.setWizardText = function(scoreKey, text, questionIdx) {
+    wizardState.scores[scoreKey] = text;
+};
+
 window.setWizardScore = function(scoreKey, score, questionIdx) {
     wizardState.scores[scoreKey] = score;
     // Re-render buttons for this question
@@ -483,6 +493,9 @@ window.wizardNext = function() {
     
     if (!isSkipped) {
         const unanswered = page.questions.filter(q => {
+            const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
+            if (isText) return false; // Text fields are optional
+            
             const scoreKey = `${page.key}_${q.id}`;
             return !wizardState.scores[scoreKey];
         });
@@ -643,21 +656,27 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
         </div>
 
         <div id="instQuestionsArea">
-            ${questions.map((q, i) => `
+            ${questions.map((q, i) => {
+                const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
+                return `
             <div style="margin-bottom:16px; padding:12px; background:var(--bg-secondary); border-radius:var(--radius-md);">
-                <label style="font-size:0.9rem; font-weight:500; display:block; margin-bottom:8px;">${i+1}. ${q.text} *</label>
-                <div style="display:flex;gap:8px;" id="instLikert_${i}">
-                    ${[1,2,3,4,5].map(s => `
-                        <button type="button" onclick="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=${s}; document.querySelectorAll('#instLikert_${i} button').forEach((b,idx)=>{b.style.borderColor=idx===${s-1}?'var(--accent-primary)':'var(--border-color)';b.style.background=idx===${s-1}?'var(--accent-primary)':'var(--bg-card)';b.style.color=idx===${s-1}?'white':'inherit';})" 
-                                style="width:48px;height:40px;border:2px solid var(--border-color);background:var(--bg-card);border-radius:var(--radius-sm);font-weight:700;cursor:pointer;transition:all 0.15s;">
-                            ${s}
-                        </button>
-                    `).join('')}
-                </div>
-                <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-top:3px;">
-                    <span>น้อยที่สุด</span><span>มากที่สุด</span>
-                </div>
-            </div>`).join('')}
+                <label style="font-size:0.9rem; font-weight:500; display:block; margin-bottom:8px;">${i+1}. ${q.text} ${isText ? '(ไม่บังคับ)' : '*'}</label>
+                ${isText ? `
+                    <textarea class="form-control" placeholder="ข้อเสนอแนะเพิ่มเติม..." rows="3" onchange="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=this.value;" style="width:100%; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:12px;"></textarea>
+                ` : `
+                    <div style="display:flex;gap:8px;" id="instLikert_${i}">
+                        ${[1,2,3,4,5].map(s => `
+                            <button type="button" onclick="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=${s}; document.querySelectorAll('#instLikert_${i} button').forEach((b,idx)=>{b.style.borderColor=idx===${s-1}?'var(--accent-primary)':'var(--border-color)';b.style.background=idx===${s-1}?'var(--accent-primary)':'var(--bg-card)';b.style.color=idx===${s-1}?'white':'inherit';})" 
+                                    style="width:48px;height:40px;border:2px solid var(--border-color);background:var(--bg-card);border-radius:var(--radius-sm);font-weight:700;cursor:pointer;transition:all 0.15s;">
+                                ${s}
+                            </button>
+                        `).join('')}
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-muted); margin-top:3px;">
+                        <span>น้อยที่สุด</span><span>มากที่สุด</span>
+                    </div>
+                `}
+            </div>`}).join('')}
         </div>
 
         <button class="btn btn-primary" style="width:100%;margin-top:16px;font-size:1rem;" onclick="submitStandaloneInstructorEval('${instructorId.replace(/'/g,"\\\\'")}', '${courseCode}', '${courseName.replace(/'/g,"\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
@@ -672,6 +691,23 @@ window.submitStandaloneInstructorEval = async function(instructorId, courseCode,
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
     const skipped = window._instSkipped || false;
     const scores = window._instScores || {};
+    
+    // Check validation
+    if (!skipped) {
+        const instQuestions = MOCK.evalInstructorQuestions || [];
+        const questionsList = instQuestions.length > 0 ? instQuestions.map(q=>({id:q.question_id, text:q.question_text})) : [1,2,3,4,5,6].map(id=>({id, text:'Question'}));
+        let unansweredCount = 0;
+        
+        questionsList.forEach(q => {
+            const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
+            if (!isText && !scores['q_'+q.id]) unansweredCount++;
+        });
+
+        if (unansweredCount > 0) {
+            alert(`กรุณาตอบคำถามให้ครบทุกข้อ (เหลืออีก ${unansweredCount} ข้อ)`);
+            return;
+        }
+    }
     
     showApiLoading('กำลังบันทึกผลการประเมินอาจารย์...');
 
