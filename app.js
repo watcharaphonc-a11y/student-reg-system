@@ -784,11 +784,12 @@ window.syncActiveStudentData = async function () {
         if (documents && documents.length > 0) {
             MOCK.studentDocuments = documents
                 .filter(d => {
-                    const dSId = String(d['รหัสนักศึกษา'] || d['studentId'] || d.student_id || '').trim();
-                    return dSId === sId && sId !== '';
+                    const rowSId = String(d['รหัสนักศึกษา'] || d['studentId'] || d['student_id'] || '').trim();
+                    return rowSId === sId && sId !== '';
                 })
                 .map((d, index) => ({
                     id: d['รหัสติดตาม'] || d['id'] || ('DOC-S' + (1000 + index)),
+                    studentId: String(d['รหัสนักศึกษา'] || d['studentId'] || d['student_id'] || '').trim(),
                     formName: d['ประเภทเอกสาร'] || d.documentType || 'คำร้องทั่วไป',
                     submitDate: d['วันที่ส่ง'] || d.date || '-',
                     lastUpdate: d['วันที่ส่ง'] || d.date || '-',

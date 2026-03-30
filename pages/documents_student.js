@@ -255,7 +255,7 @@ window.syncStudentDocuments = async function() {
             const mappedDocs = data
                 .filter(row => {
                     if (!isStudent) return true;
-                    const rowSId = String(row['รหัสนักศึกษา'] || row['studentId'] || '').trim();
+                    const rowSId = String(row['รหัสนักศึกษา'] || row['studentId'] || row['student_id'] || '').trim();
                     return rowSId === studentId && studentId !== '';
                 })
                 .map((row, index) => {
