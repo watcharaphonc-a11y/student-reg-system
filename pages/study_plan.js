@@ -2,10 +2,6 @@
 // Study Plan Page (Faculty of Nursing, PBRI)
 // ============================
 
-// ============================
-// Study Plan Page (Faculty of Nursing, PBRI)
-// ============================
-
 window.getStudyPlanForStudent = function(student) {
     if (!student) return { title: "ไม่พบข้อมูล", data: [] };
     
@@ -13,8 +9,34 @@ window.getStudyPlanForStudent = function(student) {
     const studentIdStr = String(student.studentId || student.id || '');
     const cohort = studentIdStr.substring(0, 2);
     const cohortNum = parseInt(cohort);
+    
+    // Admission Sequence logic:
+    // 65xx: Start 2565 S2
+    // 66xx+: Start [2500+cohort] S1
+    const startYear = 2500 + cohortNum;
+    const startSem = (cohortNum === 65) ? 2 : 1;
+    
     const isLegacy65 = (cohortNum === 65);
     const isNewCurriculum = (cohortNum >= 66);
+
+    // Current relative period calculation
+    const curY = window.CURRENT_ACADEMIC_YEAR || 2568;
+    const curS = window.CURRENT_SEMESTER || 1;
+    
+    let totalSems = 0;
+    if (curY === startYear) {
+        totalSems = Math.max(1, curS - startSem + 1);
+    } else if (curY > startYear) {
+        totalSems = (3 - startSem + 1) + (curY - startYear - 1) * 3 + curS;
+    }
+    
+    // Convert back to relative Year/Sem for matching
+    let relY = 1;
+    let relS = startSem;
+    for (let i = 1; i < totalSems; i++) {
+        relS++;
+        if (relS > 3) { relS = 1; relY++; }
+    }
     
     // Determine major from department string
     const dept = String(student.department || '').toLowerCase();
@@ -28,15 +50,27 @@ window.getStudyPlanForStudent = function(student) {
                 { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 11, courses: ['0100500101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ 3 (3-0-6)', '0100500102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '0100504105 พยาธิสรีรวิทยาและเภสัชวิทยาทางการพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)', '0100504106 การพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)'] },
                 { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 5, courses: ['0100500104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '0100504107 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 1 3 (0-9-3)'] },
                 { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 8, courses: ['0100500103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '0100504108 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 2 3 (0-9-3)', '0100500115 การวิจัยเชิงคุณภาพ 3 (3-0-6)'] },
-                { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 4, courses: ['xxxxxxx วิชาเลือกเสรี 3 (x-x-x)', '0100500217 วิทยานิพนธ์ 1 (0-3-1)'] } // Added generic elective to fulfill requirement
+                { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 4, courses: ['xxxxxxx วิชาเลือกเสรี 3 (x-x-x)', '0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 2, sem: 3, title: 'ชั้นปีที่ 2 ภาคฤดูร้อน', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 2 (0-3-1)'] },
+                { year: 3, sem: 1, title: 'ชั้นปีที่ 3 ภาคการศึกษาที่ 1', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 3 (0-3-1)'] },
+                { year: 3, sem: 2, title: 'ชั้นปีที่ 3 ภาคการศึกษาที่ 2', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 4 (0-3-1)'] },
+                { year: 3, sem: 3, title: 'ชั้นปีที่ 3 ภาคฤดูร้อน', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 5 (0-3-1)'] },
+                { year: 4, sem: 1, title: 'ชั้นปีที่ 4 ภาคการศึกษาที่ 1', credits: 2, courses: ['0100500217 วิทยานิพนธ์ 6 (0-2-1)'] },
+                { year: 4, sem: 2, title: 'ชั้นปีที่ 4 ภาคการศึกษาที่ 2', credits: 2, courses: ['0100500217 วิทยานิพนธ์ 7 (0-2-1)'] },
+                { year: 4, sem: 3, title: 'ชั้นปีที่ 4 ภาคฤดูร้อน', credits: 2, courses: ['0100500217 วิทยานิพนธ์ 8 (0-2-1)'] }
             ];
-        } else if (isNewCurriculum) {
+        } else {
             // Cohort 66+ (starts Y1S1)
             planData = [
                 { year: 1, sem: 1, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 1', credits: 11, courses: ['0100500101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ 3 (3-0-6)', '0100500102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '0100504105 พยาธิสรีรวิทยาและเภสัชวิทยาทางการพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)', '0100504106 การพยาบาลผู้ใหญ่และผู้สูงอายุ 3 (3-0-6)'] },
                 { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 10, courses: ['0100500104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '0100504107 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 1 3 (0-9-3)', '0100500103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '0100500110 การเรียนการสอนทางการพยาบาล 3 (3-0-6)'] },
                 { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 3, courses: ['0100504108 ปฏิบัติการพยาบาลผู้ใหญ่และผู้สูงอายุ 2 3 (0-9-3)'] },
-                { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 4, courses: ['xxxxxxx วิชาเลือกเสรี 3 (x-x-x)', '0100500217 วิทยานิพนธ์ 1 (0-3-1)'] }
+                { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 4, courses: ['xxxxxxx วิชาเลือกเสรี 3 (x-x-x)', '0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 2, sem: 3, title: 'ชั้นปีที่ 2 ภาคฤดูร้อน', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 3, sem: 1, title: 'ชั้นปีที่ 3 ภาคการศึกษาที่ 1', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 3, sem: 2, title: 'ชั้นปีที่ 3 ภาคการศึกษาที่ 2', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 3, sem: 3, title: 'ชั้นปีที่ 3 ภาคฤดูร้อน', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 1 (0-3-1)'] }
             ];
         }
     } else if (dept.includes('ชุมชน') || student.program === 'nursing-community') {
@@ -45,14 +79,24 @@ window.getStudyPlanForStudent = function(student) {
                 { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 11, courses: ['100500101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ 3 (3-0-6)', '100500102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '100509105 การประเมินสุขภาพขั้นสูงและเภสัชวิทยาสำหรับการรักษาโรคเบื้องต้น 2 (1-2-3)', '100509106 การพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัว ที่มีปัญหาสุขภาพซับซ้อน 2 (2-0-4)', '100509107 การพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการสุขภาพชุมชน 2 (2-0-4)'] },
                 { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 5, courses: ['100500104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '100509108 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัวที่มีปัญหาสุขภาพซับซ้อน 3 (0-9-3)'] },
                 { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 8, courses: ['0100500103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '0100504109 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการสุขภาพชุมชน 3 (0-9-3)', '0100500110 การเรียนการสอนทางการพยาบาล 3 (3-0-6)'] },
-                { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 4, courses: ['xxxxxxx วิชาเลือกเสรี 3 (x-x-x)', '0100500217 วิทยานิพนธ์ 1 (0-3-1)'] }
+                { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 4, courses: ['xxxxxxx วิชาเลือกเสรี 3 (x-x-x)', '0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 2, sem: 3, title: 'ชั้นปีที่ 2 ภาคฤดูร้อน', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 2 (0-3-1)'] },
+                { year: 3, sem: 1, title: 'ชั้นปีที่ 3 ภาคการศึกษาที่ 1', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 3 (0-3-1)'] },
+                { year: 3, sem: 2, title: 'ชั้นปีที่ 3 ภาคการศึกษาที่ 2', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 4 (0-3-1)'] },
+                { year: 3, sem: 3, title: 'ชั้นปีที่ 3 ภาคฤดูร้อน', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 5 (0-3-1)'] },
+                { year: 4, sem: 1, title: 'ชั้นปีที่ 4 ภาคการศึกษาที่ 1', credits: 2, courses: ['0100500217 วิทยานิพนธ์ 6 (0-2-1)'] },
+                { year: 4, sem: 2, title: 'ชั้นปีที่ 4 ภาคการศึกษาที่ 2', credits: 2, courses: ['0100500217 วิทยานิพนธ์ 7 (0-2-1)'] },
+                { year: 4, sem: 3, title: 'ชั้นปีที่ 4 ภาคฤดูร้อน', credits: 2, courses: ['0100500217 วิทยานิพนธ์ 8 (0-2-1)'] }
             ];
-        } else if (isNewCurriculum) {
+        } else {
             planData = [
                 { year: 1, sem: 1, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 1', credits: 11, courses: ['100500101 ระบบสุขภาพ ภาวะผู้นำทางการพยาบาล จริยธรรมและกฎหมายสุขภาพ 3 (3-0-6)', '100500102 ทฤษฎีและแนวคิดทางการพยาบาล 2 (2-0-4)', '100509105 การประเมินสุขภาพขั้นสูงและเภสัชวิทยาสำหรับการรักษาโรคเบื้องต้น 2 (1-2-3)', '100509106 การพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัว ที่มีปัญหาสุขภาพซับซ้อน 2 (2-0-4)', '100509107 การพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการสุขภาพชุมชน 2 (2-0-4)'] },
                 { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 10, courses: ['100500104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)', '100509108 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนในการดูแลบุคคลและครอบครัวที่มีปัญหาสุขภาพซับซ้อน 3 (0-9-3)', '0100500103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)', '0100500110 การเรียนการสอนทางการพยาบาล 3 (3-0-6)'] },
-                { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 3, courses: ['0100504109 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชนกับการพัฒนาระบบบริการสุขภาพชุมชน 3 (0-9-3)'] },
-                { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 4, courses: ['xxxxxxx วิชาเลือกเสรี 3 (x-x-x)', '0100500217 วิทยานิพนธ์ 1 (0-3-1)'] }
+                { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 3, courses: ['100509108 ปฏิบัติการพยาบาลเวชปฏิบัติชุมชน 3 (0-9-3)'] },
+                { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 4, courses: ['xxxxxxx วิชาเลือกเสรี 3 (x-x-x)', '0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 2, sem: 3, title: 'ชั้นปีที่ 2 ภาคฤดูร้อน', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 1 (0-3-1)'] },
+                { year: 3, sem: 1, title: 'ชั้นปีที่ 3 ภาคการศึกษาที่ 1', credits: 3, courses: ['0100500217 วิทยานิพนธ์ 1 (0-3-1)'] }
             ];
         }
     } else {
@@ -63,7 +107,14 @@ window.getStudyPlanForStudent = function(student) {
         ];
     }
     
-    return { title: degreeTitle, data: planData };
+    return { 
+        title: degreeTitle, 
+        data: planData, 
+        relYear: relY, 
+        relSem: relS,
+        startYear: startYear,
+        startSem: startSem
+    };
 };
 
 pages['study-plan'] = function() {
@@ -74,7 +125,7 @@ pages['study-plan'] = function() {
         <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
             <div>
                 <h1 class="page-title">แผนการศึกษา (Study Plan)</h1>
-                <p class="page-subtitle">คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก (การพยาบาลเฉพาะทาง 6 สาขา)</p>
+                <p class="page-subtitle">แสดงรายละเอียดวิชาเรียนในแต่ละภาคการศึกษา (ตามหลักสูตรปรับปรุง 6 ปี)</p>
             </div>
             ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
             <div style="display:flex; gap:10px;">
@@ -84,7 +135,7 @@ pages['study-plan'] = function() {
                 </button>
                 <button class="btn btn-primary" onclick="importStudyPlan()" style="gap:6px; font-size:0.85rem;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    นำเข้าข้อมูล
+                    นำเข้าแผนการศึกษา
                 </button>
             </div>
             ` : ''}
@@ -103,7 +154,7 @@ pages['study-plan'] = function() {
                             <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; color: var(--text-primary); line-height:1.4;">${plan.name}</h3>
                             <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">${plan.description}</p>
                             <div style="margin-top: 12px;">
-                                <span class="badge" style="background:var(--bg-tertiary); color:var(--text-secondary)">ดูแผนการศึกษา ➔</span>
+                                <span class="badge" style="background:var(--bg-tertiary); color:var(--text-secondary)">ระดับบัณฑิตศึกษา</span>
                             </div>
                         </div>
                     </div>
@@ -112,7 +163,7 @@ pages['study-plan'] = function() {
         </div>
         
         <div class="card animate-in animate-delay-5" style="background: var(--bg-tertiary); text-align:center; padding: 24px;">
-            <p>หมายเหตุ: โครงสร้างหลักสูตรและแผนการศึกษาอาจมีการเปลี่ยนแปลงตามประกาศของสถาบันพระบรมราชชนก กรุณาตรวจสอบกับอาจารย์ที่ปรึกษา</p>
+            <p>หมายเหตุ: แผนการศึกษาอาจมีการเปลี่ยนแปลงตามความเหมาะสมของสภาพการณ์ปัจจุบัน โปรดปรึกษาอาจารย์ที่ปรึกษาอย่างสม่ำเสมอ</p>
         </div>
     </div>`;
 };
@@ -126,7 +177,6 @@ window.openStudyPlanModal = function(planId, planName) {
     let degreeTitle = planInfo.title;
 
     let html = `
-
         <div style="padding: 10px;">
             <div style="margin-bottom: 20px;">
                 <h4 style="color:var(--accent-primary); margin:0 0 4px 0;">${degreeTitle}</h4>
@@ -152,17 +202,17 @@ window.openStudyPlanModal = function(planId, planName) {
     html += `
             </div>
             <div style="margin-top: 24px; text-align:center;">
-                <button class="btn btn-primary" onclick="closeModal()">ปิดหน้าต่าง</button>
+                <button class="btn btn-primary" onclick="closeModal()">รับทราบและปิด</button>
             </div>
         </div>
     `;
 
-    openModal('รายละเอียดแผนการศึกษา', html);
+    openModal('รายละเอียดแผนการจัดการเรียนรู้', html);
 };
 
 window.exportStudyPlanTemplate = function() {
-    const headers = ['ID','ชื่อแผนการศึกษา','ไอคอน','คำอธิบาย','รหัสสี'];
-    const sample = ['nursing-gen','สาขาวิชาพยาบาลศาสตร์ทั่วไป (ป.ตรี)','🏥','หลักสูตรพยาบาลศาสตรบัณฑิตเน้นการดูแลสุขภาพขั้นพื้นฐานและวิชาชีพ','var(--accent-primary)'];
+    const headers = ['ID','ชื่อแผนการศึกษา','ไอคอน','รายละเอียด','โค้ดสี'];
+    const sample = ['nursing-gen','สาขาวิชาพยาบาลศาสตร์ทั่วไป (ป.โท)','🏥','แสดงแผนการศึกษาในหลักสูตรพยาบาลศาสตรมหาบัณฑิตที่มีการปรับปรุงล่าสุด','var(--accent-primary)'];
     downloadCSVTemplate('template_แผนการศึกษา.csv', headers, sample);
 };
 
@@ -173,15 +223,15 @@ window.importStudyPlan = function() {
                 const newPlan = {
                     id: row['ID'] || ('plan-' + Math.random().toString(36).substr(2, 9)),
                     name: row['ชื่อแผนการศึกษา'] || '',
-                    icon: row['ไอคอน'] || '📖',
-                    description: row['คำอธิบาย'] || '',
-                    color: row['รหัสสี'] || 'var(--accent-primary)'
+                    icon: row['ไอคอน'] || '🏥',
+                    description: row['รายละเอียด'] || '',
+                    color: row['โค้ดสี'] || 'var(--accent-primary)'
                 };
                 if (newPlan.name) {
                     MOCK.studyPlans.push(newPlan);
                 }
             });
-            alert(`นำเข้าแผนการศึกษาสำเร็จ ${data.length} รายการ`);
+            alert(`นำเข้าแผนการศึกษาสำเร็จจำนวน ${data.length} รายการ`);
             renderPage();
         }
     });

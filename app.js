@@ -115,8 +115,18 @@ document.getElementById('modalOverlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('modalOverlay')) closeModal();
 });
 
+function updateHeaderSemester() {
+    const el = document.getElementById('headerSemester');
+    if (el) {
+        let semText = window.CURRENT_SEMESTER === 1 ? 'ภาคเรียนที่ 1' : 
+                      window.CURRENT_SEMESTER === 2 ? 'ภาคเรียนที่ 2' : 'ภาคฤดูร้อน';
+        el.textContent = `${semText}/${window.CURRENT_ACADEMIC_YEAR}`;
+    }
+}
+
 // ====== Boot ======
 async function bootApp() {
+    updateHeaderSemester();
     // Restore or Check Session
     if (window.currentUserRole) {
         // Session already active, do nothing

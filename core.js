@@ -8,6 +8,10 @@ const pages = {};
 // Registration wizard state
 let registrationStep = 1;
 
+// ====== Global Academic State ======
+window.CURRENT_ACADEMIC_YEAR = 2568;
+window.CURRENT_SEMESTER = 3; // 1=First, 2=Second, 3=Summer
+
 // ====== Utility Functions ======
 function formatMoney(n) {
     return n.toLocaleString('th-TH');

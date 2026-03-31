@@ -37,11 +37,14 @@ pages['eval-course'] = function() {
         }))
     );
 
-    // 2. Smart Fallback: If no enrollments, populate from Study Plan
+    // 2. Smart Fallback: If no enrollments, populate from Study Plan (Current semester only)
     if (enrolled.length === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
         const planInfo = window.getStudyPlanForStudent(MOCK.student);
-        (planInfo.data || []).forEach(sem => {
-            (sem.courses || []).forEach(cStr => {
+        // Only show courses for the student's current relative year/semester
+        const currentSemData = (planInfo.data || []).find(s => s.year === planInfo.relYear && s.sem === planInfo.relSem);
+        
+        if (currentSemData) {
+            (currentSemData.courses || []).forEach(cStr => {
                 const parts = cStr.split(' ');
                 const code = String(parts[0]).trim();
                 const name = parts.slice(1).join(' ');
@@ -50,12 +53,12 @@ pages['eval-course'] = function() {
                         code: code,
                         name: name || 'รายวิชาตามแผนการศึกษา',
                         credits: '',
-                        semester: sem.sem,
-                        year: ''
+                        semester: currentSemData.sem,
+                        year: planInfo.startYear + (currentSemData.year - 1)
                     });
                 }
             });
-        });
+        }
     }
     
     // Deduplicate by normalized course code
@@ -199,13 +202,15 @@ pages['eval-instructor'] = function() {
     // Fallback to Study Plan if no enrollments
     if (enrolledCodes.size === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
         const planInfo = window.getStudyPlanForStudent(MOCK.student);
-        (planInfo.data || []).forEach(sem => {
-            (sem.courses || []).forEach(cStr => {
+        // Only show courses for the student's current relative year/semester
+        const currentSemData = (planInfo.data || []).find(s => s.year === planInfo.relYear && s.sem === planInfo.relSem);
+        if (currentSemData) {
+            (currentSemData.courses || []).forEach(cStr => {
                 const code = String(cStr.split(' ')[0]).trim();
                 const norm = normalizeCode(code);
                 if (norm) enrolledCodes.add(norm);
             });
-        });
+        }
     }
     
     const evalItems = Object.values(courseMap).filter(c => enrolledCodes.has(normalizeCode(c.code)));
