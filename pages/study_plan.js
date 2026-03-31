@@ -2,7 +2,7 @@
 // Study Plan Page (Faculty of Nursing, PBRI)
 // ============================
 
-window.getStudyPlanForStudent = function(student) {
+window._getRawStudyPlanForStudent = function(student) {
     if (!student) return { title: "ไม่พบข้อมูล", data: [] };
     
     // Determine admission cohort from student ID (e.g., '65', '66')
@@ -244,6 +244,43 @@ window.getStudyPlanForStudent = function(student) {
         startSem: startSem
     };
 };
+
+window.getStudyPlanForStudent = function(student) {
+    const basePlan = window._getRawStudyPlanForStudent(student);
+    if (!basePlan || !basePlan.data) return basePlan;
+    
+    // If student has grades, try to resolve placeholders for actual enrollments
+    if (student && student.grades) {
+        basePlan.data.forEach(semGroup => {
+            const currentPlanCourses = semGroup.courses;
+            // Identify actual entries in grade that AREN'T core courses in the plan
+            // Extract core course codes from plan for comparison
+            const coreCodes = currentPlanCourses
+                .filter(c => !String(c).includes('วิชาเลือก'))
+                .map(c => String(c.split(' ')[0]).trim());
+
+            semGroup.courses = currentPlanCourses.map(courseStr => {
+                if (String(courseStr).includes('วิชาเลือก')) {
+                    // Try to find the elective in the student's actual grades for this semester/year
+                    const actualYear = basePlan.startYear + (semGroup.year - 1);
+                    const semGrade = student.grades.find(g => g.year === actualYear && g.term === semGroup.sem);
+                    
+                    if (semGrade && semGrade.courses) {
+                        // Find any enrollment that isn't already a core course in this plan
+                        const elective = semGrade.courses.find(gc => !coreCodes.includes(String(gc.code).trim()));
+                        if (elective) {
+                            return `${elective.code} ${elective.name} ${elective.creditsDisplay || elective.credits}`;
+                        }
+                    }
+                }
+                return courseStr;
+            });
+        });
+    }
+    
+    return basePlan;
+};
+
 
 pages['study-plan'] = function() {
     const plans = MOCK.studyPlans || [];
