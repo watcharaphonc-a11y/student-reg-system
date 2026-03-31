@@ -15,12 +15,6 @@ function getInstructorDisplayName(id) {
 // Helper to normalize course codes (removes leading zeros and trims)
 const normalizeCode = (c) => String(c || '').trim().replace(/^0+/, '');
 
-// Ensure 10-digit format for display (adds leading 0 if 9 digits)
-const formatDisplayCode = (c) => {
-    let s = String(c || '').trim();
-    if (s.length === 9 && /^\d+$/.test(s)) return '0' + s;
-    return s;
-};
 
 pages['eval-course'] = function() {
     const evals = MOCK.evaluations || [];
@@ -140,7 +134,7 @@ pages['eval-course'] = function() {
                         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border-color); ${isEval ? 'background:rgba(40,167,69,0.05)' : ''}">
                             <div style="flex:1;">
                                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
-                                    <span style="font-weight:700; color:var(--accent-primary); font-size:0.95rem;">${formatDisplayCode(course.code)}</span>
+                                    <span style="font-weight:700; color:var(--accent-primary); font-size:0.95rem;">${window.formatDisplayCode(course.code)}</span>
                                     ${isEval ? '<span class="badge success" style="font-size:0.7rem;">ประเมินแล้ว ✓</span>' : '<span class="badge warning" style="font-size:0.7rem;">รอประเมิน</span>'}
                                 </div>
                                 <div style="font-weight:500; font-size:1rem; margin-bottom:2px;">${course.name}</div>
@@ -268,7 +262,7 @@ pages['eval-instructor'] = function() {
             <div class="card animate-in animate-delay-${Math.min(idx+2,4)}">
                 <div class="card-body">
                     <div style="margin-bottom:16px; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
-                        <span style="font-weight:600; font-size:1.15rem; color:var(--accent-primary);">${formatDisplayCode(item.code)}</span>
+                        <span style="font-weight:600; font-size:1.15rem; color:var(--accent-primary);">${window.formatDisplayCode(item.code)}</span>
                         <span style="font-size:1.1rem; margin-left:8px;">${item.name}</span>
                         ${item.semester && item.academicYear ? `<div style="font-size:0.9rem; color:var(--text-muted); margin-top:4px; font-weight:500;">ภาคเรียนที่ ${item.semester}/${item.academicYear}</div>` : ''}
                         <p style="margin:4px 0 0; font-size:0.85rem; color:var(--text-muted)">เลือกประเมินเฉพาะอาจารย์ที่ท่านเรียนด้วยในวิชานี้</p>

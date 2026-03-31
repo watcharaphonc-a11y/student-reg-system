@@ -131,3 +131,10 @@ window.downloadCSVTemplate = function(filename, headers, sampleRow) {
     a.click();
     URL.revokeObjectURL(url);
 };
+
+// Global Helper to format Course Codes (ensure 10 digits/leading zero)
+window.formatDisplayCode = function(c) {
+    let s = String(c || '').trim();
+    if (s.length === 9 && /^\d+$/.test(s)) return '0' + s;
+    return s;
+};

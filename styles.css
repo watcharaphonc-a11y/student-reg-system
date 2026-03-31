@@ -1870,3 +1870,67 @@ input, select, textarea {
     color: var(--accent-primary);
     border-bottom-color: var(--accent-primary);
 }
+
+/* ============================
+   Print Optimization
+   ============================ */
+@media print {
+    /* Reset layout for print */
+    body, .app, .main-content, .content-area {
+        overflow: visible !important;
+        height: auto !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: white !important;
+        display: block !important;
+    }
+
+    /* Hide Web UI Elements */
+    .sidebar, 
+    .header, 
+    .mobile-menu-btn, 
+    .page-header, 
+    .btn, 
+    #apiLoader, 
+    #modalOverlay {
+        display: none !important;
+    }
+
+    /* Target Transcript Container */
+    .report-paper, #printable-transcript {
+        position: static !important;
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        box-shadow: none !important;
+        border: none !important;
+        visibility: visible !important;
+    }
+
+    /* Ensure tables look good in print */
+    .report-table {
+        border: 1px solid #000 !important;
+        width: 100% !important;
+    }
+
+    .report-table th, .report-table td {
+        border: 1px solid #000 !important;
+        color: black !important;
+    }
+
+    /* Setup Page Orientation */
+    @page {
+        size: auto;
+        margin: 15mm 10mm;
+    }
+
+    /* Prevent breaking inside semester blocks */
+    tr {
+        page-break-inside: avoid;
+    }
+    
+    .report-header, .report-title-center {
+        page-break-inside: avoid;
+    }
+}

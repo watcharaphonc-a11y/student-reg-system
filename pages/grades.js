@@ -19,30 +19,147 @@ window.downloadGradeTemplate = function() {
 
 window.openGradeImportModal = function() {
     const modalHtml = `
-        <div style="margin-bottom:15px;text-align:center;">
-            <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:15px;">
-                ดาวน์โหลดแบบฟอร์ม (CSV) เพื่อดูรูปแบบการนำเข้าข้อมูล
-            </p>
-            <button class="btn" style="background-color:var(--bg-secondary);" onclick="downloadGradeTemplate()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                ดาวน์โหลด Template (CSV)
-            </button>
+        <div class="tabs" style="display:flex; border-bottom:1px solid var(--border-color); margin-bottom:20px;">
+            <button class="tab-btn active" id="tabCsv" onclick="switchGradeTab('csv')" style="flex:1; padding:10px; border:none; background:none; cursor:pointer; font-weight:600; border-bottom:3px solid var(--accent-primary);">แบบไฟล์ CSV</button>
+            <button class="tab-btn" id="tabText" onclick="switchGradeTab('text')" style="flex:1; padding:10px; border:none; background:none; cursor:pointer; font-weight:600; border-bottom:3px solid transparent;">วางข้อความจาก PDF (Smart)</button>
         </div>
-        
-        <div class="form-group" style="margin-top:20px;">
-            <label class="form-label">เลือกไฟล์ CSV ที่ต้องการนำเข้า</label>
-            <input type="file" id="gradeCsvFile" class="form-input" accept=".csv" />
+
+        <div id="importContentCsv" class="tab-content">
+            <div style="margin-bottom:15px;text-align:center;">
+                <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:15px;">ดาวน์โหลดแบบฟอร์ม (CSV) เพื่อดูรูปแบบการนำเข้าข้อมูล</p>
+                <button class="btn" style="background-color:var(--bg-secondary);" onclick="downloadGradeTemplate()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    ดาวน์โหลด Template (CSV)
+                </button>
+            </div>
+            <div class="form-group" style="margin-top:20px;">
+                <label class="form-label">เลือกไฟล์ CSV ที่ต้องการนำเข้า</label>
+                <input type="file" id="gradeCsvFile" class="form-input" accept=".csv" />
+            </div>
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:25px;">
+                <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="processGradeImport()">อัปโหลดและบันทึก</button>
+            </div>
         </div>
-        
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:25px;">
-            <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
-            <button class="btn btn-primary" onclick="processGradeImport()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                อัปโหลดและบันทึก
-            </button>
+
+        <div id="importContentText" class="tab-content" style="display:none;">
+            <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:12px;">ก๊อปปี้ข้อความจากไฟล์ PDF (Ctrl+A -> Ctrl+C) แล้วนำมาวางด้านล่างเพื่อคัดแยกข้อมูลอัตโนมัติ</p>
+            <textarea id="smartTextField" class="form-input" rows="8" placeholder="รหัสนักศึกษา 66xxxxxxxxxx ...&#10;0100500101 ระบบสุขภาพ... 3(3-0-6) A"></textarea>
+            
+            <div id="parsedPreviewArea" style="margin-top:15px; display:none; max-height:250px; overflow-y:auto; border:1px solid var(--border-color); border-radius:var(--radius-sm);">
+                <table class="data-table" style="font-size:0.8rem;">
+                    <thead><tr><th>เทอม</th><th>รหัสวิชา</th><th>วิชา</th><th>เกรด</th></tr></thead>
+                    <tbody id="parsedPreviewBody"></tbody>
+                </table>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:25px;">
+                <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn" style="background-color:var(--bg-tertiary);" onclick="previewSmartText()">อ่านข้อมูล (Preview)</button>
+                <button class="btn btn-primary" id="btnConfirmSmart" disabled onclick="confirmSmartImport()">นำเข้าข้อมูลที่เลือก</button>
+            </div>
         </div>
     `;
-    openModal("นำเข้าผลการเรียน (Import Grades)", modalHtml);
+    openModal("นำเข้าผลการเรียน (Grade Import)", modalHtml);
+};
+
+window.switchGradeTab = function(type) {
+    document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.style.borderBottomColor = 'transparent';
+    });
+    document.getElementById(type === 'csv' ? 'tabCsv' : 'tabText').classList.add('active');
+    document.getElementById(type === 'csv' ? 'tabCsv' : 'tabText').style.borderBottomColor = 'var(--accent-primary)';
+    
+    document.getElementById('importContentCsv').style.display = type === 'csv' ? 'block' : 'none';
+    document.getElementById('importContentText').style.display = type === 'text' ? 'block' : 'none';
+};
+
+let smartParsedGrades = [];
+
+window.previewSmartText = function() {
+    const text = document.getElementById('smartTextField').value;
+    if (!text.trim()) { alert("กรุณาวางข้อความก่อน!"); return; }
+    
+    // Parser Logic
+    const studentIdMatch = text.match(/รหัสนักศึกษา\s+(\d{11})/);
+    const studentId = studentIdMatch ? studentIdMatch[1] : '';
+    
+    const yearMatch = text.match(/ปีการศึกษา\s+(\d{4})/);
+    const academicYear = yearMatch ? yearMatch[1] : (window.CURRENT_ACADEMIC_YEAR || '2566');
+
+    // Split text by lines and find semesters
+    const lines = text.split('\n');
+    let currentTerm = '1';
+    let results = [];
+
+    lines.forEach(line => {
+        const trLine = line.trim();
+        // Detect Term headers
+        if (trLine.includes('ภาคการศึกษาที่ 2')) currentTerm = '2';
+        else if (trLine.includes('ภาคการศึกษาที่ 1')) currentTerm = '1';
+        else if (trLine.includes('ภาคฤดูร้อน')) currentTerm = '3';
+        
+        // Detect Course lines: Code Name Credits Grade
+        // Example: 0100500101 ระบบสุขภาพ... 3(3-0-6) A
+        const courseMatch = trLine.match(/^(\d{9,10})\s+(.+?)\s+(\d\(.*?\))\s+([A-Fa-f][+]?|S|U|W|I|P|N)/);
+        if (courseMatch) {
+            results.push({
+                student_id: studentId,
+                academic_year: academicYear,
+                semester: currentTerm,
+                course_code: courseMatch[1],
+                course_name: courseMatch[2].trim(),
+                credits: courseMatch[3],
+                grade: courseMatch[4]
+            });
+        }
+    });
+
+    if (results.length === 0) {
+        alert("ไม่สามารถคัดแยกข้อมูลได้ กรุณาตรวจสอบว่าเลือกข้อความมาครบถ้วนหรือไม่");
+        return;
+    }
+
+    smartParsedGrades = results;
+    
+    // Show Preview
+    const previewArea = document.getElementById('parsedPreviewArea');
+    const previewBody = document.getElementById('parsedPreviewBody');
+    previewArea.style.display = 'block';
+    previewBody.innerHTML = results.map(r => `
+        <tr>
+            <td>${r.academic_year}/${r.semester}</td>
+            <td>${window.formatDisplayCode(r.course_code)}</td>
+            <td style="max-width:150px; overflow:hidden; text-overflow:ellipsis;">${r.course_name}</td>
+            <td><span class="badge ${r.grade==='A'?'success':'info'}">${r.grade}</span></td>
+        </tr>
+    `).join('');
+    
+    document.getElementById('btnConfirmSmart').disabled = false;
+    if (typeof showToast === 'function') showToast(`ตรวจพบ ${results.length} รายการสำหรับรหัส ${studentId || 'ไม่ทราบรหัส'}`, 'info');
+};
+
+window.confirmSmartImport = async function() {
+    if (smartParsedGrades.length === 0) return;
+    
+    showApiLoading('กำลังบันทึกข้อมูลเกรด...');
+    try {
+        const result = await postData('importGrades', { grades: smartParsedGrades });
+        hideApiLoading();
+        
+        if (result && result.status === 'success') {
+            closeModal();
+            alert(`นำเข้าข้อมูลจากข้อความสำเร็จ ${result.count} รายการ`);
+            if (typeof window.syncActiveStudentData === 'function') await window.syncActiveStudentData();
+            renderPage();
+        } else {
+            alert('เกิดข้อผิดพลาด: ' + (result ? result.message : 'Unknown Error'));
+        }
+    } catch (err) {
+        hideApiLoading();
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ: ' + err.message);
+    }
 };
 
 window.processGradeImport = function() {
@@ -288,7 +405,7 @@ function renderStudentGradesDetail(st, grades) {
                             <tbody>
                                 ${(sem.courses || []).map(c => `
                                     <tr>
-                                        <td style="color:var(--accent-primary-hover);font-weight:600">${c.code}</td>
+                                        <td style="color:var(--accent-primary-hover);font-weight:600">${window.formatDisplayCode(c.code)}</td>
                                         <td style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${c.name}">${c.name}</td>
                                         <td style="text-align:center">${c.credits}</td>
                                         <td><span class="badge ${c.grade==='A'?'success':c.grade==='B+'||c.grade==='B'?'info':c.grade?'warning':'neutral'}">${c.grade || 'รอผล'}</span></td>

@@ -269,7 +269,7 @@ window.getStudyPlanForStudent = function(student) {
                         // Find any enrollment that isn't already a core course in this plan
                         const elective = semGrade.courses.find(gc => !coreCodes.includes(String(gc.code).trim()));
                         if (elective) {
-                            return `${elective.code} ${elective.name} ${elective.creditsDisplay || elective.credits}`;
+                            return `${window.formatDisplayCode(elective.code)} ${elective.name} ${elective.creditsDisplay || elective.credits}`;
                         }
                     }
                 }

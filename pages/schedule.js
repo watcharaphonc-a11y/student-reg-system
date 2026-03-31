@@ -30,7 +30,7 @@ pages.schedule = function() {
                                 const span = cell.endSlot - cell.startSlot + 1;
                                 return `<div class="schedule-cell" style="grid-row:span ${span}">
                                     <div class="schedule-item color-${cell.color}">
-                                        <strong>${cell.code}</strong>
+                                        <strong>${window.formatDisplayCode(cell.code)}</strong>
                                         <span>${cell.name}</span>
                                         <span style="opacity:0.7;font-size:0.68rem">${cell.room}</span>
                                     </div>
@@ -51,7 +51,7 @@ pages.schedule = function() {
                             <div style="display:flex;align-items:center;gap:12px">
                                 <div style="width:4px;height:36px;border-radius:2px;background:var(--accent-primary);opacity:0.6"></div>
                                 <div class="course-info">
-                                    <span class="course-code">${c.code}</span>
+                                    <span class="course-code">${window.formatDisplayCode(c.code)}</span>
                                     <span class="course-name">${c.name}</span>
                                 </div>
                             </div>

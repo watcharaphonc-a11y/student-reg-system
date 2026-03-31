@@ -104,7 +104,7 @@ pages.transcript = function() {
 
             coursesHtml += `
                 <tr>
-                    <td class="center">${gCode}</td>
+                    <td class="center">${window.formatDisplayCode(gCode)}</td>
                     <td>${gName}</td>
                     <td class="center">${creditsText}</td>
                     <td class="center">${gGrade}</td>

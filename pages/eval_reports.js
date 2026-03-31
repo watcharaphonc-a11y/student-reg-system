@@ -31,7 +31,7 @@ pages['eval-reports'] = function() {
                     <option value="all">-- ทุกรายวิชา (All Courses) --</option>
                     ${uniqueCourses.map(code => {
                         const name = (courses.find(c => c.code === code) || {}).name || '';
-                        return `<option value="${code}">${code} ${name}</option>`;
+                        return `<option value="${code}">${window.formatDisplayCode(code)} ${name}</option>`;
                     }).join('')}
                 </select>
                 <button class="btn btn-primary" onclick="printEvalReport()">

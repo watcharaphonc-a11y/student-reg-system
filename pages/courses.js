@@ -37,7 +37,7 @@ pages.courses = function() {
                         <tbody>
                             ${MOCK.courses.map(c => `
                                 <tr data-type="${c.type}">
-                                    <td style="color:var(--accent-primary-hover);font-weight:600">${c.code}</td>
+                                    <td style="color:var(--accent-primary-hover);font-weight:600">${window.formatDisplayCode(c.code)}</td>
                                     <td>${c.name}</td>
                                     <td style="text-align:center">${c.credits}</td>
                                     <td><span class="badge ${c.type==='บังคับ'?'purple':c.type==='เลือก'?'info':'neutral'}">${c.type}</span></td>
@@ -89,7 +89,7 @@ pages.enrollment = function() {
                             ${availableCourses.map(c => `
                                 <div class="enrollment-card">
                                     <div class="course-info">
-                                        <span class="course-code">${c.code}</span>
+                                        <span class="course-code">${window.formatDisplayCode(c.code)}</span>
                                         <span class="course-name">${c.name}</span>
                                         <span class="course-meta">${c.credits} หน่วยกิต · ${c.instructor} · ${c.schedule}</span>
                                     </div>
