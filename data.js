@@ -189,5 +189,8 @@ const MOCK = {
     consultationSchedule: [],
 
     // คณะกรรมการสอบ (จาก API)
-    examCommittees: []
+    examCommittees: [],
+
+    // ประวัติการแจ้งหัวข้อวิทยานิพนธ์
+    thesisTopicHistory: []
 };
