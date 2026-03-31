@@ -55,14 +55,15 @@ window.getStudyPlanForStudent = function(student) {
         const coreS2 = [
             '0100500103 วิจัยและหลักฐานเชิงประจักษ์ทางการพยาบาล 2 (2-0-4)',
             '0100500104 สถิติประยุกต์ในการวิจัยทางการพยาบาล 2 (1-2-3)',
-            '0100500110 การเรียนการสอนทางการพยาบาล 3 (3-0-6)'
+            '0100500110 การเรียนการสอนทางการพยาบาล 3 (3-0-6)',
+            'xxxxxxxxxxx วิชาเลือกเสรี 3 (3-0-6)'
         ];
 
         // Branch Specifics
         let branchS1 = [];
         let branchS2 = [];
         let branchS3 = [];
-        let branchS4 = ['xxxxxxxxxxx วิชาเลือกเสรี 3 (3-0-6)'];
+        let branchS4 = [];
         let branchS5 = [];
 
         if (dept.includes('ผู้ใหญ่') || programId === 'nursing-adult') {
@@ -112,9 +113,9 @@ window.getStudyPlanForStudent = function(student) {
 
         planData = [
             { year: 1, sem: 1, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 1', credits: 11, courses: [...coreS1, ...branchS1] },
-            { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 10, courses: [...coreS2, ...branchS2] },
+            { year: 1, sem: 2, title: 'ชั้นปีที่ 1 ภาคการศึกษาที่ 2', credits: 13, courses: [...coreS2, ...branchS2] },
             { year: 1, sem: 3, title: 'ชั้นปีที่ 1 ภาคฤดูร้อน', credits: 3, courses: [...branchS3] },
-            { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 6, courses: [...branchS4] },
+            { year: 2, sem: 1, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 1', credits: 3, courses: [...branchS4] },
             { year: 2, sem: 2, title: 'ชั้นปีที่ 2 ภาคการศึกษาที่ 2', credits: 9, courses: [...branchS5] }
         ];
 

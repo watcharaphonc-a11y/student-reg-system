@@ -8,10 +8,10 @@ pages.payments = function() {
             <h1 class="page-title">ค่าธรรมเนียม / การชำระเงิน</h1>
             <p class="page-subtitle">จัดการค่าธรรมเนียมและตรวจสอบสถานะการชำระเงิน</p>
         </div>
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; align-items: flex-start;">
-            <div class="card animate-in animate-delay-1" style="flex: 0 0 250px; text-align:center; padding: 20px; margin: 0;">
+        <div class="payments-main-layout">
+            <div class="card animate-in animate-delay-1 qr-payment-card">
             <div style="max-width: 100%; margin: 0 auto;">
-                <h3 style="margin-bottom: 15px; color: var(--text-primary); font-size: 1.1rem;">ระบบชำระเงินอิเล็กทรอนิกส์ (e-Payment)</h3>
+                <h3 style="margin-bottom: 15px; color: var(--text-primary); font-size: 1.1rem; line-height: 1.3;">ระบบชำระเงินอิเล็กทรอนิกส์ (e-Payment)</h3>
                 <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.85rem;">
                     นักศึกษาสามารถตรวจสอบยอดค้างชำระ และทำรายการผ่านระบบ e-Payment ได้โดยตรง
                 </p>
@@ -42,43 +42,43 @@ pages.payments = function() {
                         </thead>
                         <tbody>
                             <tr style="background:var(--bg-secondary); font-weight:600;"><td colspan="2">1. ค่าลงทะเบียน</td></tr>
-                            <tr><td style="padding-left: 20px;">1.1 ค่าลงทะเบียน (เหมาจ่าย) ภาคการศึกษาที่ 1 และ 2 ภาคละ</td><td style="text-align: right; font-weight:500;">30,000</td></tr>
-                            <tr><td style="padding-left: 20px;">1.2 ค่าลงทะเบียน (เหมาจ่าย) ภาคฤดูร้อน ภาคละ</td><td style="text-align: right; font-weight:500;">9,000</td></tr>
+                            <tr><td style="padding-left: 20px;">1.1 ค่าลงทะเบียน (เหมาจ่าย) ภาคการศึกษาที่ 1 และ 2 ภาคละ</td><td class="nowrap" style="text-align: right; font-weight:500;">30,000</td></tr>
+                            <tr><td style="padding-left: 20px;">1.2 ค่าลงทะเบียน (เหมาจ่าย) ภาคฤดูร้อน ภาคละ</td><td class="nowrap" style="text-align: right; font-weight:500;">9,000</td></tr>
                             
                             <tr style="background:var(--bg-secondary); font-weight:600;"><td colspan="2">2. ค่าธรรมเนียม</td></tr>
-                            <tr><td style="padding-left: 20px;">2.1 ค่าธรรมเนียมพิเศษ (เหมาจ่าย) ภาคการศึกษาที่ 1 และ 2 ภาคละ</td><td style="text-align: right; font-weight:500;">5,000</td></tr>
-                            <tr><td style="padding-left: 20px;">2.2 ค่าธรรมเนียมการสอบประมวลผลความรู้ ครั้งละ</td><td style="text-align: right; color:var(--text-muted);">-</td></tr>
-                            <tr><td style="padding-left: 20px;">2.3 ค่าธรรมเนียมการสอบป้องกันวิทยานิพนธ์/ค้นคว้าอิสระ ครั้งละ</td><td style="text-align: right; font-weight:500;">10,000</td></tr>
-                            <tr><td style="padding-left: 20px;">2.4 ค่าขึ้นทะเบียนนักศึกษาใหม่ (ชำระแรกเข้า)</td><td style="text-align: right; font-weight:500;">1,000</td></tr>
-                            <tr><td style="padding-left: 20px;">2.5 ค่าขึ้นทะเบียนเป็นบัณฑิต</td><td style="text-align: right; font-weight:500;">2,000</td></tr>
+                            <tr><td style="padding-left: 20px;">2.1 ค่าธรรมเนียมพิเศษ (เหมาจ่าย) ภาคการศึกษาที่ 1 และ 2 ภาคละ</td><td class="nowrap" style="text-align: right; font-weight:500;">5,000</td></tr>
+                            <tr><td style="padding-left: 20px;">2.2 ค่าธรรมเนียมการสอบประมวลผลความรู้ ครั้งละ</td><td class="nowrap" style="text-align: right; color:var(--text-muted);">-</td></tr>
+                            <tr><td style="padding-left: 20px;">2.3 ค่าธรรมเนียมการสอบป้องกันวิทยานิพนธ์/ค้นคว้าอิสระ ครั้งละ</td><td class="nowrap" style="text-align: right; font-weight:500;">10,000</td></tr>
+                            <tr><td style="padding-left: 20px;">2.4 ค่าขึ้นทะเบียนนักศึกษาใหม่ (ชำระแรกเข้า)</td><td class="nowrap" style="text-align: right; font-weight:500;">1,000</td></tr>
+                            <tr><td style="padding-left: 20px;">2.5 ค่าขึ้นทะเบียนเป็นบัณฑิต</td><td class="nowrap" style="text-align: right; font-weight:500;">2,000</td></tr>
                             <tr><td style="padding-left: 20px;">2.6 ค่ารักษาสถานภาพนักศึกษา</td><td style="text-align: right;"></td></tr>
-                            <tr><td style="padding-left: 40px; color:var(--text-muted);">- ภาคการศึกษาที่ 1 และ 2 ภาคละ</td><td style="text-align: right; font-weight:500;">3,000</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">- ภาคการศึกษาที่ 1 และ 2 ภาคละ</td><td class="nowrap" style="text-align: right; font-weight:500;">3,000</td></tr>
                             <tr>
                                 <td style="padding-left: 40px; color:var(--text-muted);">
                                     - ภาคฤดูร้อน ภาคละ<br>
                                     <span style="font-size:0.8rem; color:var(--text-muted);">(หมายเหตุ : นักศึกษาที่สอบป้องกันวิทยานิพนธ์/ค้นคว้าอิสระแล้วและรอเผยแพร่วิทยานิพนธ์ ไม่ต้องจ่ายค่ารักษาสถานภาพนักศึกษาในภาคฤดูร้อน)</span>
                                 </td>
-                                <td style="text-align: right; vertical-align: top; padding-top: 14px; font-weight:500;">1,500</td>
+                                <td class="nowrap" style="text-align: right; vertical-align: top; padding-top: 14px; font-weight:500;">1,500</td>
                             </tr>
 
-                            <tr style="background:var(--bg-secondary); font-weight:600;"><td style="padding-left: 10px;">3. ค่าธรรมเนียมการเทียบโอนรายวิชา วิชาละ</td><td style="text-align: right; font-weight:500;">500</td></tr>
+                            <tr style="background:var(--bg-secondary); font-weight:600;"><td style="padding-left: 10px;">3. ค่าธรรมเนียมการเทียบโอนรายวิชา วิชาละ</td><td class="nowrap" style="text-align: right; font-weight:500;">500</td></tr>
 
                             <tr style="background:var(--bg-secondary); font-weight:600;"><td colspan="2">4. ค่าธรรมเนียมอื่นๆ</td></tr>
-                            <tr><td style="padding-left: 20px;">4.1 ค่าปรับลงทะเบียนเรียนล่าช้า (นับวันทำการ) วันละ <span style="font-size:0.8rem; color:var(--text-muted);">(ไม่เกิน 3,000 บาทต่อภาคการศึกษา)</span></td><td style="text-align: right; font-weight:500;">200</td></tr>
-                            <tr><td style="padding-left: 20px;">4.2 ค่าปรับส่งเล่มวิทยานิพนธ์ หรือการค้นคว้าอิสระ เกินกำหนด วันละ</td><td style="text-align: right; font-weight:500;">200</td></tr>
-                            <tr><td style="padding-left: 20px;">4.3 ค่าเบี้ยประกันอุบัติเหตุเป็นรายปี</td><td style="text-align: right; font-size:0.85rem; color:var(--text-muted);">นักศึกษารับผิดชอบ<br>ดำเนินการเอง</td></tr>
-                            <tr><td style="padding-left: 20px;">4.4 ค่าธรรมเนียมตรวจบทคัดย่อภาษาอังกฤษ</td><td style="text-align: right; font-weight:500;">1,000</td></tr>
-                            <tr><td style="padding-left: 20px;">4.5 ค่าธรรมเนียมเปลี่ยนแผนการศึกษา/สาขาวิชา ครั้งละ</td><td style="text-align: right; font-weight:500;">1,000</td></tr>
+                            <tr><td style="padding-left: 20px;">4.1 ค่าปรับลงทะเบียนเรียนล่าช้า (นับวันทำการ) วันละ <span style="font-size:0.8rem; color:var(--text-muted);">(ไม่เกิน 3,000 บาทต่อภาคการศึกษา)</span></td><td class="nowrap" style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 20px;">4.2 ค่าปรับส่งเล่มวิทยานิพนธ์ หรือการค้นคว้าอิสระ เกินกำหนด วันละ</td><td class="nowrap" style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 20px;">4.3 ค่าเบี้ยประกันอุบัติเหตุเป็นรายปี</td><td class="nowrap" style="text-align: right; font-size:0.85rem; color:var(--text-muted);">นักศึกษารับผิดชอบ<br>ดำเนินการเอง</td></tr>
+                            <tr><td style="padding-left: 20px;">4.4 ค่าธรรมเนียมตรวจบทคัดย่อภาษาอังกฤษ</td><td class="nowrap" style="text-align: right; font-weight:500;">1,000</td></tr>
+                            <tr><td style="padding-left: 20px;">4.5 ค่าธรรมเนียมเปลี่ยนแผนการศึกษา/สาขาวิชา ครั้งละ</td><td class="nowrap" style="text-align: right; font-weight:500;">1,000</td></tr>
                             <tr><td style="padding-left: 20px;">4.6 ค่าออกเอกสารทางการศึกษา</td><td style="text-align: right;"></td></tr>
-                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.1 ค่าออกบัตรประจำตัวนักศึกษาทดแทนบัตรเก่า ครั้งละ</td><td style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.1 ค่าออกบัตรประจำตัวนักศึกษาทดแทนบัตรเก่า ครั้งละ</td><td class="nowrap" style="text-align: right; font-weight:500;">200</td></tr>
                             <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.2 ค่าออกเอกสารหรือใบรับรองระหว่างการศึกษา</td><td style="text-align: right;"></td></tr>
-                            <tr><td style="padding-left: 60px; color:var(--text-muted);">- ภาษาไทย ฉบับละ</td><td style="text-align: right; font-weight:500;">100</td></tr>
-                            <tr><td style="padding-left: 60px; color:var(--text-muted);">- ภาษาอังกฤษ ฉบับละ</td><td style="text-align: right; font-weight:500;">200</td></tr>
-                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.3 ค่าออกเอกสารหลังสำเร็จการศึกษา (ออกทดแทน) ฉบับละ</td><td style="text-align: right; font-weight:500;">100</td></tr>
-                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.4 ค่าออกเอกสารภาษาอังกฤษ หน้าละ</td><td style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 60px; color:var(--text-muted);">- ภาษาไทย ฉบับละ</td><td class="nowrap" style="text-align: right; font-weight:500;">100</td></tr>
+                            <tr><td style="padding-left: 60px; color:var(--text-muted);">- ภาษาอังกฤษ ฉบับละ</td><td class="nowrap" style="text-align: right; font-weight:500;">200</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.3 ค่าออกเอกสารหลังสำเร็จการศึกษา (ออกทดแทน) ฉบับละ</td><td class="nowrap" style="text-align: right; font-weight:500;">100</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.6.4 ค่าออกเอกสารภาษาอังกฤษ หน้าละ</td><td class="nowrap" style="text-align: right; font-weight:500;">200</td></tr>
                             <tr><td style="padding-left: 20px;">4.7 ค่าบริการจัดส่งเอกสาร หรือหนังสือสำคัญทางไปรษณีย์</td><td style="text-align: right;"></td></tr>
-                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.7.1 การจัดส่งภายในประเทศ ครั้งละ</td><td style="text-align: right; font-weight:500;">100</td></tr>
-                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.7.2 การจัดส่งต่างประเทศ ครั้งละ</td><td style="text-align: right; font-size:0.85rem; color:var(--text-muted);">ตามอัตราที่จ่ายจริง</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.7.1 การจัดส่งภายในประเทศ ครั้งละ</td><td class="nowrap" style="text-align: right; font-weight:500;">100</td></tr>
+                            <tr><td style="padding-left: 40px; color:var(--text-muted);">4.7.2 การจัดส่งต่างประเทศ ครั้งละ</td><td class="nowrap" style="text-align: right; font-size:0.85rem; color:var(--text-muted);">ตามอัตราที่จ่ายจริง</td></tr>
                         </tbody>
                     </table>
                 </div>
