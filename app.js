@@ -576,8 +576,13 @@ async function bootApp() {
         }
 
         // Calculate Dashboard Stats from Real Data
+        const allStudents = MOCK.students || [];
+        const activeStudents = allStudents.filter(s => s.status !== 'สำเร็จการศึกษา' && s.status !== 'Graduated');
+        const alumni = allStudents.filter(s => s.status === 'สำเร็จการศึกษา' || s.status === 'Graduated');
+
         MOCK.dashboardStats = {
-            totalStudents: MOCK.students ? MOCK.students.length : 0,
+            totalStudents: activeStudents.length,
+            totalAlumni: alumni.length,
             totalTeachers: MOCK.academicAdvisors ? MOCK.academicAdvisors.length : 0,
             totalCourses: MOCK.courses ? MOCK.courses.length : 0,
             pendingPayments: MOCK.payments ? MOCK.payments.filter(p => p.status === 'ค้างชำระ').length : 0,

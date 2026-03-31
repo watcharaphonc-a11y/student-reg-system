@@ -2,11 +2,16 @@
 // Dashboard Page
 // ============================
 pages.dashboard = function() {
-    const s = MOCK.dashboardStats || { totalStudents: 0, totalTeachers: 0, totalCourses: 0, avgGPA: 0 };
-    const students = MOCK.students || [];
+    const allStudents = MOCK.students || [];
+    const activeStudents = allStudents.filter(s => s.status !== 'สำเร็จการศึกษา' && s.status !== 'Graduated');
+    const alumniStudents = allStudents.filter(s => s.status === 'สำเร็จการศึกษา' || s.status === 'Graduated');
+    
+    const s = MOCK.dashboardStats || { totalStudents: 0, totalAlumni: 0, totalTeachers: 0, totalCourses: 0, avgGPA: 0 };
+    const totalStudents = activeStudents.length || (s.totalStudents || 0);
+    const totalAlumni = alumniStudents.length || (s.totalAlumni || 0);
+
     const advisors = MOCK.academicAdvisors || [];
-    const totalStudents = students.length > 0 ? students.length : (s.totalStudents || 0);
-    const totalAdvisors = advisors.length;
+    const totalAdvisors = advisors.length || (s.totalTeachers || 0);
     const enrolledCourses = MOCK.enrolledCourses || [];
     const uniqueCourseNames = new Set(enrolledCourses.map(c => c.name));
     const totalCourses = uniqueCourseNames.size || (s.totalCourses || 0);
@@ -44,6 +49,14 @@ pages.dashboard = function() {
                 <span class="stat-change up">↑ 1.0%</span>
             </div>
             <div class="stat-card animate-in animate-delay-4">
+                <div class="stat-icon pink">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                </div>
+                <div class="stat-value">${totalAlumni}</div>
+                <div class="stat-label">ศิษย์เก่า (Alumni)</div>
+                <span class="stat-change up">↑ รุ่น 65</span>
+            </div>
+            <div class="stat-card animate-in animate-delay-5">
                 <div class="stat-icon green">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                 </div>
@@ -82,7 +95,7 @@ pages.dashboard = function() {
             </div>
             <div class="card-body" style="padding:0;">
                 <div class="table-wrapper" style="max-height:400px; overflow-y:auto;" id="studentListContainer">
-                    ${renderStudentListTable(students)}
+                    ${renderStudentListTable(activeStudents)}
                 </div>
             </div>
         </div>

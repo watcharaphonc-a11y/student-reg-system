@@ -22,6 +22,7 @@ function getStatusBadge(status) {
         'เปิด': 'success', 'เต็ม': 'danger', 'ปิด': 'neutral',
         'ชำระแล้ว': 'success', 'ค้างชำระ': 'danger',
         'กำลังศึกษา': 'success', 'พ้นสภาพ': 'danger',
+        'สำเร็จการศึกษา': 'purple', 'Graduated': 'purple',
     };
     return `<span class="badge ${map[status] || 'neutral'}">${status}</span>`;
 }

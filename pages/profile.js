@@ -143,6 +143,14 @@ pages['student-profile'] = function () {
                         ปีที่เข้าศึกษา ${admissionYear}
                     </div>
                     <div class="profile-meta-item">${getStatusBadge(status)}</div>
+                    ${(isAdmin && status !== 'สำเร็จการศึกษา' && status !== 'Graduated') ? `
+                    <div class="profile-meta-item">
+                        <button class="btn btn-primary btn-sm" onclick="openApproveGraduationModal()" style="background:var(--success); border:none; box-shadow:none; padding:4px 12px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            อนุมัติจบการศึกษา
+                        </button>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
         </div>
@@ -409,5 +417,85 @@ window.saveStudentProfileEdit = function () {
         closeModal();
         renderPage();
         setTimeout(() => alert('บันทึกข้อมูลส่วนตัวเรียบร้อย (อัปเดตระบบชั่วคราว)'), 300);
+    }
+};
+
+// ============================
+// Graduation Approval
+// ============================
+window.openApproveGraduationModal = function() {
+    const st = MOCK.student;
+    if (!st) return;
+
+    const modalHtml = `
+    <div style="padding:10px;">
+        <p style="margin-bottom:15px; color:var(--text-secondary);">คุณกำลังจะอนุมัติการสำเร็จการศึกษาให้แก่ <strong>${st.prefix || ''}${st.firstName} ${st.lastName}</strong></p>
+        
+        <div class="form-group" style="margin-bottom:15px;">
+            <label class="form-label">ปีที่สำเร็จการศึกษา (พ.ศ.)</label>
+            <input type="number" id="gradYear" class="form-input" value="${new Date().getFullYear() + 543}">
+        </div>
+        
+        <div class="form-group" style="margin-bottom:15px;">
+            <label class="form-label">สถานที่ปฏิบัติงานหลังบรรจุ/ทำงาน</label>
+            <input type="text" id="gradWorkplace" class="form-input" placeholder="เช่น รพ.พุทธชินราช, สสจ.พิษณุโลก" value="${st.workplace || ''}">
+        </div>
+
+        <div class="form-group" style="margin-bottom:15px;">
+            <label class="form-label">ตำแหน่ง</label>
+            <input type="text" id="gradPosition" class="form-input" placeholder="เช่น พยาบาลวิชาชีพ" value="${st.position || ''}">
+        </div>
+
+        <div style="background:var(--warning-bg); padding:12px; border-radius:var(--radius-md); border:1px solid var(--warning); margin-bottom:20px;">
+            <p style="font-size:0.82rem; color:var(--warning); margin:0;">
+                <strong>คำแนะนำ:</strong> การอนุมัติจะเปลี่ยนสถานะนักศึกษาเป็น "สำเร็จการศึกษา" และย้ายข้อมูลไปยังฐานข้อมูลศิษย์เก่าทันที
+            </p>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+            <button class="btn btn-primary" onclick="submitGraduationApproval()" style="background:var(--success); border:none;">ยืนยันการสำเร็จการศึกษา</button>
+        </div>
+    </div>
+    `;
+    openModal('อนุมัติการสำเร็จการศึกษา', modalHtml);
+};
+
+window.submitGraduationApproval = function() {
+    const gradYear = document.getElementById('gradYear').value;
+    const gradWorkplace = document.getElementById('gradWorkplace').value;
+    const gradPosition = document.getElementById('gradPosition').value;
+
+    if (!gradYear) {
+        alert('กรุณาระบุปีที่สำเร็จการศึกษา');
+        return;
+    }
+
+    if (MOCK.student) {
+        showApiLoading('กำลังบันทึกข้อมูลการสำเร็จการศึกษา...');
+        
+        // Update local object
+        MOCK.student.status = 'สำเร็จการศึกษา';
+        MOCK.student.graduationYear = gradYear;
+        MOCK.student.workplace = gradWorkplace;
+        MOCK.student.position = gradPosition;
+
+        // Sync with main students list
+        const idx = MOCK.students.findIndex(s => (s.id || s.studentId) === (MOCK.student.id || MOCK.student.studentId));
+        if (idx !== -1) {
+            MOCK.students[idx] = { ...MOCK.student };
+        }
+
+        // Trigger API Sync
+        if (typeof window.syncActiveStudentData === 'function') {
+            window.syncActiveStudentData();
+        }
+
+        setTimeout(() => {
+            hideApiLoading();
+            closeModal();
+            alert('อนุมัติการสำเร็จการศึกษาเรียบร้อยแล้ว รายชื่อจะถูกย้ายไปยังฐานข้อมูลศิษย์เก่า');
+            navigateTo('alumni');
+        }, 1000);
     }
 };
