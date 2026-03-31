@@ -64,6 +64,17 @@ pages.dashboard = function() {
                 <div class="stat-label">GPA เฉลี่ย</div>
                 <span class="stat-change up">↑ 0.12</span>
             </div>
+
+            ${(window.currentUserRole === 'admin' || window.currentUserRole === 'staff') && s.recentTopicChanges > 0 ? `
+            <div class="stat-card animate-in alert-glow" style="border: 2px solid var(--accent-primary); cursor:pointer;" onclick="navigateTo('thesis-topic')">
+                <div class="stat-icon" style="background:var(--accent-primary); color:white;">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                </div>
+                <div class="stat-value" style="color:var(--accent-primary-hover)">${s.recentTopicChanges}</div>
+                <div class="stat-label" style="font-weight:700;">แจ้งเปลี่ยนหัวข้อ (ล่าสุด)</div>
+                <span class="stat-change" style="background:var(--success); color:white;">รายการใหม่</span>
+            </div>
+            ` : ''}
         </div>
 
         </div>
