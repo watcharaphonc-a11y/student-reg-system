@@ -309,6 +309,7 @@ function applyRolePermissions(role) {
             'nav-transcript',
             'nav-exams',
             'nav-thesis-advisor',
+            'nav-thesis-topic',
             'nav-academic-advisor',
             'nav-exam-committee',
             'nav-payments',
