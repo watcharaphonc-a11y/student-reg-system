@@ -40,10 +40,12 @@ pages['eval-course'] = function() {
     // 2. Smart Fallback: If no enrollments, populate from Study Plan (Current semester only)
     if (enrolled.length === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
         const planInfo = window.getStudyPlanForStudent(MOCK.student);
-        // Only show courses for the student's current relative year/semester
-        const currentSemData = (planInfo.data || []).find(s => s.year === planInfo.relYear && s.sem === planInfo.relSem);
+        // Show all courses for the current relative year up to the current semester
+        const relevantSems = (planInfo.data || []).filter(s => 
+            s.year === planInfo.relYear && s.sem <= planInfo.relSem
+        );
         
-        if (currentSemData) {
+        relevantSems.forEach(currentSemData => {
             (currentSemData.courses || []).forEach(cStr => {
                 const parts = cStr.split(' ');
                 const code = String(parts[0]).trim();
@@ -58,7 +60,7 @@ pages['eval-course'] = function() {
                     });
                 }
             });
-        }
+        });
     }
     
     // Deduplicate by normalized course code
@@ -202,15 +204,17 @@ pages['eval-instructor'] = function() {
     // Fallback to Study Plan if no enrollments
     if (enrolledCodes.size === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
         const planInfo = window.getStudyPlanForStudent(MOCK.student);
-        // Only show courses for the student's current relative year/semester
-        const currentSemData = (planInfo.data || []).find(s => s.year === planInfo.relYear && s.sem === planInfo.relSem);
-        if (currentSemData) {
+        // Show all courses for the current relative year up to the current semester
+        const relevantSems = (planInfo.data || []).filter(s => 
+            s.year === planInfo.relYear && s.sem <= planInfo.relSem
+        );
+        relevantSems.forEach(currentSemData => {
             (currentSemData.courses || []).forEach(cStr => {
                 const code = String(cStr.split(' ')[0]).trim();
                 const norm = normalizeCode(code);
                 if (norm) enrolledCodes.add(norm);
             });
-        }
+        });
     }
     
     const evalItems = Object.values(courseMap).filter(c => enrolledCodes.has(normalizeCode(c.code)));
