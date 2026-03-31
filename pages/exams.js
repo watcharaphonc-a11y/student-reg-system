@@ -3,12 +3,50 @@
 // ============================
 
 const EXAM_TYPES = [
-    'ความรู้ภาษาอังกฤษ',
-    'หัวข้อวิทยานิพนธ์',
     'ประมวลความรู้',
+    'หัวข้อวิทยานิพนธ์',
+    'ความรู้ภาษาอังกฤษ',
     'โครงร่างวิทยานิพนธ์',
     'ป้องกันวิทยานิพนธ์'
 ];
+
+const EXAM_MECHANISMS = {
+    'ประมวลความรู้': [
+        { step: 1, desc: 'ตรวจสอบคุณสมบัติ (ลงทะเบียนมาแล้วไม่น้อยกว่า 2 ภาคการศึกษาปกติ)' },
+        { step: 2, desc: 'ยื่นคำร้องขอสอบประมวลความรู้ (Comprehensive Exam)' },
+        { step: 3, desc: 'ชำระค่าธรรมเนียมการสอบ' },
+        { step: 4, desc: 'เข้ารับการสอบ (ข้อเขียน/ปากเปล่า)' },
+        { step: 5, desc: 'ประกาศผลการสอบ' }
+    ],
+    'หัวข้อวิทยานิพนธ์': [
+        { step: 1, desc: 'ปรึกษาและเลือกอาจารย์ที่ปรึกษาวิทยานิพนธ์' },
+        { step: 2, desc: 'จัดทำบันทึกข้อความขออนุมัติชื่อหัวข้อวิทยานิพนธ์' },
+        { step: 3, desc: 'เสนอหัวข้อต่อคณะกรรมการบริหารหลักสูตร' },
+        { step: 4, desc: 'คณะกรรมการพิจารณาอนุมัติหัวข้อ' },
+        { step: 5, desc: 'บันทึกข้อมูลหัวข้อที่ได้รับอนุมัติลงในระบบ' }
+    ],
+    'ความรู้ภาษาอังกฤษ': [
+        { step: 1, desc: 'ตรวจสอบเกณฑ์คะแนนภาษาอังกฤษที่หลักสูตรกำหนด (IELTS, TOEFL, CU-TEP ฯลฯ)' },
+        { step: 2, desc: 'เข้ารับการทดสอบจากสถาบันที่ได้รับการรับรอง' },
+        { step: 3, desc: 'ยื่นผลคะแนนภาษาอังกฤษต่อฝ่ายบัณฑิตศึกษา' },
+        { step: 4, desc: 'เจ้าหน้าที่ตรวจสอบความถูกต้องของใบรายงานผล' },
+        { step: 5, desc: 'บันทึกสถานะผ่านเกณฑ์ภาษาอังกฤษ' }
+    ],
+    'โครงร่างวิทยานิพนธ์': [
+        { step: 1, desc: 'จัดทำรูปเล่มโครงร่างวิทยานิพนธ์ (บทที่ 1-3) ภายใต้การดูแลของที่ปรึกษา' },
+        { step: 2, desc: 'ยื่นคำร้องขอสอบโครงร่างวิทยานิพนธ์และแต่งตั้งคณะกรรมการ' },
+        { step: 3, desc: 'นำเสนอโครงร่างต่อคณะกรรมการสอบ' },
+        { step: 4, desc: 'ปรับปรุงแก้ไขรูปเล่มตามมติคณะกรรมการ (ถ้ามี)' },
+        { step: 5, desc: 'ส่งรูปเล่มโครงร่างฉบับสมบูรณ์และขอรับหนังสือรับรองจริยธรรมการวิจัย' }
+    ],
+    'ป้องกันวิทยานิพนธ์': [
+        { step: 1, desc: 'ดำเนินการวิจัยและจัดทำเล่มวิทยานิพนธ์ฉบับสมบูรณ์ (บทที่ 1-5)' },
+        { step: 2, desc: 'ยื่นตรวจสอบการคัดลอกวรรณกรรม (Plagiarism) และผ่านเกณฑ์ที่กำหนด' },
+        { step: 3, desc: 'ยื่นคำร้องขอสอบป้องกันวิทยานิพนธ์' },
+        { step: 4, desc: 'สอบป้องกันวิทยานิพนธ์ต่อคณะกรรมการ' },
+        { step: 5, desc: 'ส่งเล่มวิทยานิพนธ์ฉบับสมบูรณ์และหลักฐานการเผยแพร่ผลงานวิจัย' }
+    ]
+};
 
 pages.exams = function() {
     const role = window.currentUserRole;
@@ -70,28 +108,52 @@ function renderStudentExams(st) {
             });
         }
 
+        const mechanism = EXAM_MECHANISMS[type] || [];
+        const mechanismHtml = mechanism.map(m => `
+            <div class="mechanism-step">
+                <span class="step-dot">${m.step}</span>
+                <span class="step-text">${m.desc}</span>
+            </div>
+        `).join('');
+
         cardsHtml += `
-            <div class="card animate-in" style="margin-bottom:20px; animation-delay: ${typeIdx * 0.1}s">
+            <div class="card animate-in" id="exam-card-${typeIdx}" style="margin-bottom:30px; animation-delay: ${typeIdx * 0.1}s">
                 <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <h3 class="card-title">${type}</h3>
+                    <h3 class="card-title" style="display:flex; align-items:center; gap:10px;">
+                        ${type}
+                        <span class="badge info" style="font-size:0.7rem; font-weight:normal;">ขั้นตอนที่ ${typeIdx + 1}</span>
+                    </h3>
                     <span class="status-badge ${statusClass}">${statusSummary}</span>
                 </div>
-                <div class="card-body" style="padding:0;">
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th style="width:15%">ครั้งที่</th>
-                                    <th style="width:20%">สถานะ</th>
-                                    <th style="width:15%">คะแนน/ผล</th>
-                                    <th style="width:20%">วันที่สอบ</th>
-                                    <th style="width:30%">หมายเหตุ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${historyRows}
-                            </tbody>
-                        </table>
+                <div class="card-body">
+                    <div class="mechanism-box">
+                        <div class="mechanism-header">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            กลไกและขั้นตอนการดำเนินการ (Preparation Guide)
+                        </div>
+                        <div class="mechanism-body">
+                            ${mechanismHtml}
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px;">
+                        <h4 style="font-size:0.9rem; margin-bottom:12px; color:var(--text-secondary);">ประวัติการสอบ</h4>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width:15%">ครั้งที่</th>
+                                        <th style="width:20%">สถานะ</th>
+                                        <th style="width:15%">คะแนน/ผล</th>
+                                        <th style="width:20%">วันที่สอบ</th>
+                                        <th style="width:30%">หมายเหตุ</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${historyRows}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -103,7 +165,7 @@ function renderStudentExams(st) {
                 <div class="card-body">
                     <h3 class="card-title" style="margin-bottom:20px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        ความก้าวหน้าการสอบ 5 ขั้นตอน
+                        ลำดับขั้นตอนการดำเนินการวิทยานิพนธ์ (Exam Roadmap)
                     </h3>
                     <div class="exam-stepper">
                         ${EXAM_TYPES.map((type, idx) => {
@@ -114,7 +176,7 @@ function renderStudentExams(st) {
                             else if (lastStatus === 'ไม่ผ่าน' || lastStatus === 'รอผล') state = 'active'; // yellow
 
                             return `
-                                <div class="step ${state}">
+                                <div class="step ${state}" onclick="document.getElementById('exam-card-${idx}').scrollIntoView({behavior:'smooth', block:'center'});">
                                     <div class="step-number">${idx + 1}</div>
                                     <div class="step-label">${type}</div>
                                 </div>
@@ -124,7 +186,7 @@ function renderStudentExams(st) {
                 </div>
             </div>
 
-            <div class="cards-grid">
+            <div class="animate-in">
                 ${cardsHtml}
             </div>
             
