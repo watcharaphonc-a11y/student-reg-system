@@ -77,44 +77,53 @@ const MOCK = {
             name: 'สาขาวิชาการผดุงครรภ์ (ป.โท)',
             icon: '👩‍👧‍👦',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นการวิเคราะห์ วิจัย และปฏิบัติการผดุงครรภ์ขั้นสูง ทั้งในภาวะปกติและเสี่ยงสูง',
-            color: 'var(--accent-primary)'
+            color: 'var(--accent-primary)',
+            requiredCredits: 36
         },
         {
             id: 'nursing-pediatric',
             name: 'สาขาวิชาการพยาบาลเด็ก (ป.โท)',
             icon: '👶',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นการวิเคราะห์ ปฏิบัติการพยาบาลขั้นสูง และทำวิจัยเพื่อสุขภาพเด็ก',
-            color: 'var(--success)'
+            color: 'var(--success)',
+            requiredCredits: 36
         },
         {
             id: 'nursing-adult',
             name: 'สาขาวิชาการพยาบาลผู้ใหญ่และผู้สูงอายุ (ป.โท)',
             icon: '🧓',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นการวิจัยเชิงประจักษ์ ปฏิบัติการพยาบาลขั้นสูงสำหรับผู้ใหญ่และผู้สูงอายุ',
-            color: 'var(--warning)'
+            color: 'var(--warning)',
+            requiredCredits: 36
         },
         {
             id: 'nursing-mental',
             name: 'สาขาวิชาการพยาบาลจิตเวชและสุขภาพจิต (ป.โท)',
             icon: '🧠',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นวิทยาเขตบำบัด จิตเภสัชวิทยา และการพยาบาลจิตเวชฉุกเฉิน',
-            color: '#ec4899'
+            color: '#ec4899',
+            requiredCredits: 36
         },
         {
             id: 'nursing-community',
             name: 'สาขาวิชาการพยาบาลเวชปฏิบัติชุมชน (ป.โท)',
             icon: '🏡',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นการวิเคราะห์และพัฒนาระบบสุขภาพชุมชน การรักษาโรคเบื้องต้น',
-            color: '#10b981'
+            color: '#10b981',
+            requiredCredits: 36
         },
         {
             id: 'nursing-admin',
             name: 'สาขาวิชาการบริหารทางการพยาบาล (ป.โท)',
             icon: '🏢',
             description: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต เน้นสร้างภาวะผู้นำ การจัดการคุณภาพองค์กร และกลยุทธ์สาธารณสุข',
-            color: '#8b5cf6'
+            color: '#8b5cf6',
+            requiredCredits: 36
         }
     ],
+
+    // รายการคำร้องขอสำเร็จการศึกษา
+    graduationRequests: [],
 
     // แบบฟอร์มคำร้องออนไลน์ (Document Templates)
     documentTemplates: [

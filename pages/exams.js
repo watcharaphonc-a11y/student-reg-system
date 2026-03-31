@@ -99,12 +99,31 @@ function renderStudentExams(st) {
     });
 
     return `
-        <div class="animate-in">
-            <div class="page-header">
-                <h1 class="page-title">ผลการสอบ</h1>
-                <p class="page-subtitle">แสดงสถานะและคะแนนการสอบวัดความรู้และวิทยานิพนธ์</p>
+            <div class="card animate-in animate-delay-1" style="margin-bottom:25px;">
+                <div class="card-body">
+                    <h3 class="card-title" style="margin-bottom:20px; font-size:1.1rem; display:flex; align-items:center; gap:8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                        ความก้าวหน้าการสอบ 5 ขั้นตอน
+                    </h3>
+                    <div class="exam-stepper">
+                        ${EXAM_TYPES.map((type, idx) => {
+                            const typeExams = exams.filter(ex => ex.exam_type === type);
+                            const lastStatus = typeExams.length > 0 ? typeExams.sort((a,b)=>new Date(b.date)-new Date(a.date))[0].status : null;
+                            let state = 'pending'; // gray
+                            if (lastStatus === 'ผ่าน' || lastStatus === 'Pass') state = 'completed'; // green
+                            else if (lastStatus === 'ไม่ผ่าน' || lastStatus === 'รอผล') state = 'active'; // yellow
+
+                            return `
+                                <div class="step ${state}">
+                                    <div class="step-number">${idx + 1}</div>
+                                    <div class="step-label">${type}</div>
+                                </div>
+                            `;
+                        }).join('<div class="step-connector"></div>')}
+                    </div>
+                </div>
             </div>
-            
+
             <div class="cards-grid">
                 ${cardsHtml}
             </div>

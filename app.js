@@ -586,6 +586,7 @@ async function bootApp() {
             totalTeachers: MOCK.academicAdvisors ? MOCK.academicAdvisors.length : 0,
             totalCourses: MOCK.courses ? MOCK.courses.length : 0,
             pendingPayments: MOCK.payments ? MOCK.payments.filter(p => p.status === 'ค้างชำระ').length : 0,
+            pendingGraduation: (MOCK.graduationRequests || []).filter(r => r.status === 'Pending').length || 0,
             avgGPA: 0
         };
 
