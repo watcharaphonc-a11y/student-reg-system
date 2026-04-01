@@ -86,10 +86,10 @@ function renderApplicantsList(data) {
 function getStatusBadge(status) {
     switch(status) {
         case 'Pending': return '<span class="badge info">Pending</span>';
-        case 'Interview': return '<span class="badge warning" style="background:#8b5cf6">Interview</span>';
+        case 'Interview': return '<span class="badge interview">Interview</span>';
         case 'Accepted': return '<span class="badge success">Accepted</span>';
         case 'Rejected': return '<span class="badge danger">Rejected</span>';
-        case 'Enrolled': return '<span class="badge success" style="background:var(--primary-color)">Enrolled</span>';
+        case 'Enrolled': return '<span class="badge enrolled">Enrolled</span>';
         default: return `<span class="badge secondary">${status}</span>`;
     }
 }

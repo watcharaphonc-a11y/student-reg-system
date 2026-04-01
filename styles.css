@@ -676,16 +676,21 @@ input, select, textarea {
     padding: 3px 10px;
     border-radius: var(--radius-full);
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     gap: 5px;
+    border: 1px solid transparent;
 }
 
-.badge.success { color: var(--success); background: var(--success-bg); }
-.badge.warning { color: var(--warning); background: var(--warning-bg); }
-.badge.danger { color: var(--danger); background: var(--danger-bg); }
-.badge.info { color: var(--info); background: var(--info-bg); }
-.badge.neutral { color: var(--text-secondary); background: var(--bg-tertiary); }
-.badge.purple { color: #a78bfa; background: rgba(139, 92, 246, 0.12); }
+.badge.success { color: #166534; background: #dcfce7; border-color: #bbf7d0; }
+.badge.warning { color: #92400e; background: #fef3c7; border-color: #fde68a; }
+.badge.danger { color: #991b1b; background: #fee2e2; border-color: #fecaca; }
+.badge.info { color: #075985; background: #e0f2fe; border-color: #bae6fd; }
+.badge.neutral { color: #475569; background: #f1f5f9; border-color: #e2e8f0; }
+.badge.purple { color: #6b21a8; background: #f3e8ff; border-color: #e9d5ff; }
+
+/* Special Premium Statuses */
+.badge.interview { color: #5b21b6; background: #ede9fe; border-color: #ddd6fe; box-shadow: 0 0 10px rgba(139, 92, 246, 0.1); }
+.badge.enrolled { color: white; background: var(--accent-gradient); border: none; padding: 3px 12px; }
 
 .status-badge {
     display: inline-flex;
