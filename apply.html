@@ -533,7 +533,7 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><input type="text" name="edu_degree[]" placeholder="เช่น ป.ตรี" required></td>
+                                    <td><input type="text" name="edu_degree[]" required></td>
                                     <td><input type="text" name="edu_inst[]" required></td>
                                     <td><input type="text" name="edu_major[]" required></td>
                                     <td><input type="text" name="edu_year[]" required></td>
@@ -584,7 +584,7 @@
                                 ยังไม่ได้ทำงาน</label>
                             <label style="display:flex; align-items:center; gap:8px;"><input type="radio"
                                     name="WorkStatus" value="ทำงานแล้ว" onchange="toggleWorkTable(true)">
-                                ทำงานแล้ว</label>
+                                ทำงานแล้ว โปรดระบุประวัติการทำงานจากปัจจุบันถึงอดีต</label>
                         </div>
                     </div>
 
@@ -593,11 +593,11 @@
                             <table class="data-table-input" id="workTable">
                                 <thead>
                                     <tr>
-                                        <th>ชื่อหน่วยงาน</th>
+                                        <th>ชื่อสถานที่ทำงาน</th>
                                         <th>ตำแหน่งงาน</th>
-                                        <th>ระยะเวลา</th>
-                                        <th>ตั้งแต่ (ปี)</th>
-                                        <th>ถึง (ปี)</th>
+                                        <th>ระยะเวลาการทำงาน</th>
+                                        <th>เริ่มต้น</th>
+                                        <th>สิ้นสุด</th>
                                         <th></th>
                                     </tr>
                                 </thead>
@@ -620,18 +620,21 @@
 
                 <!-- Step 4: Workplace & Research -->
                 <div class="form-section" data-section="4">
-                    <h3 style="margin-bottom:15px;">5. ข้อมูลที่ทำงานปัจจุบัน</h3>
+                    <h3 style="margin-bottom:15px;">5. สถานที่ทำงานในปัจจุบัน</h3>
                     <div class="form-group">
-                        <label class="form-label">ชื่อสถานที่ทำงานปัจจุบันและที่อยู่</label>
+                        <label class="form-label">ชื่อสถานที่ทำงานปัจจุบัน</label>
                         <textarea class="form-textarea" name="CurrentWorkplace" rows="3"
-                            placeholder="ระบุหน่วยงานและที่ตั้ง"></textarea>
+                            placeholder="ระบุหน่วยงาน"></textarea>
                     </div>
-
-                    <h3 style="margin-top:30px; margin-bottom:15px;">6. ความสนใจ/หัวข้อที่ต้องการทำวิจัย (โดยย่อ)</h3>
                     <div class="form-group">
-                        <label class="form-label">ระบุความมุ่งหมายและแผนการศึกษา/แผนแนวการทำวิทยานิพนธ์</label>
-                        <textarea class="form-textarea" name="ResearchTopic" rows="6"
-                            placeholder="ระบุประเด็นที่สนใจทำวิจัย"></textarea>
+                        <label class="form-label">ที่อยู่ของสถานที่ทำงาน</label>
+                        <textarea class="form-textarea" name="CurrentWorkplace" rows="3"
+                            placeholder="ระบุที่อยู่"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">โทรศัพท์ที่ทำงาน</label>
+                        <textarea class="form-textarea" name="CurrentWorkplace" rows="3"
+                            placeholder="ระบุเบอร์โทร"></textarea>
                     </div>
 
                     <div class="form-group">
@@ -641,6 +644,14 @@
                             <option value="ทุนต้นสังกัด">ทุนต้นสังกัด</option>
                             <option value="ทุนอื่นๆ">ทุนอื่นๆ</option>
                         </select>
+                    </div>
+
+                    <h3 style="margin-top:30px; margin-bottom:15px;">6. ๑๐.
+                        บทความแนะนำตนเองเพื่อการศึกษาต่อและแผนการทำวิทยานิพนธ์ (โปรดพิมพ์ ไม่เกิน 1 หน้า)</h3>
+                    <div class="form-group">
+                        <label class="form-label">ระบุความมุ่งหมาย/แผนการทำวิทยานิพนธ์</label>
+                        <textarea class="form-textarea" name="ResearchTopic" rows="6"
+                            placeholder="ระบุประเด็นที่สนใจทำวิจัย"></textarea>
                     </div>
                 </div>
 
@@ -679,34 +690,78 @@
                     </style>
 
                     <div class="upload-row">
-                        <div class="label">2. สำเนาปริญญาบัตร <span style="color:var(--primary);">*</span></div>
+                        <div class="label">1. สำเนาวุฒิการศึกษา (สำเนาปริญญาบัตรหรือใบรับรองการสำเร็จการศึกษา)
+                            (ในกรณีที่ยังไม่ได้รับปริญญาบัตร) <span style="color:var(--primary);">*</span></div>
                         <input type="file" class="input-file" data-type="สำเนาปริญญาบัตร" accept="image/*,.pdf"
                             required>
                     </div>
                     <div class="upload-row">
-                        <div class="label">3. สำเนาใบอนุญาตพยาบาลฯ <span style="color:var(--primary);">*</span></div>
+                        <div class="label">2. สำเนาใบรับรองผลการศึกษา (Transcript) <span
+                                style="color:var(--primary);">*</span></div>
+                        <input type="file" class="input-file" data-type="Transcript" accept="image/*,.pdf" required>
+                    </div>
+                    <div class="upload-row">
+                        <div class="label">3. สำเนาใบอนุญาตเป็นผู้ประกอบวิชาชีพการพยาบาลและผดุงครรภ์ชั้น 1
+                            หรือการพยาบาลชั้น 1 ที่ไม่หมดอายุ <span style="color:var(--primary);">*</span>
+                        </div>
                         <input type="file" class="input-file" data-type="ใบอนุญาตประกอบวิชาชีพ" accept="image/*,.pdf"
                             required>
                     </div>
                     <div class="upload-row">
-                        <div class="label">4. สำเนาใบแสดงผล (Transcript) <span style="color:var(--primary);">*</span>
+                        <div class="label">4. หนังสือรับรองประสบการณ์การทำงานพยาบาล/การศึกษาพยาบาล
+                            และ/หรือการบริหารการพยาบาลหลังจากสำเร็จการศึกษาอย่างน้อย 1 ปี <span
+                                style="color:var(--primary);">*</span>
                         </div>
-                        <input type="file" class="input-file" data-type="Transcript" accept="image/*,.pdf" required>
-                    </div>
-                    <div class="upload-row">
-                        <div class="label">5. สำเนาบัตรประชาชน/ทะเบียนบ้าน <span style="color:var(--primary);">*</span>
-                        </div>
-                        <input type="file" class="input-file" data-type="บัตรประชาชนและทะเบียนบ้าน"
+                        <input type="file" class="input-file" data-type="หนังสือรับรองประสบการณ์การทำงาน"
                             accept="image/*,.pdf" required>
                     </div>
                     <div class="upload-row">
-                        <div class="label">6. ใบรับรองการทำงาน (2 ปีขึ้นไป) <span style="color:var(--primary);">*</span>
+                        <div class="label">5. สำเนาบัตรประจำตัวประชาชนที่ยังไม่หมดอายุ (เฉพาะด้านหน้าของบัตร)
+                            หรือสำเนาบัตรประจำตัวข้าราชการ หรือสำเนา Passport (กรณีชาวต่างชาติ) <span
+                                style="color:var(--primary);">*</span>
                         </div>
-                        <input type="file" class="input-file" data-type="ใบรับรองประสบการณ์การทำงาน"
+                        <input type="file" class="input-file" data-type="บัตรประชาชน" accept="image/*,.pdf" required>
+                    </div>
+                    <div class="upload-row">
+                        <div class="label">6. สำเนาการเปลี่ยนชื่อ ชื่อสกุล (ถ้ามี) <span
+                                style="color:var(--primary);">*</span>
+                        </div>
+                        <input type="file" class="input-file" data-type="สำเนาการเปลี่ยนชื่อ" accept="image/*,.pdf"
+                            required>
+                    </div>
+                    <div class="upload-row">
+                        <div class="label">7. สำเนาทะเบียนสมรส (ถ้ามี) <span style="color:var(--primary);">*</span>
+                        </div>
+                        <input type="file" class="input-file" data-type="ทะเบียนสมรส" accept="image/*,.pdf" required>
+                    </div>
+                    <div class="upload-row">
+                        <div class="label">8. สำเนาทะเบียนบ้าน <span style="color:var(--primary);">*</span>
+                        </div>
+                        <input type="file" class="input-file" data-type="สำเนาทะเบียนบ้าน" accept="image/*,.pdf"
+                            required>
+                    </div>
+                    <div class="upload-row">
+                        <div class="label">9. ใบรับรองแพทย์จากสถานพยาบาลของรัฐ <span
+                                style="color:var(--primary);">*</span>
+                        </div>
+                        <input type="file" class="input-file" data-type="ใบรับรองแพทย์" accept="image/*,.pdf" required>
+                    </div>
+                    <div class="upload-row">
+                        <div class="label">10. สำเนาแสดงผลการสอบวัดความรู้ด้านภาษาอังกฤษ ภายในระยะเวลาไม่เกิน ๒ ปี
+                            (ถ้ามี) <span style="color:var(--primary);">*</span>
+                        </div>
+                        <input type="file" class="input-file" data-type="ผลการสอบวัดความรู้ด้านภาษาอังกฤษ"
                             accept="image/*,.pdf" required>
                     </div>
                     <div class="upload-row">
-                        <div class="label">7. หลักฐานการโอนเงิน (500 บ.) <span style="color:var(--primary);">*</span>
+                        <div class="label">11. เอกสารอื่นๆ เช่น ผลการวิจัย ผลงานนวัตกรรม <span
+                                style="color:var(--primary);">*</span>
+                        </div>
+                        <input type="file" class="input-file" data-type="เอกสารอื่นๆ" accept="image/*,.pdf" required>
+                    </div>
+                    <div class="upload-row">
+                        <div class="label">12. สำเนาสลิปการโอนเงินค่าธรรมเนียมการสมัคร 500 บาท <span
+                                style="color:var(--primary);">*</span>
                         </div>
                         <input type="file" class="input-file" data-type="หลักฐานการชำระเงิน" accept="image/*" required>
                     </div>
