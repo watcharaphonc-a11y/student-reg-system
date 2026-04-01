@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ใบสมัครเข้าศึกษาต่อ | Graduate Admission</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --primary: #dc3545;
+            --primary-dark: #c82333;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'Inter', 'Noto Sans Thai', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container { max-width: 800px; margin: 40px auto; }
+        
+        .header { text-align: center; margin-bottom: 40px; }
+        .logo-box { 
+            width: 60px; height: 60px; background: var(--primary); 
+            border-radius: 16px; margin: 0 auto 20px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; box-shadow: 0 10px 15px -3px rgba(220, 53, 69, 0.3);
+        }
+        .header h1 { font-size: 1.8rem; font-weight: 800; margin-bottom: 8px; }
+        .header p { color: var(--text-muted); }
+
+        .card { 
+            background: var(--card-bg); 
+            padding: 40px; 
+            border-radius: var(--radius); 
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        /* Stepper */
+        .stepper { display: flex; justify-content: space-between; margin-bottom: 40px; position: relative; }
+        .stepper::before {
+            content: ''; position: absolute; top: 18px; left: 0; right: 0;
+            height: 2px; background: var(--border); z-index: 1;
+        }
+        .step { 
+            position: relative; z-index: 2; background: var(--card-bg); 
+            width: 36px; height: 36px; border-radius: 50%;
+            border: 2px solid var(--border); display: flex;
+            align-items: center; justify-content: center;
+            font-weight: 700; color: var(--text-muted);
+            transition: all 0.3s;
+        }
+        .step.active { border-color: var(--primary); color: var(--primary); transform: scale(1.1); box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1); }
+        .step.completed { background: var(--primary); border-color: var(--primary); color: white; }
+
+        /* Form Controls */
+        .form-group { margin-bottom: 20px; }
+        .form-label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
+        .form-input, .form-select, .form-textarea {
+            width: 100%; padding: 12px 16px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 14px; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary); }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .card { padding: 20px; } }
+
+        .btn {
+            padding: 12px 24px; border-radius: 8px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; display: inline-flex;
+            align-items: center; justify-content: center; gap: 8px;
+            font-family: inherit; border: none; font-size: 0.95rem;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-secondary { background: #f1f5f9; color: var(--text-main); }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        .form-section { display: none; animation: fadeIn 0.4s ease; }
+        .form-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Loading */
+        #loading {
+            position: fixed; inset: 0; background: rgba(255,255,255,0.8);
+            backdrop-filter: blur(4px); z-index: 1000; display: none;
+            align-items: center; justify-content: center; flex-direction: column;
+        }
+        .spinner { width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .success-box { text-align: center; display: none; }
+        .success-icon { font-size: 4rem; color: var(--success); margin-bottom: 20px; }
+        .app-id { background: #f0fdf4; color: var(--success); padding: 15px; border-radius: 8px; font-family: monospace; font-size: 1.5rem; font-weight: 800; margin: 20px 0; border: 1px dashed var(--success); }
+    </style>
+</head>
+<body>
+
+<div id="loading">
+    <div class="spinner"></div>
+    <div id="loadingText">กำลังส่งใบสมัคร...</div>
+</div>
+
+<div class="container" id="mainContainer">
+    <div class="header">
+        <div class="logo-box">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+        </div>
+        <h1>ระบบรับสมัครเข้าศึกษาต่อ</h1>
+        <p>หลักสูตรพยาบาลศาสตรมหาบัณฑิต สถาบันพระบรมราชชนก</p>
+    </div>
+
+    <div class="card">
+        <div class="stepper" id="stepper">
+            <div class="step active" data-step="1">1</div>
+            <div class="step" data-step="2">2</div>
+            <div class="step" data-step="3">3</div>
+            <div class="step" data-step="4">4</div>
+        </div>
+
+        <form id="applyForm">
+            <!-- Step 1: Personal Info -->
+            <div class="form-section active" data-section="1">
+                <h3 style="margin-bottom:20px;">ข้อมูลส่วนบุคคล</h3>
+                <div class="form-group">
+                    <label class="form-label">คำนำหน้า</label>
+                    <select class="form-select" name="Prefix" required>
+                        <option value="นาย">นาย</option>
+                        <option value="นางสาว">นางสาว</option>
+                        <option value="นาง">นาง</option>
+                    </select>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">ชื่อ (ภาษาไทย)</label>
+                        <input type="text" class="form-input" name="FirstName" placeholder="ระบุชื่อภาษาไทย" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">นามสกุล (ภาษาไทย)</label>
+                        <input type="text" class="form-input" name="LastName" placeholder="ระบุนามสกุลภาษาไทย" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">First Name (English)</label>
+                        <input type="text" class="form-input" name="FirstNameEn" placeholder="Name in English" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name (English)</label>
+                        <input type="text" class="form-input" name="LastNameEn" placeholder="Surname in English" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">เลขบัตรประจำตัวประชาชน</label>
+                        <input type="text" class="form-input" name="IdCard" placeholder="x-xxxx-xxxxx-xx-x" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">วัน/เดือน/ปี เกิด</label>
+                        <input type="date" class="form-input" name="Dob" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">อีเมล</label>
+                        <input type="email" class="form-input" name="Email" placeholder="example@email.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">เบอร์โทรศัพท์</label>
+                        <input type="tel" class="form-input" name="Phone" placeholder="0xx-xxx-xxxx" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Academic Info -->
+            <div class="form-section" data-section="2">
+                <h3 style="margin-bottom:20px;">ประวัติการศึกษาและการสมัคร</h3>
+                <div class="form-group">
+                    <label class="form-label">หลักสูตรที่ต้องการสมัคร</label>
+                    <input type="text" class="form-input" value="หลักสูตรพยาบาลศาสตรมหาบัณฑิต" readonly style="background:#f1f5f9;">
+                    <input type="hidden" name="Program" value="หลักสูตรพยาบาลศาสตรมหาบัณฑิต">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">สาขาวิชา</label>
+                    <select class="form-select" name="Major" required>
+                        <option value="">-- กรุณาเลือกสาขาวิชา --</option>
+                        <option value="การพยาบาลจิตเวชและสุขภาพจิต">การพยาบาลจิตเวชและสุขภาพจิต</option>
+                        <option value="การพยาบาลเวชปฏิบัติชุมชน">การพยาบาลเวชปฏิบัติชุมชน</option>
+                        <option value="การพยาบาลเด็ก">การพยาบาลเด็ก</option>
+                        <option value="การบริหารการพยาบาล">การบริหารการพยาบาล</option>
+                    </select>
+                </div>
+                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border);">
+                <div class="form-group">
+                    <label class="form-label">สถาบันการศึกษาเดิม (ป.ตรี)</label>
+                    <input type="text" class="form-input" name="PrevSchool" placeholder="ชื่อมหาวิทยาลัย" required>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">สาขาวิชาที่สำเร็จการศึกษา</label>
+                        <input type="text" class="form-input" name="PrevMajor" placeholder="เช่น พยาบาลศาสตร์" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">เกรดเฉลี่ยสะสม (GPAX)</label>
+                        <input type="number" step="0.01" class="form-input" name="PrevGPA" placeholder="x.xx" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3: Work & Funding -->
+            <div class="form-section" data-section="3">
+                <h3 style="margin-bottom:20px;">ที่อยู่และข้อมูลการทำงาน</h3>
+                <div class="form-group">
+                    <label class="form-label">ที่อยู่ที่ติดต่อได้</label>
+                    <textarea class="form-textarea" name="Address" rows="3" placeholder="เลขที่ห้อง/บ้านเลขที่, แขวง, เขต, จังหวัด, รหัสไปรษณีย์" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">ประสบการณ์การทำงาน (โดยย่อ)</label>
+                    <textarea class="form-textarea" name="WorkExperience" rows="3" placeholder="ระบุตำแหน่งและปีที่ทำงาน"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">แหล่งทุนในการศึกษา</label>
+                    <select class="form-select" name="FundingType" required>
+                        <option value="ทุนส่วนตัว">ทุนส่วนตัว</option>
+                        <option value="ทุนต้นสังกัด">ทุนต้นสังกัด</option>
+                        <option value="ทุนอื่นๆ">ทุนอื่นๆ</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Step 4: Documents & Confirm -->
+            <div class="form-section" data-section="4">
+                <h3 style="margin-bottom:20px;">อัปโหลดเอกสารและยืนยัน</h3>
+                <p style="margin-bottom:20px; font-size:0.9rem; color:var(--text-muted);">กรุณาเตรียมเอกสาร (Transcript, บัตรประชาชน, ทะเบียนบ้าน) เป็นไฟล์ PDF หรือ ZIP เดียว แล้วอัปโหลดผ่าน Google Drive หรือระบุลิงก์เอกสารด้านล่าง (ถ้ามี)</p>
+                
+                <div class="form-group">
+                    <label class="form-label">ลิงก์เอกสารแนบ (เช่น Google Drive / Dropbox)</label>
+                    <input type="url" class="form-input" name="DocumentsLink" placeholder="https://drive.google.com/...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">หมายเหตุเพิ่มเติม</label>
+                    <textarea class="form-textarea" name="Notes" rows="3"></textarea>
+                </div>
+
+                <div style="background:rgba(220,53,69,0.05); padding:20px; border-radius:8px; border:1px solid rgba(220,53,69,0.2); margin-top:20px;">
+                    <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
+                        <input type="checkbox" style="margin-top:5px;" required>
+                        <span style="font-size:0.85rem;">ข้าพเจ้ายืนยันว่าข้อมูลที่กรอกระบุในใบสมัครนี้เป็นความจริงและถูกต้องทุกประการ และยินยอมให้สถาบันตรวจสอบข้อมูลได้ตามความเหมาะสม</span>
+                    </label>
+                </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; margin-top:40px; padding-top:20px; border-top:1px solid var(--border);">
+                <button type="button" class="btn btn-secondary" id="prevBtn" style="visibility:hidden;">ย้อนกลับ</button>
+                <button type="button" class="btn btn-primary" id="nextBtn">ถัดไป →</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn" style="display:none;">ส่งใบสมัคร ✓</button>
+            </div>
+        </form>
+
+        <div class="success-box" id="successBox">
+            <div class="success-icon">🎉</div>
+            <h2 style="margin-bottom:10px;">ส่งใบสมัครสำเร็จ!</h2>
+            <p>ทางสถาบันได้รับข้อมูลของท่านเรียบร้อยแล้ว กรุณาจดบันทึกรหัสการสมัครด้านล่างเพื่อใช้ในการติดตามสถานะ</p>
+            <div class="app-id" id="displayAppId">APP-162817291</div>
+            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:30px;">เราจะส่งรายละเอียดเพิ่มเติมไปยังอีเมลที่ท่านระบุไว้</p>
+            <button class="btn btn-secondary" onclick="location.reload()">ย้อนกลับไปหน้าเริ่มต้น</button>
+        </div>
+    </div>
+
+    <p style="text-align:center; margin-top:30px; font-size:0.8rem; color:var(--text-muted);">
+        &copy; 2026 สถาบันพระบรมราชชนก - ระบบรับสมัครเรียนออนไลน์
+    </p>
+</div>
+
+<script>
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoeVHFYsghNTI30QKKIBOAKugDfDLwdQeuGmoDYVPOebH479wu50v98Z1gFM5SJVBB/exec';
+    let currentStep = 1;
+    const totalSteps = 4;
+
+    const form = document.getElementById('applyForm');
+    const sections = document.querySelectorAll('.form-section');
+    const steps = document.querySelectorAll('.step');
+    const nextBtn = document.getElementById('nextBtn');
+    const prevBtn = document.getElementById('prevBtn');
+    const submitBtn = document.getElementById('submitBtn');
+    const loading = document.getElementById('loading');
+    const successBox = document.getElementById('successBox');
+
+    function updateStep() {
+        sections.forEach(s => s.classList.remove('active'));
+        document.querySelector(`.form-section[data-section="${currentStep}"]`).classList.add('active');
+        
+        steps.forEach(s => {
+            const stepNum = parseInt(s.dataset.step);
+            s.classList.remove('active', 'completed');
+            if (stepNum === currentStep) s.classList.add('active');
+            if (stepNum < currentStep) s.classList.add('completed');
+        });
+
+        prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+        
+        if (currentStep === totalSteps) {
+            nextBtn.style.display = 'none';
+            submitBtn.style.display = 'inline-flex';
+        } else {
+            nextBtn.style.display = 'inline-flex';
+            submitBtn.style.display = 'none';
+        }
+    }
+
+    nextBtn.addEventListener('click', () => {
+        // Simple validation
+        const inputs = document.querySelector(`.form-section[data-section="${currentStep}"]`).querySelectorAll('input, select, textarea');
+        let valid = true;
+        inputs.forEach(input => {
+            if (input.hasAttribute('required') && !input.value) {
+                input.style.borderColor = 'var(--primary)';
+                valid = false;
+            } else {
+                input.style.borderColor = 'var(--border)';
+            }
+        });
+
+        if (valid && currentStep < totalSteps) {
+            currentStep++;
+            updateStep();
+        }
+    });
+
+    prevBtn.addEventListener('click', () => {
+        if (currentStep > 1) {
+            currentStep--;
+            updateStep();
+        }
+    });
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        loading.style.display = 'flex';
+
+        const formData = new FormData(form);
+        const payload = {};
+        formData.forEach((value, key) => payload[key] = value);
+
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: 'submitApplication', payload: payload })
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+                form.style.display = 'none';
+                document.getElementById('stepper').style.display = 'none';
+                document.getElementById('displayAppId').textContent = result.id || 'กำลังระบุ...';
+                successBox.style.display = 'block';
+                window.scrollTo(0, 0);
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Submission error:', error);
+            alert('ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+        } finally {
+            loading.style.display = 'none';
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -73,7 +73,7 @@ pages['menu-permissions'] = function() {
             position: absolute;
             cursor: pointer;
             top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #cbd5e1;
+            background-color: #ef4444;
             transition: .3s;
             border-radius: 24px;
         }
@@ -90,10 +90,10 @@ pages['menu-permissions'] = function() {
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
         input:checked + .perm-slider {
-            background-color: var(--accent-primary);
+            background-color: #10b981;
         }
         input:focus + .perm-slider {
-            box-shadow: 0 0 1px var(--accent-primary);
+            box-shadow: 0 0 1px #10b981;
         }
         input:checked + .perm-slider:before {
             transform: translateX(24px);
