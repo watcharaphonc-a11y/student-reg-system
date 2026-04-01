@@ -28,7 +28,8 @@ const SHEETS = {
   EXAM_COMMITTEES: 'ExamCommittees',
   EVAL_QUESTIONS: 'EvalQuestions',
   COURSE_INSTRUCTORS: 'CourseInstructors',
-  EVAL_INSTRUCTOR_QUESTIONS: 'EvalInstructorQuestions'
+  EVAL_INSTRUCTOR_QUESTIONS: 'EvalInstructorQuestions',
+  APPLICANTS: 'Applicants'
 };
 
 const DRIVE_FOLDER_ID = '1Zp4XU-m1I8o_g6Y6X6X6X6X6X6X6X6'; // Optional: Use ID for faster access
@@ -84,7 +85,8 @@ function doGet(e) {
           announcements: getSheetData(SHEETS.ANNOUNCEMENTS),
           permissions: getSheetData(SHEETS.PERMISSIONS),
           exams: getSheetData(SHEETS.EXAMS),
-          examCommittees: getSheetData(SHEETS.EXAM_COMMITTEES)
+          examCommittees: getSheetData(SHEETS.EXAM_COMMITTEES),
+          applicants: getSheetData(SHEETS.APPLICANTS)
         };
         break;
       case 'getPermissions':
@@ -117,13 +119,25 @@ function doGet(e) {
 }
 
 /**
- * Handle POST Requests
+ * Handle POST Requests (All actions requiring authentication or write)
  */
 function doPost(e) {
+  // Use LockService to prevent race conditions during concurrent writes
+  const lock = LockService.getScriptLock();
   try {
+    // Wait for up to 10 seconds for a lock before giving up
+    lock.waitLock(10000);
+  } catch (err) {
+    return createResponse({ status: 'busy', message: 'เซิร์ฟเวอร์ไม่ว่างเนื่องจากมีผู้ใช้งานจำนวนมาก กรุณาลองใหม่อีกครั้งใน 10 วินาที' });
+  }
+
+  try {
+    setupInitialSheets();
     const request = JSON.parse(e.postData.contents);
     const action = request.action;
     const payload = request.payload;
+
+    console.log('Action: ' + action);
     
     switch (action) {
       case 'registerStudent':
@@ -175,12 +189,20 @@ function doPost(e) {
         return batchImportExamCommittee(payload);
       case 'submitEvaluation':
         return submitEvaluationResult(payload);
+      case 'submitApplication':
+        return submitApplication(payload);
+      case 'updateApplicantStatus':
+        return updateApplicantStatus(payload);
+      case 'enrollApplicant':
+        return enrollApplicantToStudent(payload);
       default:
         return createResponse({ status: 'error', message: 'Unknown POST action' });
     }
     
+    lock.releaseLock();
     return createResponse({ status: 'success' });
   } catch (err) {
+    if (lock) lock.releaseLock();
     return createResponse({ status: 'error', message: err.toString() });
   }
 }
@@ -774,18 +796,19 @@ function setupInitialSheets() {
                             'nav-dashboard', 'nav-student-profile', 'nav-teacher-profile', 'nav-special-lecturers', 'nav-alumni', 'nav-new-registration', 'nav-teacher-registration', 'nav-courses', 'nav-study-plan', 
                             'nav-grades', 'nav-schedule', 'nav-eval-course', 'nav-eval-instructor', 'nav-transcript', 'nav-exams', 'nav-graduation', 
                             'nav-thesis-advisor', 'nav-thesis-topic', 'nav-academic-advisor', 'nav-exam-committee', 
-                            'nav-payments', 'nav-petitions-student', 'nav-documents-status', 'nav-documents-admin', 'nav-manage-evals', 'nav-eval-reports', 'nav-calendar', 'nav-announcements', 'nav-settings', 'nav-user-management'],
+                            'nav-payments', 'nav-petitions-student', 'nav-documents-status', 'nav-documents-admin', 'nav-manage-evals', 'nav-eval-reports', 'nav-calendar', 'nav-announcements', 'nav-settings', 'nav-user-management', 'nav-admission'],
     [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note'],
     [SHEETS.EXAM_COMMITTEES]: ['ExamID', 'StudentID', 'ExamType', 'ExamDate', 'ExamTime', 'ExamRoom', 'Advisor', 'ThesisTitle', 'Role', 'Prefix', 'FirstName', 'LastName', 'Position', 'Affiliation'],
     [SHEETS.EVAL_QUESTIONS]: ['course_code', 'section', 'category', 'question_id', 'question_text'],
     [SHEETS.COURSE_INSTRUCTORS]: ['course_code', 'course_name', 'instructor_id', 'instructor_name', 'group', 'semester', 'academic_year'],
-    [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text']
+    [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text'],
+    [SHEETS.APPLICANTS]: ['ApplicationID', 'Status', 'Date', 'Prefix', 'FirstName', 'LastName', 'FirstNameEn', 'LastNameEn', 'IdCard', 'Dob', 'Gender', 'Email', 'Phone', 'Program', 'Major', 'PrevSchool', 'PrevMajor', 'PrevGPA', 'WorkExperience', 'FundingType', 'DocumentsLink', 'Notes']
   };
 
   const defaultPermissions = [
-    ['admin', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES'],
-    ['teacher', 'NO', 'YES', 'NO', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'NO'],
-    ['student', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'YES', 'NO', 'NO', 'NO', 'NO', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'NO', 'NO', 'YES', 'YES', 'YES', 'NO']
+    ['admin', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES'],
+    ['teacher', 'NO', 'YES', 'NO', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'NO', 'NO'],
+    ['student', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'YES', 'NO', 'NO', 'NO', 'NO', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'NO', 'NO', 'YES', 'YES', 'YES', 'NO', 'NO']
   ];
 
   Object.keys(defaultHeaders).forEach(sheetName => {
@@ -980,4 +1003,132 @@ function submitEvaluationResult(payload) {
   sheet.appendRow(newRow);
   
   return createResponse({ status: 'success', id: evalId });
+}
+
+/**
+ * Public: Submit a new Admission Application
+ */
+function submitApplication(payload) {
+  const appId = 'APP-' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000);
+  const dateStr = new Date().toISOString().split('T')[0];
+  
+  const rowData = {
+    ...payload,
+    'ApplicationID': appId,
+    'Status': 'Pending',
+    'Date': dateStr
+  };
+  
+  return appendRowAsResponse(SHEETS.APPLICANTS, rowData);
+}
+
+/**
+ * Admin: Update Applicant Status
+ */
+function updateApplicantStatus(payload) {
+  const sheet = SS.getSheetByName(SHEETS.APPLICANTS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Applicants sheet not found' });
+  
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0].map(h => String(h).trim());
+  const rows = data.slice(1);
+  
+  const idIdx = headers.indexOf('ApplicationID');
+  const statusIdx = headers.indexOf('Status');
+  
+  for (let i = 0; i < rows.length; i++) {
+    if (String(rows[i][idIdx]).trim() === String(payload.id).trim()) {
+      sheet.getRange(i + 2, statusIdx + 1).setValue(payload.status);
+      return createResponse({ status: 'success' });
+    }
+  }
+  
+  return createResponse({ status: 'error', message: 'Applicant not found' });
+}
+
+/**
+ * Admin: Enroll Applicant as Student
+ */
+function enrollApplicantToStudent(payload) {
+  const applicantSheet = SS.getSheetByName(SHEETS.APPLICANTS);
+  const studentSheet = SS.getSheetByName(SHEETS.STUDENTS);
+  const userSheet = SS.getSheetByName(SHEETS.USERS);
+  
+  if (!applicantSheet || !studentSheet || !userSheet) {
+    return createResponse({ status: 'error', message: 'Required sheets not found' });
+  }
+  
+  const applicantData = applicantSheet.getDataRange().getValues();
+  const aHeaders = applicantData[0].map(h => String(h).trim());
+  const aRows = applicantData.slice(1);
+  const aIdIdx = aHeaders.indexOf('ApplicationID');
+  const aStatusIdx = aHeaders.indexOf('Status');
+  
+  let applicant = null;
+  let applicantRowIndex = -1;
+  for (let i = 0; i < aRows.length; i++) {
+    if (String(aRows[i][aIdIdx]).trim() === String(payload.id).trim()) {
+      applicantRowIndex = i + 2;
+      applicant = {};
+      aHeaders.forEach((h, idx) => applicant[h] = aRows[i][idx]);
+      break;
+    }
+  }
+  
+  if (!applicant) return createResponse({ status: 'error', message: 'Applicant not found' });
+  
+  // Mapping Applicant data to Student headers
+  const sHeaders = studentSheet.getRange(1, 1, 1, studentSheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  
+  const studentPayload = {
+    'คำนำหน้า': applicant.Prefix,
+    'ชื่อ (ไทย)': applicant.FirstName,
+    'นามสกุล (ไทย)': applicant.LastName,
+    'ชื่อ (EN)': applicant.FirstNameEn,
+    'นามสกุล (EN)': applicant.LastNameEn,
+    'เลขบัตรประชาชน': applicant.IdCard,
+    'รหัสนักศึกษา': payload.studentId, // ID assigned by admin
+    'วันเกิด (YYYY-MM-DD)': applicant.Dob,
+    'เพศ': applicant.Gender,
+    'อีเมล': applicant.Email,
+    'E-mail ของสถาบัน': payload.studentId + '@pi.ac.th',
+    'เบอร์โทร': applicant.Phone,
+    'สาขาวิชา': applicant.Major,
+    'ปีการศึกษาที่เข้า': applicant.AdmissionYear || new Date().getFullYear() + 543,
+    'ที่อยู่': applicant.Address,
+    'Username': payload.studentId,
+    'Password': payload.password || '123456'
+  };
+  
+  const studentRow = sHeaders.map(h => studentPayload[h] || '');
+  studentSheet.appendRow(studentRow);
+  
+  // Add to Users sheet
+  const uHeaders = userSheet.getRange(1, 1, 1, userSheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
+  const userPayload = {
+    Username: payload.studentId,
+    Password: payload.password || '123456',
+    Name: applicant.FirstName + ' ' + applicant.LastName,
+    Role: 'student',
+    Status: 'ใช้งาน'
+  };
+  const userRow = uHeaders.map(h => userPayload[h] || '');
+  userSheet.appendRow(userRow);
+  
+  // Update Applicant Status to Enrolled
+  applicantSheet.getRange(applicantRowIndex, aStatusIdx + 1).setValue('Enrolled');
+  
+  return createResponse({ status: 'success', studentId: payload.studentId });
+}
+
+/**
+ * Utility: Standard appendRow and return JSON response
+ */
+function appendRowAsResponse(sheetName, payload) {
+  try {
+    appendRow(sheetName, payload);
+    return createResponse({ status: 'success' });
+  } catch (e) {
+    return createResponse({ status: 'error', message: e.toString() });
+  }
 }
