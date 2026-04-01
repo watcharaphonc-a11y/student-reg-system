@@ -815,7 +815,7 @@ function setupInitialSheets() {
     [SHEETS.EVAL_QUESTIONS]: ['course_code', 'section', 'category', 'question_id', 'question_text'],
     [SHEETS.COURSE_INSTRUCTORS]: ['course_code', 'course_name', 'instructor_id', 'instructor_name', 'group', 'semester', 'academic_year'],
     [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text'],
-    [SHEETS.APPLICANTS]: ['ApplicationID', 'Status', 'Date', 'Prefix', 'FirstName', 'LastName', 'FirstNameEn', 'LastNameEn', 'IdCard', 'Dob', 'Gender', 'Email', 'Phone', 'Program', 'Major', 'PrevSchool', 'PrevMajor', 'PrevGPA', 'WorkExperience', 'FundingType', 'DocumentsLink', 'Notes']
+    [SHEETS.APPLICANTS]: ['ApplicationID', 'Status', 'Date', 'Prefix', 'FirstName', 'LastName', 'FirstNameEn', 'LastNameEn', 'IdCard', 'Dob', 'Age', 'Religion', 'Nationality', 'Email', 'Phone', 'PhoneHome', 'PhoneWork', 'Program', 'Major', 'Address', 'EducationHistory', 'TrainingHistory', 'WorkStatus', 'WorkHistory', 'CurrentWorkplace', 'ResearchTopic', 'DocumentsLink', 'Notes']
   };
 
   const defaultPermissions = [
@@ -1102,7 +1102,7 @@ function enrollApplicantToStudent(payload) {
     'เลขบัตรประชาชน': applicant.IdCard,
     'รหัสนักศึกษา': payload.studentId, // ID assigned by admin
     'วันเกิด (YYYY-MM-DD)': applicant.Dob,
-    'เพศ': applicant.Gender,
+    'เพศ': applicant.Gender || '-',
     'อีเมล': applicant.Email,
     'E-mail ของสถาบัน': payload.studentId + '@pi.ac.th',
     'เบอร์โทร': applicant.Phone,

@@ -21,11 +21,37 @@ const MOCK = {
         { Role: 'student', 'nav-dashboard': 'NO', 'nav-student-profile': 'YES', 'nav-teacher-profile': 'NO', 'nav-special-lecturers': 'NO', 'nav-alumni': 'NO', 'nav-new-registration': 'NO', 'nav-teacher-registration': 'NO', 'nav-courses': 'NO', 'nav-study-plan': 'YES', 'nav-grades': 'YES', 'nav-schedule': 'YES', 'nav-eval-course': 'YES', 'nav-eval-instructor': 'YES', 'nav-transcript': 'YES', 'nav-exams': 'YES', 'nav-graduation': 'YES', 'nav-thesis-advisor': 'YES', 'nav-thesis-topic': 'YES', 'nav-academic-advisor': 'YES', 'nav-exam-committee': 'YES', 'nav-payments': 'YES', 'nav-petitions-student': 'YES', 'nav-documents-status': 'YES', 'nav-documents-admin': 'NO', 'nav-manage-evals': 'NO', 'nav-eval-reports': 'NO', 'nav-calendar': 'YES', 'nav-announcements': 'YES', 'nav-settings': 'YES', 'nav-user-management': 'NO', 'nav-admission': 'NO' }
     ],
     
-    // รายชื่อผู้สมัคร (Mock สำหรับ Dev)
     applicants: [
-        { ApplicationID: 'APP-1700000001', Status: 'Pending', Date: '2026-03-20', Prefix: 'นางสาว', FirstName: 'นภา', LastName: 'สดใส', FirstNameEn: 'Napha', LastNameEn: 'Sodsai', IdCard: '1-1234-56789-01-2', Dob: '1998-05-12', Gender: 'หญิง', Email: 'napha@email.com', Phone: '081-111-2222', Program: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต', Major: 'การพยาบาลเด็ก', PrevSchool: 'ม.เชียงใหม่', PrevMajor: 'พยาบาลศาสตร์', PrevGPA: '3.65', FundingType: 'ทุนส่วนตัว' },
-        { ApplicationID: 'APP-1700000002', Status: 'Reviewing', Date: '2026-03-21', Prefix: 'นาย', FirstName: 'สมชาย', LastName: 'หมายคง', FirstNameEn: 'Somchai', LastNameEn: 'Maikhong', IdCard: '1-2222-33333-44-5', Dob: '1995-12-05', Gender: 'ชาย', Email: 'somchai@email.com', Phone: '082-333-4444', Program: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต', Major: 'การพยาบาลเวชปฏิบัติชุมชน', PrevSchool: 'ม.พะเยา', PrevMajor: 'พยาบาลศาสตร์', PrevGPA: '3.42', FundingType: 'ทุนต้นสังกัด' },
-        { ApplicationID: 'APP-1700000003', Status: 'Accepted', Date: '2026-03-15', Prefix: 'นางสาว', FirstName: 'วันดี', LastName: 'มีสุข', FirstNameEn: 'Wandee', LastNameEn: 'Meesook', IdCard: '1-3333-44444-55-6', Dob: '1997-04-20', Gender: 'หญิง', Email: 'wandee@email.com', Phone: '083-444-5555', Program: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต', Major: 'การบริหารการพยาบาล', PrevSchool: 'ม.ขอนแก่น', PrevMajor: 'พยาบาลศาสตร์', PrevGPA: '3.80', FundingType: 'ทุนอื่นๆ' }
+        { 
+            ApplicationID: 'APP-1700000001', Status: 'Pending', Date: '2026-03-20', 
+            Prefix: 'นางสาว', FirstName: 'นภา', LastName: 'สดใส', FirstNameEn: 'Napha', LastNameEn: 'Sodsai', 
+            IdCard: '1-1234-56789-01-2', Dob: '1998-05-12', Age: '25', Religion: 'พุทธ', Nationality: 'ไทย',
+            Email: 'napha@email.com', Phone: '081-111-2222', PhoneHome: '02-123-4567', PhoneWork: '',
+            Program: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต', Major: 'การพยาบาลเด็ก', 
+            Address: '123 ม.4 ต.ช้างเผือก อ.เมือง จ.เชียงใหม่',
+            EducationHistory: JSON.stringify([{degree:'ป.ตรี', inst:'ม.เชียงใหม่', major:'พยาบาลศาสตร์', year:'2560', gpa:'3.65'}]),
+            TrainingHistory: JSON.stringify([{name:'การช่วยฟื้นคืนชีพขั้นสูง', inst:'รพ.นครพิงค์', dur:'2 วัน', year:'2565'}]),
+            WorkStatus: 'ทำงานแล้ว',
+            WorkHistory: JSON.stringify([{inst:'รพ.มหาราชนครเชียงใหม่', pos:'พยาบาลวิชาชีพ', dur:'3 ปี', start:'2561', end:'2564'}]),
+            CurrentWorkplace: 'โรงพยาบาลเชียงใหม่ราษฎร์',
+            ResearchTopic: 'การศึกษาพฤติกรรมการดูแลสุขภาพของเด็กที่มีโรคประจำตัวเรื้อรังในเขตพื้นที่ภาคเหนือ',
+            DocumentsLink: 'https://drive.google.com/drive/folders/mock123'
+        },
+        { 
+            ApplicationID: 'APP-1700000002', Status: 'Interview', Date: '2026-03-21', 
+            Prefix: 'นาย', FirstName: 'สมชาย', LastName: 'หมายคง', FirstNameEn: 'Somchai', LastNameEn: 'Maikhong', 
+            IdCard: '1-2222-33333-44-5', Dob: '1995-12-05', Age: '28', Religion: 'พุทธ', Nationality: 'ไทย',
+            Email: 'somchai@email.com', Phone: '082-333-4444', PhoneHome: '', PhoneWork: '038-777-888',
+            Program: 'หลักสูตรพยาบาลศาสตรมหาบัณฑิต', Major: 'การพยาบาลเวชปฏิบัติชุมชน', 
+            Address: '45/1 ถ.สุขุมวิท อ.เมือง จ.ชลบุรี',
+            EducationHistory: JSON.stringify([{degree:'ป.ตรี', inst:'ม.บูรพา', major:'พยาบาลศาสตร์', year:'2558', gpa:'3.42'}]),
+            TrainingHistory: '[]',
+            WorkStatus: 'ทำงานแล้ว',
+            WorkHistory: JSON.stringify([{inst:'สสจ.ชลบุรี', pos:'นักวิชาการสาธารณสุข', dur:'5 ปี', start:'2559', end:'2564'}]),
+            CurrentWorkplace: 'สถานีอนามัยบางแสน',
+            ResearchTopic: 'การพัฒนาระบบการดูแลผู้สูงอายุติดบ้านติดเตียงในระดับชุมชนเมือง',
+            DocumentsLink: 'https://drive.google.com/drive/folders/mock456'
+        }
     ],
 
     // สาขาวิชา (Programs/Majors) - Keep for form rendering

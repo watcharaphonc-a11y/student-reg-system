@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ใบสมัครเข้าศึกษาต่อ | Graduate Admission</title>
+    <title>ใบสมัครเข้าศึกษาต่อระดับบัณฑิตศึกษา | Graduate Admission</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Thai:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -31,7 +31,7 @@
             padding: 20px;
         }
 
-        .container { max-width: 800px; margin: 40px auto; }
+        .container { max-width: 900px; margin: 40px auto; }
         
         .header { text-align: center; margin-bottom: 40px; }
         .logo-box { 
@@ -47,12 +47,11 @@
             background: var(--card-bg); 
             padding: 40px; 
             border-radius: var(--radius); 
-            box-shadow: var(--shadow);
             border: 1px solid var(--border);
         }
 
         /* Stepper */
-        .stepper { display: flex; justify-content: space-between; margin-bottom: 40px; position: relative; }
+        .stepper { display: flex; justify-content: space-between; margin-bottom: 40px; position: relative; max-width: 600px; margin-left: auto; margin-right: auto; }
         .stepper::before {
             content: ''; position: absolute; top: 18px; left: 0; right: 0;
             height: 2px; background: var(--border); z-index: 1;
@@ -63,12 +62,11 @@
             border: 2px solid var(--border); display: flex;
             align-items: center; justify-content: center;
             font-weight: 700; color: var(--text-muted);
-            transition: all 0.3s;
+            transition: all 0.3s; font-size: 14px;
         }
         .step.active { border-color: var(--primary); color: var(--primary); transform: scale(1.1); box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1); }
         .step.completed { background: var(--primary); border-color: var(--primary); color: white; }
 
-        /* Form Controls */
         .form-group { margin-bottom: 20px; }
         .form-label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 8px; }
         .form-input, .form-select, .form-textarea {
@@ -76,10 +74,14 @@
             border-radius: 8px; font-size: 14px; font-family: inherit;
             transition: border-color 0.2s;
         }
-        .form-input:focus, .form-select:focus { outline: none; border-color: var(--primary); }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary); }
         
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } .card { padding: 20px; } }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+        @media (max-width: 600px) { 
+            .grid-2, .grid-3 { grid-template-columns: 1fr; } 
+            .card { padding: 20px; } 
+        }
 
         .btn {
             padding: 12px 24px; border-radius: 8px; font-weight: 600;
@@ -91,12 +93,22 @@
         .btn-primary:hover { background: var(--primary-dark); }
         .btn-secondary { background: #f1f5f9; color: var(--text-main); }
         .btn-secondary:hover { background: #e2e8f0; }
+        .btn-danger { background: #fee2e2; color: #dc2626; font-size: 12px; padding: 6px 12px; }
 
         .form-section { display: none; animation: fadeIn 0.4s ease; }
         .form-section.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Loading */
+        /* Tables */
+        .data-table-input { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        .data-table-input th { text-align: left; background: #f8fafc; padding: 10px; border: 1px solid var(--border); color: var(--text-muted); }
+        .data-table-input td { padding: 6px; border: 1px solid var(--border); }
+        .data-table-input input { width: 100%; border: none; padding: 6px; font-size: 13px; outline: none; }
+
+        /* Checklist */
+        .checklist-item { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; font-size: 14px; transition: 0.2s; }
+        .checklist-item:hover { background: #f8fafc; border-color: var(--primary); }
+
         #loading {
             position: fixed; inset: 0; background: rgba(255,255,255,0.8);
             backdrop-filter: blur(4px); z-index: 1000; display: none;
@@ -122,8 +134,8 @@
         <div class="logo-box">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         </div>
-        <h1>ระบบรับสมัครเข้าศึกษาต่อ</h1>
-        <p>หลักสูตรพยาบาลศาสตรมหาบัณฑิต สถาบันพระบรมราชชนก</p>
+        <h1>ระบรับสมัครเข้าศึกษาต่อระดับบัณฑิตศึกษา</h1>
+        <p>คณะพยาบาลศาสตร์ สถาบันพระบรมราชชนก</p>
     </div>
 
     <div class="card">
@@ -132,40 +144,61 @@
             <div class="step" data-step="2">2</div>
             <div class="step" data-step="3">3</div>
             <div class="step" data-step="4">4</div>
+            <div class="step" data-step="5">5</div>
         </div>
 
         <form id="applyForm">
             <!-- Step 1: Personal Info -->
             <div class="form-section active" data-section="1">
-                <h3 style="margin-bottom:20px;">ข้อมูลส่วนบุคคล</h3>
-                <div class="form-group">
-                    <label class="form-label">คำนำหน้า</label>
-                    <select class="form-select" name="Prefix" required>
-                        <option value="นาย">นาย</option>
-                        <option value="นางสาว">นางสาว</option>
-                        <option value="นาง">นาง</option>
+                <h3 style="margin-bottom:15px;">1. ข้อมูลส่วนบุคคล</h3>
+                
+                <div class="form-group" style="padding:15px; background:#fef2f2; border:1px solid #fee2e2; border-radius:8px; margin-bottom:20px;">
+                    <label class="form-label">สาขาวิชาที่ต้องการสมัคร (หลักสูตรพยาบาลศาสตรมหาบัณฑิต)</label>
+                    <select class="form-select" name="Major" required>
+                        <option value="">-- กรุณาเลือกสาขาวิชา --</option>
+                        <option value="การพยาบาลผู้ใหญ่และผู้สูงอายุ">การพยาบาลผู้ใหญ่และผู้สูงอายุ</option>
+                        <option value="การพยาบาลเด็ก">การพยาบาลเด็ก</option>
+                        <option value="การผดุงครรภ์">การผดุงครรภ์</option>
+                        <option value="การพยาบาลจิตเวชและสุขภาพจิต">การพยาบาลจิตเวชและสุขภาพจิต</option>
+                        <option value="การพยาบาลเวชปฏิบัติชุมชน">การพยาบาลเวชปฏิบัติชุมชน</option>
+                        <option value="การบริหารทางการพยาบาล">การบริหารทางการพยาบาล</option>
                     </select>
                 </div>
-                <div class="grid-2">
+
+                <div class="grid-3">
                     <div class="form-group">
-                        <label class="form-label">ชื่อ (ภาษาไทย)</label>
-                        <input type="text" class="form-input" name="FirstName" placeholder="ระบุชื่อภาษาไทย" required>
+                        <label class="form-label">คำนำหน้า (ไทย)</label>
+                        <select class="form-select" name="Prefix" required>
+                            <option value="นาย">นาย</option><option value="นางสาว">นางสาว</option><option value="นาง">นาง</option>
+                        </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">นามสกุล (ภาษาไทย)</label>
-                        <input type="text" class="form-input" name="LastName" placeholder="ระบุนามสกุลภาษาไทย" required>
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">First Name (English)</label>
-                        <input type="text" class="form-input" name="FirstNameEn" placeholder="Name in English" required>
+                        <label class="form-label">ชื่อ (ไทย)</label>
+                        <input type="text" class="form-input" name="FirstName" required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Last Name (English)</label>
-                        <input type="text" class="form-input" name="LastNameEn" placeholder="Surname in English" required>
+                        <label class="form-label">นามสกุล (ไทย)</label>
+                        <input type="text" class="form-input" name="LastName" required>
                     </div>
                 </div>
+
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label class="form-label">Prefix (EN)</label>
+                        <select class="form-select" name="PrefixEn" required>
+                            <option value="Mr.">Mr.</option><option value="Miss">Miss</option><option value="Mrs.">Mrs.</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">First Name (EN)</label>
+                        <input type="text" class="form-input" name="FirstNameEn" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last Name (EN)</label>
+                        <input type="text" class="form-input" name="LastNameEn" required>
+                    </div>
+                </div>
+
                 <div class="grid-2">
                     <div class="form-group">
                         <label class="form-label">เลขบัตรประจำตัวประชาชน</label>
@@ -173,95 +206,201 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">วัน/เดือน/ปี เกิด</label>
-                        <input type="date" class="form-input" name="Dob" required>
+                        <input type="date" class="form-input" id="dobInput" name="Dob" required onchange="calculateAge()">
                     </div>
                 </div>
-                <div class="grid-2">
+
+                <div class="grid-3">
                     <div class="form-group">
-                        <label class="form-label">อีเมล</label>
-                        <input type="email" class="form-input" name="Email" placeholder="example@email.com" required>
+                        <label class="form-label">อายุ (ปี)</label>
+                        <input type="number" class="form-input" id="ageInput" name="Age" readonly style="background:#f1f5f9;">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">เบอร์โทรศัพท์</label>
-                        <input type="tel" class="form-input" name="Phone" placeholder="0xx-xxx-xxxx" required>
+                        <label class="form-label">ศาสนา</label>
+                        <input type="text" class="form-input" name="Religion" required>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">สัญชาติ</label>
+                        <input type="text" class="form-input" name="Nationality" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">ที่อยู่ปัจจุบันที่ติดต่อได้</label>
+                    <textarea class="form-textarea" name="Address" rows="2" required></textarea>
+                </div>
+
+                <div class="grid-3">
+                    <div class="form-group">
+                        <label class="form-label">เบอร์โทรศัพท์บ้าน</label>
+                        <input type="text" class="form-input" name="PhoneHome">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">เบอร์โทรศัพท์ที่ทำงาน</label>
+                        <input type="text" class="form-input" name="PhoneWork">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">เบอร์โทรศัพท์มือถือ</label>
+                        <input type="text" class="form-input" name="Phone" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">อีเมล</label>
+                    <input type="email" class="form-input" name="Email" required>
                 </div>
             </div>
 
-            <!-- Step 2: Academic Info -->
+            <!-- Step 2: Education -->
             <div class="form-section" data-section="2">
-                <h3 style="margin-bottom:20px;">ประวัติการศึกษาและการสมัคร</h3>
-                <div class="form-group">
-                    <label class="form-label">หลักสูตรที่ต้องการสมัคร</label>
-                    <input type="text" class="form-input" value="หลักสูตรพยาบาลศาสตรมหาบัณฑิต" readonly style="background:#f1f5f9;">
-                    <input type="hidden" name="Program" value="หลักสูตรพยาบาลศาสตรมหาบัณฑิต">
+                <h3 style="margin-bottom:10px;">2. ประวัติการศึกษา</h3>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px;">ระบุวุฒิการศึกษาตั้งแต่ปริญญาตรีขึ้นไป</p>
+                
+                <div style="overflow-x:auto;">
+                    <table class="data-table-input" id="eduTable">
+                        <thead>
+                            <tr>
+                                <th>ระดับปริญญา</th>
+                                <th>สถบันการศึกษา</th>
+                                <th>สาขาวิชา</th>
+                                <th>พ.ศ. ที่จบ</th>
+                                <th>GPA</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" name="edu_degree[]" placeholder="เช่น ป.ตรี" required></td>
+                                <td><input type="text" name="edu_inst[]" required></td>
+                                <td><input type="text" name="edu_major[]" required></td>
+                                <td><input type="text" name="edu_year[]" required></td>
+                                <td><input type="text" name="edu_gpa[]" required></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="form-group">
-                    <label class="form-label">สาขาวิชา</label>
-                    <select class="form-select" name="Major" required>
-                        <option value="">-- กรุณาเลือกสาขาวิชา --</option>
-                        <option value="การพยาบาลจิตเวชและสุขภาพจิต">การพยาบาลจิตเวชและสุขภาพจิต</option>
-                        <option value="การพยาบาลเวชปฏิบัติชุมชน">การพยาบาลเวชปฏิบัติชุมชน</option>
-                        <option value="การพยาบาลเด็ก">การพยาบาลเด็ก</option>
-                        <option value="การบริหารการพยาบาล">การบริหารการพยาบาล</option>
-                    </select>
+                <button type="button" class="btn btn-secondary" style="margin-top:10px; font-size:13px;" onclick="addRow('eduTable')">+ เพิ่มรายการการศึกษา</button>
+
+                <h3 style="margin-top:30px; margin-bottom:10px;">3. ประวัติการฝึกอบรม/ประกาศนียบัตร</h3>
+                <div style="overflow-x:auto;">
+                    <table class="data-table-input" id="trainTable">
+                        <thead>
+                            <tr>
+                                <th>หลักสูตรอบรม</th>
+                                <th>สถาบัน</th>
+                                <th>ระยะเวลา</th>
+                                <th>ปีที่ได้รับ</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="text" name="train_name[]"></td>
+                                <td><input type="text" name="train_inst[]"></td>
+                                <td><input type="text" name="train_dur[]"></td>
+                                <td><input type="text" name="train_year[]"></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <hr style="margin: 20px 0; border: 0; border-top: 1px solid var(--border);">
+                <button type="button" class="btn btn-secondary" style="margin-top:10px; font-size:13px;" onclick="addRow('trainTable')">+ เพิ่มรายการฝึกอบรม</button>
+            </div>
+
+            <!-- Step 3: Work Info -->
+            <div class="form-section" data-section="3">
+                <h3 style="margin-bottom:15px;">4. ประวัติการทำงาน</h3>
                 <div class="form-group">
-                    <label class="form-label">สถาบันการศึกษาเดิม (ป.ตรี)</label>
-                    <input type="text" class="form-input" name="PrevSchool" placeholder="ชื่อมหาวิทยาลัย" required>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label class="form-label">สาขาวิชาที่สำเร็จการศึกษา</label>
-                        <input type="text" class="form-input" name="PrevMajor" placeholder="เช่น พยาบาลศาสตร์" required>
+                    <label class="form-label">สถานภาพการทำงาน</label>
+                    <div style="display:flex; gap:20px;">
+                        <label style="display:flex; align-items:center; gap:8px;"><input type="radio" name="WorkStatus" value="ยังไม่ได้ทำงาน" checked onchange="toggleWorkTable(false)"> ยังไม่ได้ทำงาน</label>
+                        <label style="display:flex; align-items:center; gap:8px;"><input type="radio" name="WorkStatus" value="ทำงานแล้ว" onchange="toggleWorkTable(true)"> ทำงานแล้ว</label>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">เกรดเฉลี่ยสะสม (GPAX)</label>
-                        <input type="number" step="0.01" class="form-input" name="PrevGPA" placeholder="x.xx" required>
+                </div>
+
+                <div id="workHistorySection" style="display:none;">
+                    <div style="overflow-x:auto;">
+                        <table class="data-table-input" id="workTable">
+                            <thead>
+                                <tr>
+                                    <th>ชื่อหน่วยงาน</th>
+                                    <th>ตำแหน่งงาน</th>
+                                    <th>ระยะเวลา</th>
+                                    <th>ตั้งแต่ (ปี)</th>
+                                    <th>ถึง (ปี)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><input type="text" name="work_inst[]"></td>
+                                    <td><input type="text" name="work_pos[]"></td>
+                                    <td><input type="text" name="work_dur[]"></td>
+                                    <td><input type="text" name="work_start[]"></td>
+                                    <td><input type="text" name="work_end[]"></td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
+                    <button type="button" class="btn btn-secondary" style="margin-top:10px; font-size:13px;" onclick="addRow('workTable')">+ เพิ่มรายการประสบการณ์ทำงาน</button>
                 </div>
             </div>
 
-            <!-- Step 3: Work & Funding -->
-            <div class="form-section" data-section="3">
-                <h3 style="margin-bottom:20px;">ที่อยู่และข้อมูลการทำงาน</h3>
+            <!-- Step 4: Workplace & Research -->
+            <div class="form-section" data-section="4">
+                <h3 style="margin-bottom:15px;">5. ข้อมูลที่ทำงานปัจจุบัน</h3>
                 <div class="form-group">
-                    <label class="form-label">ที่อยู่ที่ติดต่อได้</label>
-                    <textarea class="form-textarea" name="Address" rows="3" placeholder="เลขที่ห้อง/บ้านเลขที่, แขวง, เขต, จังหวัด, รหัสไปรษณีย์" required></textarea>
+                    <label class="form-label">ชื่อสถานที่ทำงานปัจจุบันและที่อยู่</label>
+                    <textarea class="form-textarea" name="CurrentWorkplace" rows="3" placeholder="หากยังไม่ได้ทำงาน ให้ปล่อยว่างหรือระบุ 'ไม่มี'"></textarea>
                 </div>
+
+                <h3 style="margin-top:30px; margin-bottom:15px;">6. ความสนใจ/หัวข้อที่ต้องการทำวิจัย (โดยย่อ)</h3>
                 <div class="form-group">
-                    <label class="form-label">ประสบการณ์การทำงาน (โดยย่อ)</label>
-                    <textarea class="form-textarea" name="WorkExperience" rows="3" placeholder="ระบุตำแหน่งและปีที่ทำงาน"></textarea>
+                    <label class="form-label">ระบุความมุ่งหมายและแผนการศึกษา/แผนแนวการทำวิทยานิพนธ์</label>
+                    <textarea class="form-textarea" name="ResearchTopic" rows="6" placeholder="ระบุประมาณ 10-20 บรรทัด หรือสรุปประเด็นที่สนใจ"></textarea>
                 </div>
+                
                 <div class="form-group">
-                    <label class="form-label">แหล่งทุนในการศึกษา</label>
+                    <label class="form-label">แหล่งทุนสนับสนุนการศึกษา</label>
                     <select class="form-select" name="FundingType" required>
                         <option value="ทุนส่วนตัว">ทุนส่วนตัว</option>
-                        <option value="ทุนต้นสังกัด">ทุนต้นสังกัด</option>
+                        <option value="ทุนต้นสังกัด">ทุนต้นสังกัด (แจ้งชื่อหน่วยงานในช่องหมายเหตุ)</option>
                         <option value="ทุนอื่นๆ">ทุนอื่นๆ</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Step 4: Documents & Confirm -->
-            <div class="form-section" data-section="4">
-                <h3 style="margin-bottom:20px;">อัปโหลดเอกสารและยืนยัน</h3>
-                <p style="margin-bottom:20px; font-size:0.9rem; color:var(--text-muted);">กรุณาเตรียมเอกสาร (Transcript, บัตรประชาชน, ทะเบียนบ้าน) เป็นไฟล์ PDF หรือ ZIP เดียว แล้วอัปโหลดผ่าน Google Drive หรือระบุลิงก์เอกสารด้านล่าง (ถ้ามี)</p>
+            <!-- Step 5: Checklist -->
+            <div class="form-section" data-section="5">
+                <h3 style="margin-bottom:15px;">7. ตรวจสอบหลักฐานการสมัคร</h3>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">กรุณาเตรียมเอกสารเหล่านี้ (สแกนเป็นไฟล์เดียวหรือระบุลิงก์จัดเก็บ) และแนบลองก์ด้านล่าง</p>
                 
-                <div class="form-group">
-                    <label class="form-label">ลิงก์เอกสารแนบ (เช่น Google Drive / Dropbox)</label>
-                    <input type="url" class="form-input" name="DocumentsLink" placeholder="https://drive.google.com/...">
+                <div class="checklist-item"><input type="checkbox" checked disabled> ใบสมัคร (ที่กรอกอยู่นี้)</div>
+                <div class="checklist-item"><input type="checkbox"> รูปถ่ายหน้าตรง (1 นิ้ว)</div>
+                <div class="checklist-item"><input type="checkbox"> สำเนาปริญญาบัตร/หนังสือรับรองฯ</div>
+                <div class="checklist-item"><input type="checkbox"> สำเนาใบอนุญาตประกอบวิชาชีพฯ</div>
+                <div class="checklist-item"><input type="checkbox"> สำเนาใบแสดงผลการศึกษา (Transcript)</div>
+                <div class="checklist-item"><input type="checkbox"> สำเนาบัตรประชาชน/ทะเบียนบ้าน</div>
+                <div class="checklist-item"><input type="checkbox"> สำเนาหลักฐานการเปลี่ยนชื่อ-สกุล</div>
+                <div class="checklist-item"><input type="checkbox"> ใบรับรองประสบการณ์การทำงาน (ไม่ต่ำกว่า 2 ปี)</div>
+                <div class="checklist-item"><input type="checkbox"> หลักฐานการโอนเงินค่าธรรมเนียมการสมัคร (500 บาท)</div>
+
+                <div class="form-group" style="margin-top:25px;">
+                    <label class="form-label">ลิงก์โฟลเดอร์เอกสารแนบ (Google Drive / Dropbox)</label>
+                    <input type="url" class="form-input" name="DocumentsLink" placeholder="https://drive.google.com/..." required>
                 </div>
+
                 <div class="form-group">
                     <label class="form-label">หมายเหตุเพิ่มเติม</label>
-                    <textarea class="form-textarea" name="Notes" rows="3"></textarea>
+                    <textarea class="form-textarea" name="Notes" rows="2"></textarea>
                 </div>
 
                 <div style="background:rgba(220,53,69,0.05); padding:20px; border-radius:8px; border:1px solid rgba(220,53,69,0.2); margin-top:20px;">
                     <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
                         <input type="checkbox" style="margin-top:5px;" required>
-                        <span style="font-size:0.85rem;">ข้าพเจ้ายืนยันว่าข้อมูลที่กรอกระบุในใบสมัครนี้เป็นความจริงและถูกต้องทุกประการ และยินยอมให้สถาบันตรวจสอบข้อมูลได้ตามความเหมาะสม</span>
+                        <span style="font-size:0.85rem;">ข้าพเข้ายืนยันว่าข้อมูลที่กรอกในใบสมัครนี้เป็นความจริงและถูกต้องทุกประการ หากตรวจสอบแล้วพบว่าเป็นเท็จ ข้าพเจ้ายินยอมให้ตัดสิทธิ์การเป็นนักศึกษาทันที</span>
                     </label>
                 </div>
             </div>
@@ -269,121 +408,144 @@
             <div style="display:flex; justify-content:space-between; margin-top:40px; padding-top:20px; border-top:1px solid var(--border);">
                 <button type="button" class="btn btn-secondary" id="prevBtn" style="visibility:hidden;">ย้อนกลับ</button>
                 <button type="button" class="btn btn-primary" id="nextBtn">ถัดไป →</button>
-                <button type="submit" class="btn btn-primary" id="submitBtn" style="display:none;">ส่งใบสมัคร ✓</button>
+                <button type="submit" class="btn btn-primary" id="submitBtn" style="display:none;">ส่งใบสมัครออนไลน์ ✓</button>
             </div>
         </form>
 
         <div class="success-box" id="successBox">
-            <div class="success-icon">🎉</div>
-            <h2 style="margin-bottom:10px;">ส่งใบสมัครสำเร็จ!</h2>
-            <p>ทางสถาบันได้รับข้อมูลของท่านเรียบร้อยแล้ว กรุณาจดบันทึกรหัสการสมัครด้านล่างเพื่อใช้ในการติดตามสถานะ</p>
-            <div class="app-id" id="displayAppId">APP-162817291</div>
-            <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:30px;">เราจะส่งรายละเอียดเพิ่มเติมไปยังอีเมลที่ท่านระบุไว้</p>
-            <button class="btn btn-secondary" onclick="location.reload()">ย้อนกลับไปหน้าเริ่มต้น</button>
+            <div class="success-icon">🎊</div>
+            <h2 style="margin-bottom:10px;">ส่งใบสมัครเรียบร้อยแล้ว!</h2>
+            <p>ระบบได้รับใบสมัครของท่านแล้ว กรุณาบันทึกรหัสการสมัครเพื่อใช้ติดต่อเจ้าหน้าที่</p>
+            <div class="app-id" id="displayAppId">APP-XXXXXX</div>
+            <button class="btn btn-secondary" onclick="location.reload()">กลับสู่หน้าสมัครใหม่</button>
         </div>
     </div>
-
-    <p style="text-align:center; margin-top:30px; font-size:0.8rem; color:var(--text-muted);">
-        &copy; 2026 สถาบันพระบรมราชชนก - ระบบรับสมัครเรียนออนไลน์
-    </p>
 </div>
 
 <script>
-    // Automatically detect SCRIPT_URL when hosted on Google Apps Script
-    // Falls back to existing URL if testing locally
     const SCRIPT_URL = '<?= ScriptApp.getService().getUrl() ?>' || 'https://script.google.com/macros/s/AKfycbwoeVHFYsghNTI30QKKIBOAKugDfDLwdQeuGmoDYVPOebH479wu50v98Z1gFM5SJVBB/exec';
-    
     let currentStep = 1;
-    const totalSteps = 4;
+    const totalSteps = 5;
 
-    const form = document.getElementById('applyForm');
-    const sections = document.querySelectorAll('.form-section');
-    const steps = document.querySelectorAll('.step');
-    const nextBtn = document.getElementById('nextBtn');
-    const prevBtn = document.getElementById('prevBtn');
-    const submitBtn = document.getElementById('submitBtn');
-    const loading = document.getElementById('loading');
-    const successBox = document.getElementById('successBox');
+    // Helper: Age calculation
+    function calculateAge() {
+        const dob = document.getElementById('dobInput').value;
+        if (!dob) return;
+        const birthDate = new Date(dob);
+        const diff = Date.now() - birthDate.getTime();
+        const ageDate = new Date(diff);
+        const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+        document.getElementById('ageInput').value = age;
+    }
 
+    // Helper: Dynamic Rows
+    function addRow(tableId) {
+        const tbody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
+        const lastRow = tbody.rows[tbody.rows.length - 1];
+        const newRow = lastRow.cloneNode(true);
+        const inputs = newRow.getElementsByTagName('input');
+        for (let i = 0; i < inputs.length; i++) {
+            inputs[i].value = '';
+        }
+        
+        // Add delete button if not exists
+        if (newRow.cells[newRow.cells.length - 1].children.length === 0) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn btn-danger';
+            deleteBtn.innerHTML = 'ลบ';
+            deleteBtn.type = 'button';
+            deleteBtn.onclick = function() { tbody.removeChild(newRow); };
+            newRow.cells[newRow.cells.length - 1].appendChild(deleteBtn);
+        }
+        
+        tbody.appendChild(newRow);
+    }
+
+    function toggleWorkTable(show) {
+        document.getElementById('workHistorySection').style.display = show ? 'block' : 'none';
+    }
+
+    // Form Navigation
     function updateStep() {
-        sections.forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
         document.querySelector(`.form-section[data-section="${currentStep}"]`).classList.add('active');
         
-        steps.forEach(s => {
+        document.querySelectorAll('.step').forEach(s => {
             const stepNum = parseInt(s.dataset.step);
             s.classList.remove('active', 'completed');
             if (stepNum === currentStep) s.classList.add('active');
             if (stepNum < currentStep) s.classList.add('completed');
         });
 
-        prevBtn.style.visibility = currentStep === 1 ? 'hidden' : 'visible';
+        document.getElementById('prevBtn').style.visibility = (currentStep === 1) ? 'hidden' : 'visible';
         
         if (currentStep === totalSteps) {
-            nextBtn.style.display = 'none';
-            submitBtn.style.display = 'inline-flex';
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('submitBtn').style.display = 'inline-flex';
         } else {
-            nextBtn.style.display = 'inline-flex';
-            submitBtn.style.display = 'none';
+            document.getElementById('nextBtn').style.display = 'inline-flex';
+            document.getElementById('submitBtn').style.display = 'none';
         }
+        window.scrollTo(0, 0);
     }
 
-    nextBtn.addEventListener('click', () => {
-        // Simple validation
-        const inputs = document.querySelector(`.form-section[data-section="${currentStep}"]`).querySelectorAll('input, select, textarea');
+    document.getElementById('nextBtn').onclick = () => {
+        const fields = document.querySelector(`.form-section[data-section="${currentStep}"]`).querySelectorAll('[required]');
         let valid = true;
-        inputs.forEach(input => {
-            if (input.hasAttribute('required') && !input.value) {
-                input.style.borderColor = 'var(--primary)';
-                valid = false;
-            } else {
-                input.style.borderColor = 'var(--border)';
-            }
+        fields.forEach(f => { if(!f.value) { f.style.borderColor = 'red'; valid = false; } else { f.style.borderColor = ''; } });
+        if (valid) { currentStep++; updateStep(); }
+    };
+    document.getElementById('prevBtn').onclick = () => { if (currentStep > 1) { currentStep--; updateStep(); } };
+
+    // Submission
+    document.getElementById('applyForm').onsubmit = async (e) => {
+        e.preventDefault();
+        document.getElementById('loading').style.display = 'flex';
+
+        // Extract and process dynamic tables into JSON strings
+        const formData = new FormData(e.target);
+        const payload = {};
+        formData.forEach((value, key) => {
+            if (!key.endsWith('[]')) payload[key] = value;
         });
 
-        if (valid && currentStep < totalSteps) {
-            currentStep++;
-            updateStep();
-        }
-    });
+        // Helper to extract table data
+        const getTableData = (tableId) => {
+            const rows = document.getElementById(tableId).querySelectorAll('tbody tr');
+            return Array.from(rows).map(row => {
+                const rowObj = {};
+                row.querySelectorAll('input').forEach(input => {
+                    const name = input.name.replace('[]', '');
+                    rowObj[name] = input.value;
+                });
+                return rowObj;
+            }).filter(obj => Object.values(obj).some(v => v !== ''));
+        };
 
-    prevBtn.addEventListener('click', () => {
-        if (currentStep > 1) {
-            currentStep--;
-            updateStep();
-        }
-    });
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        loading.style.display = 'flex';
-
-        const formData = new FormData(form);
-        const payload = {};
-        formData.forEach((value, key) => payload[key] = value);
+        payload.EducationHistory = JSON.stringify(getTableData('eduTable'));
+        payload.TrainingHistory = JSON.stringify(getTableData('trainTable'));
+        payload.WorkHistory = JSON.stringify(getTableData('workTable'));
 
         try {
-            const response = await fetch(SCRIPT_URL, {
+            const result = await fetch(SCRIPT_URL, {
                 method: 'POST',
                 body: JSON.stringify({ action: 'submitApplication', payload: payload })
-            });
+            }).then(res => res.json());
 
-            const result = await response.json();
             if (result.status === 'success') {
-                form.style.display = 'none';
+                document.getElementById('applyForm').style.display = 'none';
                 document.getElementById('stepper').style.display = 'none';
-                document.getElementById('displayAppId').textContent = result.id || 'กำลังระบุ...';
-                successBox.style.display = 'block';
-                window.scrollTo(0, 0);
+                document.getElementById('displayAppId').textContent = result.id || 'กำลังตรวจสอบ...';
+                document.getElementById('successBox').style.display = 'block';
             } else {
-                alert('เกิดข้อผิดพลาด: ' + result.message);
+                alert('ข้อผิดพลาด: ' + result.message);
             }
-        } catch (error) {
-            console.error('Submission error:', error);
-            alert('ไม่สามารถส่งข้อมูลได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต');
+        } catch (err) {
+            alert('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อีกครั้ง');
         } finally {
-            loading.style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
         }
-    });
+    }
 </script>
 
 </body>
