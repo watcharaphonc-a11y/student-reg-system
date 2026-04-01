@@ -1019,18 +1019,49 @@ function submitEvaluationResult(payload) {
 }
 
 /**
- * Public: Submit a new Admission Application
+ * Public: Submit a new Admission Application with Multi-File support
  */
 function submitApplication(payload) {
   const appId = 'APP-' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000);
   const dateStr = new Date().toISOString().split('T')[0];
   
+  // Handle Attachments if present
+  let docLinks = {};
+  if (payload.attachments && Array.isArray(payload.attachments)) {
+    try {
+      const applicantName = (payload.FirstName || '') + '_' + (payload.LastName || '');
+      const folderName = `Admission_${appId}_${applicantName}`;
+      const parentFolder = getDocumentsFolder();
+      const applicantFolder = parentFolder.createFolder(folderName);
+      applicantFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+      
+      const folderUrl = applicantFolder.getUrl();
+      docLinks['_folder'] = folderUrl; // Store folder URL for easy access
+      
+      payload.attachments.forEach(file => {
+        let data = file.base64Data;
+        if (data && data.indexOf(',') > -1) data = data.split(',')[1];
+        
+        const blob = Utilities.newBlob(Utilities.base64Decode(data), file.mimeType, `${applicantName}_${file.type}.${file.mimeType.split('/')[1]}`);
+        const driveFile = applicantFolder.createFile(blob);
+        driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+        docLinks[file.type] = driveFile.getUrl();
+      });
+    } catch (e) {
+      console.error('Error saving attachments: ' + e.toString());
+    }
+  }
+
   const rowData = {
     ...payload,
     'ApplicationID': appId,
     'Status': 'Pending',
-    'Date': dateStr
+    'Date': dateStr,
+    'DocumentsLink': JSON.stringify(docLinks) // Store as JSON map
   };
+  
+  // Remove attachments from payload before saving to sheet to prevent cell overflow
+  delete rowData.attachments;
   
   return appendRowAsResponse(SHEETS.APPLICANTS, rowData);
 }
@@ -1135,13 +1166,24 @@ function enrollApplicantToStudent(payload) {
 }
 
 /**
- * Utility: Standard appendRow and return JSON response
+ * Helper: Get or Create the root folder for Admission Documents
  */
-function appendRowAsResponse(sheetName, payload) {
-  try {
-    appendRow(sheetName, payload);
-    return createResponse({ status: 'success' });
-  } catch (e) {
-    return createResponse({ status: 'error', message: e.toString() });
+function getDocumentsFolder() {
+  const FOLDER_NAME = 'Admission_Documents';
+  const folders = DriveApp.getFoldersByName(FOLDER_NAME);
+  if (folders.hasNext()) {
+    return folders.next();
+  } else {
+    const folder = DriveApp.createFolder(FOLDER_NAME);
+    folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    return folder;
   }
+}
+
+/**
+ * Standard createResponse JSON helper
+ */
+function createResponse(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
 }

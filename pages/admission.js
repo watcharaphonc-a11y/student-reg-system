@@ -140,7 +140,12 @@ window.viewApplicantDetail = function(appId) {
         </div>
 
         <div style="margin-top:25px; display:flex; gap:10px; flex-wrap:wrap; padding-top:20px; border-top:1px solid #e2e8f0;">
-            <a href="${app.DocumentsLink}" target="_blank" class="btn btn-secondary">📂 เปิดลิงก์เอกสารและหลักฐาน</a>
+            <div style="width:100%; margin-bottom:10px;">
+                <h5 style="margin-bottom:10px; color:var(--text-muted);">📂 เอกสารหลักฐานที่แนบมา:</h5>
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                    ${renderDocumentLinks(app.DocumentsLink)}
+                </div>
+            </div>
             <div style="flex:1;"></div>
             ${app.Status !== 'Enrolled' ? `
                 <button class="btn btn-secondary" onclick="updateAppStatus('${appId}', 'Interview')">นัดสัมภาษณ์</button>
@@ -153,3 +158,45 @@ window.viewApplicantDetail = function(appId) {
     `;
     openModal('ตรวจสอบรายละเอียดผู้สมัคร', content);
 };
+
+function renderDocumentLinks(linkStr) {
+    if (!linkStr) return '<span style="color:var(--text-muted); font-size:0.8rem;">ไม่พบเอกสารแนบ</span>';
+    
+    try {
+        const docMap = JSON.parse(linkStr);
+        if (typeof docMap === 'object' && docMap !== null) {
+            let html = '';
+            
+            // Render Folder Link first
+            if (docMap['_folder']) {
+                html += `
+                    <a href="${docMap['_folder']}" target="_blank" class="btn btn-secondary btn-sm" style="background:#fff7ed; border-color:#fdba74; color:#9a3412;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                        เปิดโฟลเดอร์เก็บเอกสาร (Google Drive)
+                    </a>
+                `;
+            }
+
+            // Render individual files
+            html += Object.entries(docMap).map(([type, url]) => {
+                if (type === '_folder') return ''; // Skip folder key here
+                return `
+                    <a href="${url}" target="_blank" class="btn btn-secondary btn-sm" title="${type}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        ${type}
+                    </a>
+                `;
+            }).join('');
+            
+            return html;
+        }
+    } catch (e) {
+        if (linkStr.startsWith('http')) {
+            return `<a href="${linkStr}" target="_blank" class="btn btn-secondary btn-sm">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                เปิดลิงก์โฟลเดอร์เอกสาร
+            </a>`;
+        }
+    }
+    return '<span style="color:var(--text-muted); font-size:0.8rem;">ไม่พบลิงก์เอกสาร</span>';
+}
