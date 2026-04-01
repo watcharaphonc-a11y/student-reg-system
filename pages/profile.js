@@ -79,18 +79,18 @@ pages['student-profile'] = function () {
     const initial = firstName ? firstName[0] : '?';
 
     return `
-    <div class="animate-in">
-        <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap: wrap; gap: 15px;">
+    <div class="animate-in" style="font-size:0.95rem; color:var(--text-primary);">
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap: wrap; gap: 15px; margin-bottom:25px;">
             <div>
                 <h1 class="page-title">ข้อมูลนักศึกษา</h1>
-                <p class="page-subtitle">ข้อมูลส่วนตัวและข้อมูลการศึกษา</p>
+                <p class="page-subtitle">ข้อมูลส่วนตัวและข้อมูลการศึกษาปัจจุบัน</p>
             </div>
             
-            ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin' || window.hasPermission('import_student')) ? `
-            <div style="flex-grow: 1; max-width: 400px; margin: 0 20px;">
-                <div class="form-group" style="margin-bottom: 0;">
-                    <select id="studentSelector" class="form-input" onchange="changeProfileStudent(this.value)" style="padding-right: 30px;">
-                        <option value="">-- เลือกนักศึกษาเพื่อดูข้อมูล --</option>
+            <div style="display:flex; gap:12px; align-items: center;">
+                ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin' || window.hasPermission('import_student')) ? `
+                <div style="flex-grow: 1; min-width: 250px;">
+                    <select id="studentSelector" class="form-input" onchange="changeProfileStudent(this.value)" style="padding-right: 30px; height:38px;">
+                        <option value="">-- เลือกนักศึกษา --</option>
                         ${(MOCK.students || []).map(s => `
                             <option value="${s.id || s.studentId}" ${(st && (st.id === s.id || st.studentId === s.studentId)) ? 'selected' : ''}>
                                 ${s.studentId || ''} - ${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}
@@ -98,120 +98,126 @@ pages['student-profile'] = function () {
                         `).join('')}
                     </select>
                 </div>
-            </div>
-            ` : ''}
+                ` : ''}
 
-            <div style="display:flex; gap:10px; align-items: center;">
                 ${(window.currentUserRole === 'student') ? `
-                <button class="btn btn-primary" onclick="openEditStudentProfile()" style="gap:6px; font-size:0.85rem;">
+                <button class="btn btn-primary" onclick="openEditStudentProfile()" style="gap:6px; font-size:0.85rem; height:38px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     แก้ไขข้อมูล
                 </button>
                 ` : ''}
-                ${(window.hasPermission('export_template') || window.hasPermission('import_student')) ? `
-                ${window.hasPermission('export_template') ? `
-                <button class="btn btn-secondary" onclick="exportProfileTemplate()" style="gap:6px; font-size:0.85rem;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Template
-                </button>
-                ` : ''}
+                
                 ${window.hasPermission('import_student') ? `
-                <button class="btn btn-primary" onclick="importProfile()" style="gap:6px; font-size:0.85rem;">
+                <button class="btn btn-primary" onclick="importProfile()" style="gap:6px; font-size:0.85rem; height:38px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     นำเข้าข้อมูล
                 </button>
                 ` : ''}
-                ` : ''}
             </div>
         </div>
-        <div class="profile-header animate-in animate-delay-1">
-            <div class="profile-avatar-large">${initial}</div>
-            <div class="profile-details">
-                <h2>${prefix}${firstName} ${lastName}</h2>
-                <div class="student-id">รหัสนักศึกษา: ${studentId}</div>
-                <div class="profile-meta">
-                    <div class="profile-meta-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-                        ${faculty}
-                    </div>
-                    <div class="profile-meta-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                        ${department}
-                    </div>
-                    <div class="profile-meta-item">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                        ปีที่เข้าศึกษา ${admissionYear}
-                    </div>
-                    <div class="profile-meta-item" style="display:flex; align-items:center; gap:8px;">
-                        ${getStatusBadge(status)}
-                        ${isAdmin ? `
-                        <button class="btn btn-ghost btn-sm" onclick="openStatusUpdateModal()" title="เปลี่ยนสถานะ" style="padding: 2px; border-radius: 4px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </button>
-                        ` : ''}
-                    </div>
-                    ${(isAdmin && status !== 'สำเร็จการศึกษา' && status !== 'Graduated') ? `
-                    <div class="profile-meta-item">
-                        <button class="btn btn-primary btn-sm" onclick="openApproveGraduationModal()" style="background:var(--success); border:none; box-shadow:none; padding:4px 12px;">
+
+        <!-- Upper Profile Header Card -->
+        <div class="card animate-in animate-delay-1" style="margin-bottom:30px; border:none; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.05);">
+            <div class="card-body" style="padding:25px; display:flex; gap:30px; align-items:center;">
+                <div class="profile-avatar-large" style="width:100px; height:100px; font-size:2.5rem; background:linear-gradient(135deg, var(--primary-color), var(--accent-primary)); border:4px solid white; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1);">${initial}</div>
+                <div style="flex:1;">
+                    <h2 style="margin:0 0 8px 0; font-size:1.8rem; font-weight:800; color:var(--text-primary);">${prefix}${firstName} ${lastName}</h2>
+                    <div style="display:flex; gap:20px; align-items:center; flex-wrap:wrap;">
+                        <div style="color:var(--text-muted); font-weight:600;"><span style="color:var(--accent-primary);">ID:</span> ${studentId}</div>
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            ${getStatusBadge(status)}
+                            ${isAdmin ? `
+                            <button class="btn btn-ghost btn-sm" onclick="openStatusUpdateModal()" title="เปลี่ยนสถานะ" style="padding: 2px; border-radius: 4px; color:var(--text-muted);">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </button>
+                            ` : ''}
+                        </div>
+                        ${(isAdmin && status !== 'สำเร็จการศึกษา' && status !== 'Graduated') ? `
+                        <button class="btn btn-primary btn-sm" onclick="openApproveGraduationModal()" style="background:#10b981; border:none; padding:6px 16px; border-radius:30px; border:none; box-shadow:0 4px 6px -1px rgba(16, 185, 129, 0.2);">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                             อนุมัติจบการศึกษา
                         </button>
+                        ` : ''}
                     </div>
-                    ` : ''}
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700; letter-spacing:0.05em; margin-bottom:4px;">GPA สะสม</div>
+                    <div style="font-size:2.2rem; font-weight:900; color:var(--accent-primary); line-height:1;">${gpa.toFixed(2)}</div>
                 </div>
             </div>
         </div>
-        <div class="grid-2">
-            <div class="card animate-in animate-delay-2">
-                <div class="card-header"><h3 class="card-title">ข้อมูลส่วนตัว</h3></div>
-                <div class="card-body">
-                    <div class="transcript-info">
-                        <div class="transcript-info-item"><span class="label">ชื่อ-สกุล (EN):</span><span>${firstNameEn} ${lastNameEn}</span></div>
-                        <div class="transcript-info-item"><span class="label">วันเกิด:</span><span>${dob}</span></div>
-                        <div class="transcript-info-item"><span class="label">อีเมลวิทยาลัย:</span><span>${email}</span></div>
-                        <div class="transcript-info-item"><span class="label">อีเมลส่วนตัว:</span><span>${personalEmail}</span></div>
-                        <div class="transcript-info-item"><span class="label">โทรศัพท์:</span><span>${phone}</span></div>
-                        <div class="transcript-info-item"><span class="label">สถานที่ปฏิบัติงาน:</span><span>${workplace}</span></div>
-                        <div class="transcript-info-item"><span class="label">ตำแหน่ง:</span><span>${position}</span></div>
-                        <div class="transcript-info-item"><span class="label">ที่อยู่:</span><span>${address}</span></div>
-                        <div class="transcript-info-item"><span class="label">บุคคลที่ติดต่อได้:</span><span>${parentName}</span></div>
-                        <div class="transcript-info-item"><span class="label">เบอร์โทรติดต่อได้:</span><span>${parentPhone}</span></div>
+
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:30px; margin-bottom:30px;">
+            <!-- Column 1: Personal Info -->
+            <div class="card animate-in animate-delay-2" style="border:none; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.05);">
+                <div class="card-body" style="padding:25px;">
+                    <div style="display:flex; align-items:center; gap:10px; color:#9d174d; border-bottom:1px solid #fecdd3; padding-bottom:8px; margin-bottom:20px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                        <h3 style="font-weight:700; font-size:1.1rem; margin:0;">ข้อมูลส่วนบุคคล</h3>
+                    </div>
+                    <div style="display:grid; gap:12px;">
+                        <div><span style="font-weight:700; color:var(--text-primary);">ชื่อ-สกุล (TH):</span> <span style="margin-left:5px;">${prefix}${firstName} ${lastName}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">ชื่อ-สกุล (EN):</span> <span style="margin-left:5px;">${firstNameEn} ${lastNameEn}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">รหัสนักศึกษา:</span> <span style="margin-left:5px;">${studentId}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">วันเกิด:</span> <span style="margin-left:5px;">${dob}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">อีเมลส่วนตัว:</span> <span style="margin-left:5px;">${personalEmail}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">เบอร์โทรศัพท์:</span> <span style="margin-left:5px;">${phone}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">ที่อยู่:</span> <span style="margin-left:5px; line-height:1.4;">${address}</span></div>
+                        <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #e2e8f0;">
+                            <div><span style="font-weight:700; color:var(--text-primary);">สถานที่ปฏิบัติงาน:</span> <span style="margin-left:5px;">${workplace}</span></div>
+                            <div><span style="font-weight:700; color:var(--text-primary);">ตำแหน่ง:</span> <span style="margin-left:5px;">${position}</span></div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="card animate-in animate-delay-3">
-                <div class="card-header"><h3 class="card-title">ข้อมูลการศึกษา</h3></div>
-                <div class="card-body">
-                    <div style="text-align:center;margin-bottom:20px;">
-                        <div class="gpa-circle">
-                            <div class="gpa-circle-inner">
-                                <div class="gpa-value">${gpa.toFixed(2)}</div>
-                                <div class="gpa-label">GPA สะสม</div>
+
+            <!-- Column 2: Education Info -->
+            <div class="card animate-in animate-delay-3" style="border:none; box-shadow: 0 4px 20px -5px rgba(0,0,0,0.05);">
+                <div class="card-body" style="padding:25px;">
+                    <div style="display:flex; align-items:center; gap:10px; color:#9d174d; border-bottom:1px solid #fecdd3; padding-bottom:8px; margin-bottom:20px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        <h3 style="font-weight:700; font-size:1.1rem; margin:0;">ข้อมูลการศึกษา</h3>
+                    </div>
+                    <div style="display:grid; gap:12px;">
+                        <div><span style="font-weight:700; color:var(--text-primary);">คณะ:</span> <span style="margin-left:5px;">${faculty}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">สาขาวิชา:</span> <span style="margin-left:5px;">${department}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">หลักสูตร:</span> <span style="margin-left:5px;">${program}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">ปีที่เข้าศึกษา:</span> <span style="margin-left:5px;">${admissionYear}</span></div>
+                        <div><span style="font-weight:700; color:var(--text-primary);">อาจารย์ที่ปรึกษา (ทั่วไป):</span> <span style="margin-left:5px;">${advisor}</span></div>
+                        
+                        <div style="margin-top:15px; background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0;">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px; font-size:0.85rem; font-weight:700; color:#475569;">
+                                <span>หน่วยกิตสะสม</span><span>${totalCredits} / ${requiredCredits}</span>
                             </div>
+                            <div class="progress-bar" style="height:10px; background:#e2e8f0; border-radius:10px; overflow:hidden;">
+                                <div class="progress-fill" style="width:${creditPercent}%; background:linear-gradient(90deg, var(--primary-color), var(--accent-primary)); height:100%;"></div>
+                            </div>
+                            <div style="text-align:right; font-size:0.75rem; color:var(--text-muted); margin-top:4px; font-weight:600;">${creditPercent}% สำเร็จการศึกษา</div>
                         </div>
-                    </div>
-                    <div class="transcript-info">
-                        <div class="transcript-info-item"><span class="label">หลักสูตร:</span><span>${program}</span></div>
-                        <div class="transcript-info-item"><span class="label">ปีที่เข้าศึกษา:</span><span>${admissionYear}</span></div>
-                        <div class="transcript-info-item"><span class="label">อาจารย์ที่ปรึกษา (ทั่วไป):</span><span>${advisor}</span></div>
-                        <div class="transcript-info-item"><span class="label">หัวข้อวิทยานิพนธ์:</span><span style="font-weight:600; color:var(--accent-primary);">${st.thesisInfo?.title || 'ยังไม่ได้ระบุ'}</span></div>
-                        <div class="transcript-info-item"><span class="label">หัวข้อวิทยานิพนธ์ (EN):</span><span style="font-style:italic; font-size:0.9em;">${st.thesisInfo?.titleEn || 'Not specified'}</span></div>
-                        <div class="transcript-info-item">
-                            <span class="label">อาจารย์ที่ปรึกษาวิทยานิพนธ์:</span>
-                            <span>${(st.thesisAdvisor && st.thesisAdvisor !== '-') ? st.thesisAdvisor : 'รอการจัดสรร'}</span>
-                        </div>
-                    </div>
-                    <div style="margin-top:18px;">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.82rem">
-                            <span>หน่วยกิตสะสม</span><span>${totalCredits} / ${requiredCredits}</span>
-                        </div>
-                        <div class="progress-bar"><div class="progress-fill" style="width:${creditPercent}%"></div></div>
-                        <div style="text-align:right;font-size:0.72rem;color:var(--text-muted);margin-top:4px">${creditPercent}%</div>
                     </div>
                 </div>
             </div>
         </div>
-        
+
+        <!-- Thesis Topic Box (Premium Highlight) -->
+        <div class="animate-in animate-delay-4" style="background:#f8fafc; padding:30px; border-radius:20px; border:1px solid #e2e8f0; margin-top:10px; position:relative; box-shadow: 0 4px 15px -3px rgba(0,0,0,0.04);">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px; color:#b45309;">
+                <div style="background:#fef3c7; padding:8px; border-radius:10px; display:flex; align-items:center; justify-content:center; width:40px; height:40px;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/></svg>
+                </div>
+                <h3 style="margin:0; font-size:1.2rem; font-weight:800;">หัวข้อวิทยานิพนธ์ (Thesis Topic)</h3>
+            </div>
+            
+            <div style="padding-left:12px; border-left:4px solid #f59e0b; margin-left:18px;">
+                <div style="margin-bottom:10px; font-size:1.1rem; font-weight:700; color:#1e293b; line-height:1.5;">${st.thesisInfo?.title || 'ยังไม่ได้ระบุหัวข้อวิทยานิพนธ์'}</div>
+                <div style="font-style:italic; color:#64748b; font-size:1rem; line-height:1.5; margin-bottom:15px;">${st.thesisInfo?.titleEn || 'Not specified'}</div>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; border-top:1px dashed #e2e8f0; padding-top:15px; margin-top:10px;">
+                    <div><span style="font-weight:700; color:#475569;">อาจารย์ที่ปรึกษาวิทยานิพนธ์:</span> <span style="margin-left:8px; color:var(--accent-primary); font-weight:700;">${(st.thesisAdvisor && st.thesisAdvisor !== '-') ? st.thesisAdvisor : 'รอการจัดสรร'}</span></div>
+                    ${st.thesisInfo?.status ? `<div><span style="font-weight:700; color:#475569;">สถานะล่าสุด:</span> <span class="badge" style="background:#e0f2fe; color:#0369a1; border:none; margin-left:8px;">${st.thesisInfo.status}</span></div>` : ''}
+                </div>
+            </div>
+        </div>
     </div>`;
 };
 
