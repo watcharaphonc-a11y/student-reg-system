@@ -39,6 +39,19 @@ let CACHED_FOLDER = null;
  * Handle GET Requests
  */
 function doGet(e) {
+  // --- Support multi-page hosting (e.g. ?p=apply) ---
+  if (e.parameter.p === 'apply') {
+    try {
+      return HtmlService.createTemplateFromFile('apply')
+          .evaluate()
+          .setTitle('ใบสมัครเข้าศึกษาต่อ | Graduate Admission')
+          .addMetaTag('viewport', 'width=device-width, initial-scale=1')
+          .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
+    } catch (err) {
+      return ContentService.createTextOutput("Error loading page: " + err.toString());
+    }
+  }
+
   setupInitialSheets(); // Ensure all sheets and headers exist
   const action = e.parameter.action;
   let data = [];

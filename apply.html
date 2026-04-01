@@ -289,7 +289,10 @@
 </div>
 
 <script>
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoeVHFYsghNTI30QKKIBOAKugDfDLwdQeuGmoDYVPOebH479wu50v98Z1gFM5SJVBB/exec';
+    // Automatically detect SCRIPT_URL when hosted on Google Apps Script
+    // Falls back to existing URL if testing locally
+    const SCRIPT_URL = '<?= ScriptApp.getService().getUrl() ?>' || 'https://script.google.com/macros/s/AKfycbwoeVHFYsghNTI30QKKIBOAKugDfDLwdQeuGmoDYVPOebH479wu50v98Z1gFM5SJVBB/exec';
+    
     let currentStep = 1;
     const totalSteps = 4;
 
