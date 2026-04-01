@@ -304,6 +304,7 @@ async function bootApp() {
                     status: s['สถานะ'] || s.status || 'กำลังศึกษา',
                     admissionYear: s['admissionYear'] || s['ปีการศึกษา'] || s['ปีที่เข้าศึกษา'] || s.admissionYear,
                     advisor: s['อาจารย์ที่ปรึกษา'] || s.advisor || '-',
+                    thesisAdvisor: s['อาจารย์ที่ปรึกษาวิทยานิพนธ์'] || s.thesisAdvisor || '-',
                     email: s['อีเมล'] || s.email || '-',
                     personalEmail: s['อีเมลส่วนตัว'] || s.personalEmail || '-',
                     phone: s['โทรศัพท์'] || s.phone || '-',
@@ -343,7 +344,7 @@ async function bootApp() {
             // If academic advisors list is empty (e.g. initial setup), fall back to all teachers for compatibility
             if (MOCK.academicAdvisors.length === 0) MOCK.academicAdvisors = allMappedTeachers;
             
-            MOCK.thesisAdvisors = [...MOCK.academicAdvisors];
+            MOCK.thesisAdvisors = []; // Start empty, only fill if student-specific data exists
         }
 
         if (usersData && usersData.length > 0) {

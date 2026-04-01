@@ -727,12 +727,24 @@ function updatePermission(payload) {
   const sheet = SS.getSheetByName(SHEETS.PERMISSIONS);
   if (!sheet) return createResponse({ status: 'error', message: 'Permissions sheet not found' });
   
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-  const roleIdx = headers.indexOf('Role');
-  const actionIdx = headers.indexOf(payload.actionKey);
+  let data = sheet.getDataRange().getValues();
+  let headers = data[0];
+  let roleIdx = headers.indexOf('Role');
+  let actionIdx = headers.indexOf(payload.actionKey);
   
-  if (actionIdx === -1) return createResponse({ status: 'error', message: 'Action not found: ' + payload.actionKey });
+  // If column doesn't exist, create it!
+  if (actionIdx === -1) {
+    const lastCol = sheet.getLastColumn();
+    sheet.getRange(1, lastCol + 1).setValue(payload.actionKey);
+    // Fill new column with 'NO' for all rows by default
+    if (sheet.getLastRow() > 1) {
+      sheet.getRange(2, lastCol + 1, sheet.getLastRow() - 1, 1).setValue('NO');
+    }
+    // Refresh data/headers
+    data = sheet.getDataRange().getValues();
+    headers = data[0];
+    actionIdx = headers.indexOf(payload.actionKey);
+  }
   
   for (let i = 1; i < data.length; i++) {
     if (String(data[i][roleIdx]).toLowerCase() === String(payload.role).toLowerCase()) {
@@ -758,7 +770,11 @@ function setupInitialSheets() {
     [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
     [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ', 'ประวัติการดำเนินการ'],
     [SHEETS.ANNOUNCEMENTS]: ['รหัสประกาศ', 'ประเภท', 'หัวข้อ', 'เนื้อหา', 'วันที่ประกาศ', 'ไอคอน', 'ผู้ประกาศ'],
-    [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data'],
+    [SHEETS.PERMISSIONS]: ['Role', 'import_student', 'export_template', 'manage_users', 'post_announcement', 'delete_data', 
+                            'nav-dashboard', 'nav-student-profile', 'nav-teacher-profile', 'nav-special-lecturers', 'nav-alumni', 'nav-new-registration', 'nav-teacher-registration', 'nav-courses', 'nav-study-plan', 
+                            'nav-grades', 'nav-schedule', 'nav-eval-course', 'nav-eval-instructor', 'nav-transcript', 'nav-exams', 'nav-graduation', 
+                            'nav-thesis-advisor', 'nav-thesis-topic', 'nav-academic-advisor', 'nav-exam-committee', 
+                            'nav-payments', 'nav-petitions-student', 'nav-documents-status', 'nav-documents-admin', 'nav-manage-evals', 'nav-eval-reports', 'nav-calendar', 'nav-announcements', 'nav-settings', 'nav-user-management'],
     [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note'],
     [SHEETS.EXAM_COMMITTEES]: ['ExamID', 'StudentID', 'ExamType', 'ExamDate', 'ExamTime', 'ExamRoom', 'Advisor', 'ThesisTitle', 'Role', 'Prefix', 'FirstName', 'LastName', 'Position', 'Affiliation'],
     [SHEETS.EVAL_QUESTIONS]: ['course_code', 'section', 'category', 'question_id', 'question_text'],
@@ -767,9 +783,9 @@ function setupInitialSheets() {
   };
 
   const defaultPermissions = [
-    ['admin', 'YES', 'YES', 'YES', 'YES', 'YES'],
-    ['teacher', 'NO', 'YES', 'NO', 'YES', 'NO'],
-    ['student', 'NO', 'NO', 'NO', 'NO', 'NO']
+    ['admin', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES'],
+    ['teacher', 'NO', 'YES', 'NO', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'NO'],
+    ['student', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'YES', 'NO', 'NO', 'NO', 'NO', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'NO', 'NO', 'YES', 'YES', 'YES', 'NO']
   ];
 
   Object.keys(defaultHeaders).forEach(sheetName => {

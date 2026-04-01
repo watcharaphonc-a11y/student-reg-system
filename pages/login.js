@@ -293,67 +293,39 @@ window.performLogout = function () {
 function applyRolePermissions(role) {
     const allNavItems = document.querySelectorAll('.nav-item');
 
-    // Reset all to visible first
-    allNavItems.forEach(el => el.style.display = 'flex');
-
-    if (role === 'student') {
-        // Strictly allow only what was requested for Students
-        const allowedIds = [
-            'nav-student-profile',
-            'nav-courses',
-            'nav-study-plan',
-            'nav-grades',
-            'nav-schedule',
-            'nav-eval-course',
-            'nav-eval-instructor',
-            'nav-transcript',
-            'nav-exams',
-            'nav-thesis-advisor',
-            'nav-thesis-topic',
-            'nav-academic-advisor',
-            'nav-exam-committee',
-            'nav-payments',
-            'nav-petitions-student',
-            'nav-documents-status',
-            'nav-calendar',
-            'nav-announcements',
-            'nav-settings'
-            // 'nav-user-management' is NOT in allowedIds, so it will be hidden
-        ];
-
-        allNavItems.forEach(el => {
-            if (!allowedIds.includes(el.id)) {
-                el.style.display = 'none';
-            }
-        });
-    } else if (role === 'staff') {
-        // Staff/Teacher/Dean role items
-        const restrictedForStaff = [
-            'nav-teacher-registration', // Usually for Super Admin
-            'nav-manage-evals', // Usually for Super Admin
-            'nav-user-management' // Super Admin only
-        ];
-        allNavItems.forEach(el => {
-            if (restrictedForStaff.includes(el.id)) {
-                el.style.display = 'none';
-            }
-        });
-    } else if (role === 'admin') {
-        // Regular Admin vs Super Admin
-        if (!window.isSuperAdmin) {
-            const superAdminOnly = [
-                'nav-user-management',
-                'nav-manage-evals',
-                'nav-teacher-registration'
-            ];
-            allNavItems.forEach(el => {
-                if (superAdminOnly.includes(el.id)) {
-                    el.style.display = 'none';
-                }
-            });
-        }
+    // Super Admin always sees everything
+    if (window.isSuperAdmin) {
+        allNavItems.forEach(el => el.style.display = 'flex');
+        return;
     }
-    // Super Admin sees everything (all visible by default)
+
+    allNavItems.forEach(el => {
+        const menuId = el.id;
+        // Check if role has permission for this specific menu ID
+        if (window.hasPermission(menuId)) {
+            el.style.display = 'flex';
+        } else {
+            // Default behavior for items not yet in permissions sheet
+            // Admins see most things by default unless specifically restricted
+            if (role === 'admin' && !['nav-user-management', 'nav-manage-evals', 'nav-teacher-registration'].includes(menuId)) {
+                 el.style.display = 'flex';
+            } else {
+                 el.style.display = 'none';
+            }
+        }
+    });
+
+    // Special case for nav-user-management and other sensitive menus
+    // Ensure they stay hidden for non-super admins if not explicitly allowed
+    if (!window.isSuperAdmin) {
+        const sensitiveMenus = ['nav-user-management', 'nav-manage-evals', 'nav-teacher-registration', 'nav-menu-permissions'];
+        sensitiveMenus.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && !window.hasPermission(id)) {
+                el.style.display = 'none';
+            }
+        });
+    }
 }
 
 // Ensure Login UI kicks off

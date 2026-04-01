@@ -191,7 +191,7 @@ pages['student-profile'] = function () {
                         <div class="transcript-info-item"><span class="label">หัวข้อวิทยานิพนธ์ (EN):</span><span style="font-style:italic; font-size:0.9em;">${st.thesisInfo?.titleEn || 'Not specified'}</span></div>
                         <div class="transcript-info-item">
                             <span class="label">อาจารย์ที่ปรึกษาวิทยานิพนธ์:</span>
-                            <span>${(MOCK.thesisAdvisors && MOCK.thesisAdvisors.length > 0) ? MOCK.thesisAdvisors.map(a => a.name).join(', ') : 'รอการจัดสรร'}</span>
+                            <span>${(st.thesisAdvisor && st.thesisAdvisor !== '-') ? st.thesisAdvisor : 'รอการจัดสรร'}</span>
                         </div>
                     </div>
                     <div style="margin-top:18px;">
