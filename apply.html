@@ -901,52 +901,77 @@
                 }).filter(obj => Object.values(obj).some(v => v !== ''));
             };
 
-            payload.EducationHistory = JSON.stringify(getTableData('eduTable'));
-            payload.TrainingHistory = JSON.stringify(getTableData('trainTable'));
-            payload.WorkHistory = JSON.stringify(getTableData('workTable'));
-
-            // Process Attachments
-            const attachments = [];
-            const fileInputs = e.target.querySelectorAll('input[type="file"]');
-
-            for (let i = 0; i < fileInputs.length; i++) {
-                const input = fileInputs[i];
-                if (input.files.length > 0) {
-                    loadingText.innerText = `กำลังประมวลผลไฟล์เอกสาร (${i + 1}/${fileInputs.length})...`;
-                    const file = input.files[0];
-                    const base64 = await fileToBase64(file);
-                    attachments.push({
-                        type: input.dataset.type,
-                        fileName: file.name,
-                        mimeType: file.type,
-                        base64Data: base64
-                    });
-                }
-            }
-
-            payload.attachments = attachments;
-            loadingText.innerText = 'กำลังส่งใบสมัครและอัปโหลดไฟล์หลักฐาน...';
-
+            // Phase 1: Initialize Application (Record & Folder)
+            loadingText.innerText = 'กำลังส่งข้อมูลใบสมัครขั้นต้น...';
+            let appId, folderId;
             try {
-                const result = await fetch(SCRIPT_URL, {
+                const initResult = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'submitApplication', payload: payload })
+                    body: JSON.stringify({
+                        action: 'initializeApplication',
+                        payload: payload
+                    })
                 }).then(res => res.json());
 
-                if (result.status === 'success') {
-                    document.getElementById('applyForm').style.display = 'none';
-                    document.getElementById('stepper').style.display = 'none';
-                    document.getElementById('displayAppId').textContent = result.id || 'กำลังตรวจสอบ...';
-                    document.getElementById('successBox').style.display = 'block';
-                } else {
-                    alert('ข้อผิดพลาด: ' + result.message);
+                if (initResult.status !== 'success') {
+                    throw new Error(initResult.message || 'ไม่สามารถเริ่มต้นส่งใบสมัครได้');
                 }
+
+                appId = initResult.appId;
+                folderId = initResult.folderId;
             } catch (err) {
                 console.error(err);
-                alert('เกิดข้อผิดพลาดในการส่งข้อมูล กรุณาลองใหม่อยีกครั้ง');
-            } finally {
+                alert('ข้อผิดพลาดในการส่งข้อมูลขั้นต้น: ' + err.toString());
                 loading.style.display = 'none';
+                return;
             }
+
+            // Phase 2: Sequential File Upload
+            const fileInputs = Array.from(e.target.querySelectorAll('input[type="file"]'))
+                .filter(input => input.files.length > 0);
+            const totalFiles = fileInputs.length;
+
+            for (let i = 0; i < totalFiles; i++) {
+                const input = fileInputs[i];
+                const file = input.files[0];
+                const docType = input.dataset.type || 'เอกสารอื่นๆ';
+
+                loadingText.innerText = `กำลังอัปโหลดเอกสาร (${i + 1}/${totalFiles}): ${docType}...`;
+
+                try {
+                    const base64 = await fileToBase64(file);
+                    const fileName = `${payload.FirstName}_${payload.LastName}_${docType}.${file.name.split('.').pop()}`;
+
+                    const uploadResult = await fetch(SCRIPT_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'uploadApplicationFile',
+                            payload: {
+                                appId: appId,
+                                folderId: folderId,
+                                fileName: fileName,
+                                mimeType: file.type,
+                                docType: docType,
+                                base64Data: base64
+                            }
+                        })
+                    }).then(res => res.json());
+
+                    if (uploadResult.status !== 'success') {
+                        console.warn(`ไม่สามารถอัปโหลดไฟล์ ${docType}: ${uploadResult.message}`);
+                    }
+                } catch (err) {
+                    console.error(`เกิดข้อผิดพลาดในการอัปโหลด ${docType}:`, err);
+                }
+            }
+
+            // Phase 3: Finalize
+            loading.style.display = 'none';
+            document.getElementById('applyForm').style.display = 'none';
+            document.getElementById('stepper').style.display = 'none';
+            document.getElementById('displayAppId').textContent = appId;
+            document.getElementById('successBox').style.display = 'block';
+            window.scrollTo(0, 0);
         }
     </script>
 

@@ -202,6 +202,10 @@ function doPost(e) {
         return batchImportExamCommittee(payload);
       case 'submitEvaluation':
         return submitEvaluationResult(payload);
+      case 'initializeApplication':
+        return initializeApplication(payload);
+      case 'uploadApplicationFile':
+        return uploadApplicationFile(payload);
       case 'submitApplication':
         return submitApplication(payload);
       case 'updateApplicantStatus':
@@ -1019,13 +1023,99 @@ function submitEvaluationResult(payload) {
 }
 
 /**
- * Public: Submit a new Admission Application with Multi-File support
+ * Public: Step 1 - Initialize Application (Text Details & Folder Creation)
+ */
+function initializeApplication(payload) {
+  try {
+    const appId = 'APP-' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000);
+    const dateStr = new Date().toISOString().split('T')[0];
+    
+    // Create dedicated folder
+    const applicantName = (payload.FirstName || '') + '_' + (payload.LastName || '');
+    const folderName = `Admission_${appId}_${applicantName}`;
+    const parentFolder = getDocumentsFolder();
+    const applicantFolder = parentFolder.createFolder(folderName);
+    applicantFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    const folderUrl = applicantFolder.getUrl();
+    const docLinks = { '_folder': folderUrl };
+    
+    const rowData = {
+      ...payload,
+      'ApplicationID': appId,
+      'Status': 'Pending',
+      'Date': dateStr,
+      'DocumentsLink': JSON.stringify(docLinks)
+    };
+    
+    // Remove temporary attachments if they exist (should be empty in step 1)
+    delete rowData.attachments;
+    
+    appendRow(SHEETS.APPLICANTS, rowData);
+    
+    return createResponse({ 
+      status: 'success', 
+      appId: appId, 
+      folderId: applicantFolder.getId(),
+      folderUrl: folderUrl
+    });
+  } catch (e) {
+    return createResponse({ status: 'error', message: e.toString() });
+  }
+}
+
+/**
+ * Public: Step 2 - Upload a single file and update sheet mapping
+ */
+function uploadApplicationFile(payload) {
+  try {
+    const { appId, folderId, fileName, mimeType, docType, base64Data } = payload;
+    const folder = DriveApp.getFolderById(folderId);
+    
+    let data = base64Data;
+    if (data && data.indexOf(',') > -1) data = data.split(',')[1];
+    
+    const blob = Utilities.newBlob(Utilities.base64Decode(data), mimeType, fileName);
+    const driveFile = folder.createFile(blob);
+    driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    const fileUrl = driveFile.getUrl();
+    
+    // Update Sheet with the new link
+    const sheet = SS.getSheetByName(SHEETS.APPLICANTS);
+    const dataRange = sheet.getDataRange().getValues();
+    const headers = dataRange[0].map(h => String(h).trim());
+    const appIdIdx = headers.indexOf('ApplicationID');
+    const docLinkIdx = headers.indexOf('DocumentsLink');
+    
+    if (appIdIdx === -1 || docLinkIdx === -1) throw new Error('Sheet headers missing required columns');
+    
+    for (let i = 1; i < dataRange.length; i++) {
+        if (dataRange[i][appIdIdx] === appId) {
+            const currentLinksStr = dataRange[i][docLinkIdx] || '{}';
+            let links = {};
+            try { links = JSON.parse(currentLinksStr); } catch(e) {}
+            
+            links[docType] = fileUrl;
+            sheet.getRange(i + 1, docLinkIdx + 1).setValue(JSON.stringify(links));
+            break;
+        }
+    }
+    
+    return createResponse({ status: 'success', url: fileUrl });
+  } catch (e) {
+    return createResponse({ status: 'error', message: e.toString() });
+  }
+}
+
+/**
+ * Public: Standard Submission (Legacy Fallback)
  */
 function submitApplication(payload) {
+  // Use the new functions sequentially for legacy support if needed
+  // But prefer calling Step 1 and Step 2 separately from frontend
   const appId = 'APP-' + new Date().getTime() + '-' + Math.floor(Math.random() * 1000);
   const dateStr = new Date().toISOString().split('T')[0];
   
-  // Handle Attachments if present
   let docLinks = {};
   if (payload.attachments && Array.isArray(payload.attachments)) {
     try {
@@ -1036,7 +1126,7 @@ function submitApplication(payload) {
       applicantFolder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
       
       const folderUrl = applicantFolder.getUrl();
-      docLinks['_folder'] = folderUrl; // Store folder URL for easy access
+      docLinks['_folder'] = folderUrl;
       
       payload.attachments.forEach(file => {
         let data = file.base64Data;
@@ -1057,12 +1147,10 @@ function submitApplication(payload) {
     'ApplicationID': appId,
     'Status': 'Pending',
     'Date': dateStr,
-    'DocumentsLink': JSON.stringify(docLinks) // Store as JSON map
+    'DocumentsLink': JSON.stringify(docLinks)
   };
   
-  // Remove attachments from payload before saving to sheet to prevent cell overflow
   delete rowData.attachments;
-  
   return appendRowAsResponse(SHEETS.APPLICANTS, rowData);
 }
 
