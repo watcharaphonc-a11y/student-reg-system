@@ -21,7 +21,8 @@ function getStatusBadge(status) {
     const map = {
         'เปิด': 'success', 'เต็ม': 'danger', 'ปิด': 'neutral',
         'ชำระแล้ว': 'success', 'ค้างชำระ': 'danger',
-        'กำลังศึกษา': 'success', 'พ้นสภาพ': 'danger',
+        'กำลังศึกษา': 'success', 'พ้นสภาพ': 'danger', 'ลาออก': 'danger', 'Resigned': 'danger',
+        'ลาพักการศึกษา': 'warning', 'Leave of Absence': 'warning',
         'สำเร็จการศึกษา': 'purple', 'Graduated': 'purple',
     };
     return `<span class="badge ${map[status] || 'neutral'}">${status}</span>`;

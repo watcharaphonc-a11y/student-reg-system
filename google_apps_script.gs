@@ -210,6 +210,8 @@ function doPost(e) {
         return submitApplication(payload);
       case 'updateApplicantStatus':
         return updateApplicantStatus(payload);
+      case 'updateStudentStatus':
+        return updateStudentStatus(payload);
       case 'enrollApplicant':
         return enrollApplicantToStudent(payload);
       default:
@@ -801,7 +803,7 @@ function updatePermission(payload) {
 function setupInitialSheets() {
   const defaultHeaders = {
     [SHEETS.USERS]: ['Username', 'Password', 'Name', 'Role', 'Status'],
-    [SHEETS.STUDENTS]: ['คำนำหน้า','ชื่อ (ไทย)','นามสกุล (ไทย)','ชื่อ (EN)','นามสกุล (EN)','เลขบัตรประชาชน','รหัสนักศึกษา','วันเกิด (YYYY-MM-DD)','เพศ','อีเมล','E-mail ของสถาบัน','เบอร์โทร','สาขาวิชา','ปีการศึกษาที่เข้า','ที่อยู่','Username','Password'],
+    [SHEETS.STUDENTS]: ['คำนำหน้า','ชื่อ (ไทย)','นามสกุล (ไทย)','ชื่อ (EN)','นามสกุล (EN)','เลขบัตรประชาชน','รหัสนักศึกษา','วันเกิด (YYYY-MM-DD)','เพศ','อีเมล','E-mail ของสถาบัน','เบอร์โทร','สาขาวิชา','ปีการศึกษาที่เข้า','ที่อยู่','Username','Password','สถานะ'],
     [SHEETS.TEACHERS]: ['คำนำหน้า','ชื่อ','นามสกุล','ตำแหน่งทางวิชาการ','ความเชี่ยวชาญ','อีเมล','เบอร์โทร','คณะ/สังกัด','นศ. ในกำกับ','Username','Password','ประเภทอาจารย์'],
     [SHEETS.COURSES]: ['รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'กลุ่ม', 'อาจารย์ผู้สอน'],
     [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
@@ -1251,6 +1253,37 @@ function enrollApplicantToStudent(payload) {
   applicantSheet.getRange(applicantRowIndex, aStatusIdx + 1).setValue('Enrolled');
   
   return createResponse({ status: 'success', studentId: payload.studentId });
+}
+
+/**
+ * Admin: Update Student Status (Studying, On Leave, Resigned, Graduated)
+ */
+function updateStudentStatus(payload) {
+  const sheet = SS.getSheetByName(SHEETS.STUDENTS);
+  if (!sheet) return createResponse({ status: 'error', message: 'Students sheet not found' });
+  
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0].map(h => String(h).trim());
+  const rows = data.slice(1);
+  
+  const idIdx = headers.indexOf('รหัสนักศึกษา');
+  const statusIdx = headers.indexOf('สถานะ');
+  
+  if (idIdx === -1 || statusIdx === -1) {
+    return createResponse({ status: 'error', message: 'Students sheet headers missing (Required: รหัสนักศึกษา, สถานะ)' });
+  }
+  
+  const targetId = String(payload.studentId || payload.id || '').trim();
+  const newStatus = payload.status;
+  
+  for (let i = 0; i < rows.length; i++) {
+    if (String(rows[i][idIdx]).trim() === targetId) {
+      sheet.getRange(i + 2, statusIdx + 1).setValue(newStatus);
+      return createResponse({ status: 'success' });
+    }
+  }
+  
+  return createResponse({ status: 'error', message: 'Student not found: ' + targetId });
 }
 
 /**

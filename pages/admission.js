@@ -95,69 +95,122 @@ function getStatusBadge(status) {
 }
 
 window.viewApplicantDetail = function(appId) {
-    const app = MOCK.applicants.find(a => a.ApplicationID === appId);
+    const app = (MOCK.applicants || []).find(a => String(a.ApplicationID) === String(appId));
     if (!app) return;
 
-    const eduHistory = JSON.parse(app.EducationHistory || '[]');
-    const workHistory = JSON.parse(app.WorkHistory || '[]');
-    const trainHistory = JSON.parse(app.TrainingHistory || '[]');
+    let eduHistory = [];
+    let workHistory = [];
+    try { eduHistory = JSON.parse(app.EducationHistory || '[]'); } catch(e) { eduHistory = []; }
+    try { workHistory = JSON.parse(app.WorkHistory || '[]'); } catch(e) { workHistory = []; }
 
     const content = `
-    <div style="max-height:85vh; overflow-y:auto; padding:15px; font-size:0.9rem;">
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px; margin-bottom:20px;">
+    <div style="max-height:85vh; overflow-y:auto; padding:25px; font-size:0.95rem; color:var(--text-primary);">
+        <!-- Personal & Education Grid -->
+        <div style="display:grid; grid-template-columns: 1.2fr 1fr; gap:40px; margin-bottom:30px;">
+            <!-- Column 1: Personal Info -->
             <div>
-                <h4 style="color:var(--accent-primary); border-bottom:2px solid #fee2e2; padding-bottom:5px; margin-bottom:15px;">👤 ข้อมูลส่วนบุคคล</h4>
-                <p><strong>ชื่อ-สกุล (TH):</strong> ${app.Prefix}${app.FirstName} ${app.LastName}</p>
-                <p><strong>ชื่อ-สกุล (EN):</strong> ${app.FirstNameEn} ${app.LastNameEn}</p>
-                <p><strong>เลขบัตรประชาชน:</strong> ${app.IdCard}</p>
-                <p><strong>วันเกิด:</strong> ${app.Dob} (อายุ: ${app.Age} ปี)</p>
-                <p><strong>ศสนา:</strong> ${app.Religion} | <strong>สัญชาติ:</strong> ${app.Nationality}</p>
-                <p><strong>ที่อยู่:</strong> ${app.Address}</p>
-                <p><strong>เบอร์โทร:</strong> ${app.Phone} (มือถือ) | ${app.PhoneHome || '-'} (บ้าน)</p>
+                <div style="display:flex; align-items:center; gap:10px; color:#9d174d; border-bottom:1px solid #fecdd3; padding-bottom:8px; margin-bottom:20px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <h3 style="font-weight:700; font-size:1.1rem; margin:0;">ข้อมูลส่วนบุคคล</h3>
+                </div>
+                <div style="display:grid; gap:12px;">
+                    <div><span style="font-weight:700; color:var(--text-primary);">ชื่อ-สกุล (TH):</span> <span style="margin-left:5px;">${app.Prefix || ''}${app.FirstName || ''} ${app.LastName || ''}</span></div>
+                    <div><span style="font-weight:700; color:var(--text-primary);">ชื่อ-สกุล (EN):</span> <span style="margin-left:5px;">${app.FirstNameEn || ''} ${app.LastNameEn || ''}</span></div>
+                    <div><span style="font-weight:700; color:var(--text-primary);">เลขบัตรประชาชน:</span> <span style="margin-left:5px;">${app.IdCard || '-'}</span></div>
+                    <div><span style="font-weight:700; color:var(--text-primary);">วันเกิด:</span> <span style="margin-left:5px;">${app.Dob || '-'} (อายุ: ${app.Age || '-'} ปี)</span></div>
+                    <div><span style="font-weight:700; color:var(--text-primary);">ศาสนา:</span> <span style="margin-left:5px;">${app.Religion || '-'}</span> | <span style="font-weight:700; color:var(--text-primary);">สัญชาติ:</span> <span style="margin-left:5px;">${app.Nationality || '-'}</span></div>
+                    <div><span style="font-weight:700; color:var(--text-primary);">ที่อยู่:</span> <span style="margin-left:5px; line-height:1.4;">${app.Address || '-'}</span></div>
+                    <div><span style="font-weight:700; color:var(--text-primary);">เบอร์โทร:</span> <span style="margin-left:5px;">${app.Phone || '-'} (มือถือ) | ${app.PhoneHome || '-'} (บ้าน)</span></div>
+                </div>
             </div>
+
+            <!-- Column 2: Education Info -->
             <div>
-                <h4 style="color:var(--accent-primary); border-bottom:2px solid #fee2e2; padding-bottom:5px; margin-bottom:15px;">🎓 ข้อมูลการศึกษา</h4>
-                <table class="data-table" style="font-size:0.8rem; margin-top:5px;">
-                    <thead><tr><th>ระดับ</th><th>สถาบัน</th><th>วิชาเอก</th><th>GPA</th></tr></thead>
-                    <tbody>${eduHistory.map(e => `<tr><td>${e.degree}</td><td>${e.inst}</td><td>${e.major}</td><td>${e.gpa}</td></tr>`).join('')}</tbody>
+                <div style="display:flex; align-items:center; gap:10px; color:#9d174d; border-bottom:1px solid #fecdd3; padding-bottom:8px; margin-bottom:20px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    <h3 style="font-weight:700; font-size:1.1rem; margin:0;">ข้อมูลการศึกษา</h3>
+                </div>
+                <div class="table-wrapper" style="border:1px solid #f1f5f9; border-radius:8px; overflow:hidden;">
+                    <table class="data-table" style="font-size:0.85rem;">
+                        <thead style="background:#f8fafc;">
+                            <tr><th style="padding:10px;">ระดับ</th><th style="padding:10px;">สถาบัน</th><th style="padding:10px;">วิชาเอก</th><th style="padding:10px; text-align:center;">GPA</th></tr>
+                        </thead>
+                        <tbody>
+                            ${eduHistory.length > 0 ? eduHistory.map(e => `
+                                <tr>
+                                    <td style="padding:10px; font-weight:600;">${e.degree || '-'}</td>
+                                    <td style="padding:10px;">${e.inst || '-'}</td>
+                                    <td style="padding:10px;">${e.major || '-'}</td>
+                                    <td style="padding:10px; text-align:center; font-weight:700; color:var(--accent-primary);">${e.gpa || '-'}</td>
+                                </tr>
+                            `).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">ไม่มีข้อมูล</td></tr>'}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Work History Section -->
+        <div style="margin-bottom:30px;">
+            <div style="display:flex; align-items:center; gap:10px; color:#9d174d; border-bottom:1px solid #fecdd3; padding-bottom:8px; margin-bottom:20px;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                <h3 style="font-weight:700; font-size:1.1rem; margin:0;">ประวัติการทำงานและการฝึกอบรม</h3>
+            </div>
+            <div style="margin-bottom:15px; display:flex; gap:30px;">
+                <div><span style="font-weight:700;">สถานะปัจจุบัน:</span> <span style="margin-left:5px;">${app.WorkStatus || '-'}</span></div>
+                <div><span style="font-weight:700;">สถานที่ทำงานปัจจุบัน:</span> <span style="margin-left:5px;">${app.CurrentWorkplace || '-'}</span></div>
+            </div>
+            <div class="table-wrapper" style="border:1px solid #f1f5f9; border-radius:8px; overflow:hidden;">
+                <table class="data-table" style="font-size:0.85rem;">
+                    <thead style="background:#f8fafc;">
+                        <tr><th style="padding:10px;">หน่วยงาน</th><th style="padding:10px;">ตำแหน่ง</th><th style="padding:10px; text-align:center;">ระยะเวลา</th><th style="padding:10px; text-align:center;">ปี</th></tr>
+                    </thead>
+                    <tbody>
+                        ${workHistory.length > 0 ? workHistory.map(w => `
+                            <tr>
+                                <td style="padding:10px; font-weight:600;">${w.inst || '-'}</td>
+                                <td style="padding:10px;">${w.pos || '-'}</td>
+                                <td style="padding:10px; text-align:center;">${w.dur || '-'}</td>
+                                <td style="padding:10px; text-align:center;">${w.start || ''}${w.end ? ' - ' + w.end : ''}</td>
+                            </tr>
+                        `).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">ไม่มีข้อมูล</td></tr>'}
+                    </tbody>
                 </table>
             </div>
         </div>
 
-        <div style="margin-bottom:20px;">
-            <h4 style="color:var(--accent-primary); border-bottom:2px solid #fee2e2; padding-bottom:5px; margin-bottom:15px;">💼 ประวัติการทำงานและการฝึกอบรม</h4>
-            <p><strong>สถานะปัจจุบัน:</strong> ${app.WorkStatus}</p>
-            <p><strong>สถานที่ทำงานปัจจุบัน:</strong> ${app.CurrentWorkplace || '-'}</p>
-            <table class="data-table" style="font-size:0.8rem; margin-top:10px;">
-                <thead><tr><th>หน่วยงาน</th><th>ตำแหน่ง</th><th>ระยะเวลา</th><th>ปี</th></tr></thead>
-                <tbody>${workHistory.map(w => `<tr><td>${w.inst}</td><td>${w.pos}</td><td>${w.dur}</td><td>${w.start}-${w.end}</td></tr>`).join('')}</tbody>
-            </table>
+        <!-- Research Topic Box -->
+        <div style="background:#f8fafc; padding:24px; border-radius:16px; border:1px solid #e2e8f0; margin-top:10px; position:relative;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; color:#b45309;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><line x1="9" y1="18" x2="15" y2="18"/><line x1="10" y1="22" x2="14" y2="22"/></svg>
+                <h4 style="margin:0; font-size:1.05rem; font-weight:700;">ความสนใจ/หัวข้อวิทยานิพนธ์ที่สนใจ</h4>
+            </div>
+            <div style="white-space:pre-wrap; line-height:1.7; color:#334155; font-size:0.92rem;">${app.ResearchTopic || 'ไม่ได้ระบุ'}</div>
         </div>
 
-        <div style="background:#f8fafc; padding:20px; border-radius:12px; margin-top:20px; border:1px solid #e2e8f0;">
-            <h4 style="margin-bottom:10px;">💡 ความสนใจ/หัวข้อวิทยานิพนธ์ที่สนใจ</h4>
-            <div style="white-space:pre-wrap; line-height:1.6; color:#334155;">${app.ResearchTopic || 'ไม่ได้ระบุ'}</div>
-        </div>
-
-        <div style="margin-top:25px; display:flex; gap:10px; flex-wrap:wrap; padding-top:20px; border-top:1px solid #e2e8f0;">
-            <div style="width:100%; margin-bottom:10px;">
-                <h5 style="margin-bottom:10px; color:var(--text-muted);">📂 เอกสารหลักฐานที่แนบมา:</h5>
-                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <!-- Documents Section -->
+        <div style="margin-top:35px; padding-top:25px; border-top:1px solid #f1f5f9;">
+            <div style="margin-bottom:15px;">
+                <h5 style="margin-bottom:12px; color:var(--text-muted); font-size:0.85rem; font-weight:700;">📂 เอกสารหลักฐานที่แนบมา:</h5>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
                     ${renderDocumentLinks(app.DocumentsLink)}
                 </div>
             </div>
-            <div style="flex:1;"></div>
-            ${app.Status !== 'Enrolled' ? `
-                <button class="btn btn-secondary" onclick="updateAppStatus('${appId}', 'Interview')">นัดสัมภาษณ์</button>
-                <button class="btn success" style="background:var(--success); color:white;" onclick="updateAppStatus('${appId}', 'Accepted')">รับเข้าศึกษา</button>
-                <button class="btn danger" style="background:#ef4444; color:white;" onclick="updateAppStatus('${appId}', 'Rejected')">ไม่ผ่านคัดเลือก</button>
-            ` : ''}
-            ${app.Status === 'Accepted' ? `<button class="btn btn-primary" onclick="openEnrollModal('${appId}')">ลงทะเบียนเป็นนักศึกษา</button>` : ''}
+            
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:25px;">
+                ${app.Status !== 'Enrolled' ? `
+                    <button class="btn btn-secondary" onclick="updateAppStatus('${appId}', 'Interview')">นัดสัมภาษณ์</button>
+                    <button class="btn success" style="background:var(--success); color:white; border:none; padding:10px 20px;" onclick="updateAppStatus('${appId}', 'Accepted')">รับเข้าศึกษา</button>
+                    <button class="btn danger" style="background:#ef4444; color:white; border:none; padding:10px 20px;" onclick="updateAppStatus('${appId}', 'Rejected')">ไม่ผ่านคัดเลือก</button>
+                ` : ''}
+                ${app.Status === 'Accepted' ? `<button class="btn btn-primary" onclick="openEnrollModal('${appId}')" style="box-shadow:0 10px 15px -3px rgba(220, 38, 38, 0.25);">ลงทะเบียนเป็นนักศึกษา</button>` : ''}
+            </div>
         </div>
     </div>
     `;
     openModal('ตรวจสอบรายละเอียดผู้สมัคร', content);
 };
+
 
 function renderDocumentLinks(linkStr) {
     if (!linkStr) return '<span style="color:var(--text-muted); font-size:0.8rem;">ไม่พบเอกสารแนบ</span>';

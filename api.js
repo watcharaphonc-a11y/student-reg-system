@@ -124,6 +124,13 @@ window.api.saveDocumentRecord = function (metadata) {
     return postData('saveDocumentRecord', metadata);
 };
 
+/**
+ * Update Student Status
+ */
+window.api.updateStudentStatus = function (studentId, status) {
+    return postData('updateStudentStatus', { studentId: studentId, status: status });
+};
+
 // Backwards compatibility helper
 window.uploadFile = function(file, metadata) { return window.api.uploadFile(file, metadata); };
 

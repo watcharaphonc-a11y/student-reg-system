@@ -142,7 +142,14 @@ pages['student-profile'] = function () {
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                         ปีที่เข้าศึกษา ${admissionYear}
                     </div>
-                    <div class="profile-meta-item">${getStatusBadge(status)}</div>
+                    <div class="profile-meta-item" style="display:flex; align-items:center; gap:8px;">
+                        ${getStatusBadge(status)}
+                        ${isAdmin ? `
+                        <button class="btn btn-ghost btn-sm" onclick="openStatusUpdateModal()" title="เปลี่ยนสถานะ" style="padding: 2px; border-radius: 4px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                        ` : ''}
+                    </div>
                     ${(isAdmin && status !== 'สำเร็จการศึกษา' && status !== 'Graduated') ? `
                     <div class="profile-meta-item">
                         <button class="btn btn-primary btn-sm" onclick="openApproveGraduationModal()" style="background:var(--success); border:none; box-shadow:none; padding:4px 12px;">
@@ -373,5 +380,90 @@ window.submitGraduationApproval = function() {
             alert('อนุมัติการสำเร็จการศึกษาเรียบร้อยแล้ว รายชื่อจะถูกย้ายไปยังฐานข้อมูลศิษย์เก่า');
             navigateTo('alumni');
         }, 1000);
+    }
+};
+
+// ============================
+// Status Update Logic
+// ============================
+window.openStatusUpdateModal = function() {
+    const st = MOCK.student;
+    if (!st) return;
+
+    const statuses = [
+        { val: 'กำลังศึกษา', label: 'กำลังศึกษา (Studying)', icon: '🟢' },
+        { val: 'ลาพักการศึกษา', label: 'ลาพักการศึกษา (Leave of Absence)', icon: '🟡' },
+        { val: 'ลาออก', label: 'ลาออก (Resigned)', icon: '🔴' },
+        { val: 'สำเร็จการศึกษา', label: 'สำเร็จการศึกษา (Graduated)', icon: '🟣' }
+    ];
+
+    const modalHtml = `
+    <div style="padding:10px;">
+        <p style="margin-bottom:15px; color:var(--text-secondary);">เลือกสถานะใหม่สำหรับ <strong>${st.prefix || ''}${st.firstName} ${st.lastName}</strong></p>
+        
+        <div class="status-options" style="display:grid; gap:10px; margin-bottom:20px;">
+            ${statuses.map(s => `
+                <label style="display:flex; align-items:center; gap:12px; padding:12px; border:1px solid var(--border-color); border-radius:var(--radius-md); cursor:pointer; transition:var(--transition-fast);" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                    <input type="radio" name="newStatus" value="${s.val}" ${st.status === s.val ? 'checked' : ''} style="width:18px; height:18px; accent-color:var(--accent-primary);">
+                    <div style="font-size:1.2rem;">${s.icon}</div>
+                    <div style="font-weight:600; font-size:0.95rem;">${s.label}</div>
+                </label>
+            `).join('')}
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+            <button class="btn btn-primary" onclick="saveStudentStatusUpdate()">บันทึกสถานะ</button>
+        </div>
+    </div>
+    `;
+    openModal('แก้ไขสถานะนักศึกษา', modalHtml);
+};
+
+window.saveStudentStatusUpdate = async function() {
+    const selected = document.querySelector('input[name="newStatus"]:checked');
+    if (!selected) return;
+    
+    const newStatus = selected.value;
+    const st = MOCK.student;
+    if (!st) return;
+
+    if (newStatus === st.status) {
+        closeModal();
+        return;
+    }
+
+    // Special case for Graduation
+    if (newStatus === 'สำเร็จการศึกษา' || newStatus === 'Graduated') {
+        closeModal();
+        setTimeout(() => openApproveGraduationModal(), 100);
+        return;
+    }
+
+    showApiLoading('กำลังอัปเดตสถานะนักศึกษา...');
+    try {
+        const studentId = st.studentId || st.id;
+        const result = await window.api.updateStudentStatus(studentId, newStatus);
+        
+        if (result && result.status === 'success') {
+            // Update local state
+            st.status = newStatus;
+            
+            // Sync with global mock list
+            const idx = (MOCK.students || []).findIndex(s => (s.id || s.studentId) === studentId);
+            if (idx !== -1) {
+                MOCK.students[idx].status = newStatus;
+            }
+
+            hideApiLoading();
+            closeModal();
+            renderPage();
+            alert('อัปเดตสถานะนักศึกษาเรียบร้อยแล้ว');
+        } else {
+            throw new Error(result ? result.message : 'Unknown error');
+        }
+    } catch (err) {
+        hideApiLoading();
+        alert('เกิดข้อผิดพลาดในการอัปเดตสถานะ: ' + err.message);
     }
 };
