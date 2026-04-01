@@ -12,7 +12,7 @@ pages['menu-permissions'] = function() {
     }
 
     const menuItems = [
-        { id: 'nav-dashboard', label: 'ดชบอร์ด', section: 'หน้าหลัก' },
+        { id: 'nav-dashboard', label: 'แดชบอร์ด', section: 'หน้าหลัก' },
         { id: 'nav-student-profile', label: 'ข้อมูลนักศึกษา', section: 'ทะเบียน' },
         { id: 'nav-teacher-profile', label: 'ข้อมูลอาจารย์', section: 'ทะเบียน' },
         { id: 'nav-special-lecturers', label: 'ข้อมูลอาจารย์พิเศษ', section: 'ทะเบียน' },
@@ -57,6 +57,51 @@ pages['menu-permissions'] = function() {
     });
 
     return `
+    <style>
+        .perm-toggle {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        .perm-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .perm-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .perm-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        input:checked + .perm-slider {
+            background-color: var(--accent-primary);
+        }
+        input:focus + .perm-slider {
+            box-shadow: 0 0 1px var(--accent-primary);
+        }
+        input:checked + .perm-slider:before {
+            transform: translateX(24px);
+        }
+        .perm-row:hover {
+            background-color: var(--bg-card-hover) !important;
+        }
+    </style>
     <div class="animate-in">
         <div class="page-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 25px;">
             <div>
@@ -86,7 +131,7 @@ pages['menu-permissions'] = function() {
                                 </td>
                             </tr>
                             ${sections[section].map(item => `
-                                <tr class="animate-in">
+                                <tr class="animate-in perm-row">
                                     <td style="padding: 12px 30px;">
                                         <div style="display: flex; align-items: center; gap: 10px;">
                                             <div style="width: 8px; height: 8px; border-radius: 50%; background: var(--bg-tertiary);"></div>
@@ -98,10 +143,10 @@ pages['menu-permissions'] = function() {
                                         const hasPerm = (MOCK.permissions.find(p => String(p.Role).toLowerCase() === role.id) || {})[item.id] === 'YES';
                                         return `
                                             <td style="text-align: center; padding: 10px 20px;">
-                                                <label class="toggle">
+                                                <label class="perm-toggle">
                                                     <input type="checkbox" ${hasPerm ? 'checked' : ''} 
                                                         onchange="toggleMenuPermission('${role.id}', '${item.id}', this.checked)">
-                                                    <span class="toggle-slider"></span>
+                                                    <span class="perm-slider"></span>
                                                 </label>
                                             </td>
                                         `;
