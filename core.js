@@ -140,3 +140,33 @@ window.formatDisplayCode = function(c) {
     if (s.length === 9 && /^\d+$/.test(s)) return '0' + s;
     return s;
 };
+
+// Intelligent Google Drive URL Resolver
+window.getDriveUrl = function(idOrUrl, type = 'file') {
+    if (!idOrUrl) return '';
+    const trimmed = String(idOrUrl).trim();
+    
+    // 1. If it's already a full URL, return as is
+    if (trimmed.startsWith('http')) {
+        let url = trimmed;
+        // If it's a Drive file view URL and we want a preview, swap /view for /preview
+        if (url.includes('drive.google.com')) {
+            if (type === 'preview' && url.includes('/view')) {
+                url = url.replace('/view', '/preview');
+            } else if (type === 'file' && url.includes('/preview')) {
+                url = url.replace('/preview', '/view');
+            }
+        }
+        return url;
+    }
+    
+    // 2. Otherwise assume it's a Drive ID
+    if (type === 'folder') {
+        return 'https://drive.google.com/drive/folders/' + trimmed;
+    } else if (type === 'preview') {
+        return 'https://drive.google.com/file/d/' + trimmed + '/preview';
+    } else {
+        // Default file view
+        return 'https://drive.google.com/open?id=' + trimmed;
+    }
+};

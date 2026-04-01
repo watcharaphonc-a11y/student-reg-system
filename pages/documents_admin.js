@@ -82,11 +82,15 @@ pages['documents-admin'] = function() {
 
 window.downloadAdminDoc = function(docId) {
     const doc = MOCK.adminDocuments.find(d => d.id === docId);
-    if (doc && doc.fileUrl) {
-        window.open(doc.fileUrl, '_blank');
-    } else {
-        alert('ไม่พบลิงก์สำหรับดาวน์โหลดเอกสารนี้');
+    if (doc) {
+        const urlStr = doc.signedFileUrl || doc.fileUrl;
+        if (urlStr) {
+            const firstUrl = urlStr.split(',')[0].trim();
+            window.open(window.getDriveUrl(firstUrl, 'file'), '_blank');
+            return;
+        }
     }
+    alert('ไม่พบลิงก์สำหรับดาวน์โหลดเอกสารนี้');
 };
 
 window.syncAdminDocuments = async function() {
@@ -235,8 +239,9 @@ window.previewAdminDoc = function(docId) {
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             ${urls.map((url, idx) => {
                                 const name = names[idx] || `ไฟล์ที่ ${idx + 1}`;
+                                const targetUrl = window.getDriveUrl(url, 'file');
                                 return `
-                                    <a href="${url}" target="_blank" style="display:flex; align-items:center; gap:10px; padding:10px; background:white; border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--accent-primary); text-decoration:none; font-weight:500; font-size:0.9rem; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border-color)';">
+                                    <a href="${targetUrl}" target="_blank" style="display:flex; align-items:center; gap:10px; padding:10px; background:white; border:1px solid var(--border-color); border-radius:var(--radius-sm); color:var(--accent-primary); text-decoration:none; font-weight:500; font-size:0.9rem; transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)';" onmouseout="this.style.borderColor='var(--border-color)';">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                                         <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${name}</span>
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
@@ -249,10 +254,7 @@ window.previewAdminDoc = function(docId) {
             }
 
             // 2. Visual Preview for the FIRST file (Now at BOTTOM)
-            let embedUrl = urls[0];
-            if (embedUrl.includes('drive.google.com') && embedUrl.includes('/view')) {
-                embedUrl = embedUrl.replace('/view', '/preview');
-            }
+            const embedUrl = window.getDriveUrl(urls[0], 'preview');
             const iframeHtml = `<iframe src="${embedUrl}" style="width:100%; height:550px; border:none; border-radius:var(--radius-sm);" allow="autoplay"></iframe>`;
 
             previewContent = filesListHtml + iframeHtml;
@@ -269,8 +271,9 @@ window.previewAdminDoc = function(docId) {
         let downloadBtn = '';
         if (doc.fileUrl) {
             const firstUrl = doc.fileUrl.split(',')[0].trim();
+            const targetUrl = window.getDriveUrl(firstUrl, 'file');
             downloadBtn = `
-                <button class="btn btn-primary btn-sm" onclick="window.open('${firstUrl}', '_blank')">
+                <button class="btn btn-primary btn-sm" onclick="window.open('${targetUrl}', '_blank')">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                     เปิดไฟล์ต้นฉบับ
                 </button>

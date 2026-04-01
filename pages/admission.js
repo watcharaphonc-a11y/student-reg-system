@@ -213,17 +213,19 @@ window.viewApplicantDetail = function(appId) {
 
 
 function renderDocumentLinks(linkStr) {
-    if (!linkStr) return '<span style="color:var(--text-muted); font-size:0.8rem;">ไม่พบเอกสารแนบ</span>';
+    if (!linkStr || linkStr === '-') return '<span style="color:var(--text-muted); font-size:0.8rem;">ไม่พบเอกสารแนบ</span>';
     
+    // 1. Try to parse as JSON first (handles multiple documents mapping)
     try {
         const docMap = JSON.parse(linkStr);
         if (typeof docMap === 'object' && docMap !== null) {
             let html = '';
             
-            // Render Folder Link first
+            // Render Folder Link first if exists
             if (docMap['_folder']) {
+                const folderUrl = window.getDriveUrl(docMap['_folder'], 'folder');
                 html += `
-                    <a href="${docMap['_folder']}" target="_blank" class="btn btn-secondary btn-sm" style="background:#fff7ed; border-color:#fdba74; color:#9a3412;">
+                    <a href="${folderUrl}" target="_blank" class="btn btn-secondary btn-sm" style="background:#fff7ed; border-color:#fdba74; color:#9a3412;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                         เปิดโฟลเดอร์เก็บเอกสาร (Google Drive)
                     </a>
@@ -231,10 +233,11 @@ function renderDocumentLinks(linkStr) {
             }
 
             // Render individual files
-            html += Object.entries(docMap).map(([type, url]) => {
-                if (type === '_folder') return ''; // Skip folder key here
+            html += Object.entries(docMap).map(([type, urlOrId]) => {
+                if (type === '_folder') return ''; // Already handled
+                const fileUrl = window.getDriveUrl(urlOrId, 'file');
                 return `
-                    <a href="${url}" target="_blank" class="btn btn-secondary btn-sm" title="${type}">
+                    <a href="${fileUrl}" target="_blank" class="btn btn-secondary btn-sm" title="${type}">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                         ${type}
                     </a>
@@ -244,12 +247,17 @@ function renderDocumentLinks(linkStr) {
             return html;
         }
     } catch (e) {
-        if (linkStr.startsWith('http')) {
-            return `<a href="${linkStr}" target="_blank" class="btn btn-secondary btn-sm">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                เปิดลิงก์โฟลเดอร์เอกสาร
-            </a>`;
+        // 2. Not JSON, handle as a single link or ID
+        const targetUrl = window.getDriveUrl(linkStr, 'folder');
+
+        if (targetUrl.startsWith('http')) {
+            return `
+                <a href="${targetUrl}" target="_blank" class="btn btn-secondary btn-sm">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                    เปิดลิงก์โฟลเดอร์เอกสาร
+                </a>`;
         }
     }
+    
     return '<span style="color:var(--text-muted); font-size:0.8rem;">ไม่พบลิงก์เอกสาร</span>';
 }

@@ -35,7 +35,7 @@ const MOCK = {
             WorkHistory: JSON.stringify([{inst:'รพ.มหาราชนครเชียงใหม่', pos:'พยาบาลวิชาชีพ', dur:'3 ปี', start:'2561', end:'2564'}]),
             CurrentWorkplace: 'โรงพยาบาลเชียงใหม่ราษฎร์',
             ResearchTopic: 'การศึกษาพฤติกรรมการดูแลสุขภาพของเด็กที่มีโรคประจำตัวเรื้อรังในเขตพื้นที่ภาคเหนือ',
-            DocumentsLink: 'https://drive.google.com/drive/folders/mock123'
+            DocumentsLink: 'https://drive.google.com/drive/my-drive'
         },
         { 
             ApplicationID: 'APP-1700000002', Status: 'Interview', Date: '2026-03-21', 
@@ -50,7 +50,11 @@ const MOCK = {
             WorkHistory: JSON.stringify([{inst:'สสจ.ชลบุรี', pos:'นักวิชาการสาธารณสุข', dur:'5 ปี', start:'2559', end:'2564'}]),
             CurrentWorkplace: 'สถานีอนามัยบางแสน',
             ResearchTopic: 'การพัฒนาระบบการดูแลผู้สูงอายุติดบ้านติดเตียงในระดับชุมชนเมือง',
-            DocumentsLink: 'https://drive.google.com/drive/folders/mock456'
+            DocumentsLink: JSON.stringify({
+                '_folder': 'https://drive.google.com/drive/my-drive',
+                'ปพ.1': 'https://drive.google.com/drive/my-drive',
+                'สำเนาบัตรประชาชน': 'https://drive.google.com/drive/my-drive'
+            })
         }
     ],
 
