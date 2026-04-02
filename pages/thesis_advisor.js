@@ -3,7 +3,19 @@
 // ============================
 pages['thesis-advisor'] = function() {
     const st = MOCK.student;
-    const advisors = MOCK.thesisAdvisors || [];
+    
+    // Filter advisors to only show those assigned to the student
+    const assignedName = (st && st.thesisAdvisor) ? String(st.thesisAdvisor).trim() : '';
+    const allThesisAdvisors = MOCK.teachers ? MOCK.teachers.filter(t => (t.Type || t['ประเภทบคลากร']) === 'Thesis' || (t.position || '').includes('อาจารย์')) : [];
+    
+    // If assignedName is '-', it means no advisor
+    const advisors = (assignedName === '-' || !assignedName) 
+        ? [] 
+        : allThesisAdvisors.filter(t => {
+            const fullName = (t.Prefix || '') + (t.FirstName || '') + ' ' + (t.LastName || '');
+            // Check for exact match or if the assigned string contains this teacher's name (for multiple advisors)
+            return assignedName.includes(fullName);
+        });
 
     return `
     <div class="animate-in">
@@ -11,6 +23,15 @@ pages['thesis-advisor'] = function() {
             <h1 class="page-title">อาจารย์ที่ปรึกษาวิทยานิพนธ์</h1>
             <p class="page-subtitle">ข้อมูลอาจารย์ที่ปรึกษาวิทยานิพนธ์ของนักศึกษา</p>
         </div>
+
+        ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+        <div style="margin-bottom:20px; display:flex; justify-content:flex-end;">
+            <button class="btn btn-primary" onclick="openEditStudentProfile()" style="gap:8px;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
+                แต่งตั้ง/แก้ไขอาจารย์ที่ปรึกษา
+            </button>
+        </div>
+        ` : ''}
 
         <!-- Current Student Thesis Info -->
         <div class="card animate-in animate-delay-1" style="margin-bottom:18px;">

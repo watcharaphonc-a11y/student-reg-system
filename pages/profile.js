@@ -268,7 +268,12 @@ window.changeProfileStudent = function (studentId) {
 // ============================
 window.openEditStudentProfile = function () {
     const st = MOCK.student;
-    if (!st) return;
+    const isAdmin = (window.currentUserRole === 'staff' || window.currentUserRole === 'admin');
+    
+    // Group teachers for advisor selection
+    const allTeachers = MOCK.teachers || [];
+    const academicT = allTeachers.filter(t => (t.Type || t['ประเภทบคลากร']) === 'Academic' || (t.position || '').includes('อาจารย์'));
+    const thesisT = allTeachers.filter(t => (t.Type || t['ประเภทบคลากร']) === 'Thesis' || (t.position || '').includes('อาจารย์'));
 
     const modalHtml = `
     <div style="padding:10px;">
@@ -288,6 +293,34 @@ window.openEditStudentProfile = function () {
             <label class="form-label">ตำแหน่ง (Position)</label>
             <input type="text" id="editPosition" class="form-input" value="${st.position || ''}">
         </div>
+
+        ${isAdmin ? `
+        <hr style="border:0; border-top:1px dashed var(--border-color); margin:20px 0;">
+        <h4 style="margin-bottom:15px; font-size:1rem; color:var(--accent-primary);">การแต่งตั้งอาจารย์ (Admin Only)</h4>
+        
+        <div class="form-group" style="margin-bottom:15px;">
+            <label class="form-label">อาจารย์ที่ปรึกษา (Academic Advisor)</label>
+            <select id="editAdvisor" class="form-input">
+                <option value="-">-- เลือกอาจารย์ที่ปรึกษา --</option>
+                ${allTeachers.map(t => {
+                    const name = (t.Prefix || '') + (t.FirstName || '') + ' ' + (t.LastName || '');
+                    return `<option value="${name}" ${st.advisor === name ? 'selected' : ''}>${name}</option>`;
+                }).join('')}
+            </select>
+        </div>
+
+        <div class="form-group" style="margin-bottom:15px;">
+            <label class="form-label">อาจารย์ที่ปรึกษาวิทยานิพนธ์ (Thesis Advisor)</label>
+            <select id="editThesisAdvisor" class="form-input">
+                <option value="-">-- เลือกอาจารย์ที่ปรึกษาวิทยานิพนธ์ --</option>
+                ${allTeachers.map(t => {
+                    const name = (t.Prefix || '') + (t.FirstName || '') + ' ' + (t.LastName || '');
+                    return `<option value="${name}" ${st.thesisAdvisor === name ? 'selected' : ''}>${name}</option>`;
+                }).join('')}
+            </select>
+        </div>
+        ` : ''}
+
         <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:20px;">
             <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
             <button class="btn btn-primary" onclick="saveStudentProfileEdit()">บันทึกข้อมูล</button>
@@ -297,15 +330,48 @@ window.openEditStudentProfile = function () {
     openModal('แก้ไขข้อมูลส่วนตัว', modalHtml);
 };
 
-window.saveStudentProfileEdit = function () {
-    if (MOCK.student) {
-        MOCK.student.phone = document.getElementById('editPhone').value;
-        MOCK.student.personalEmail = document.getElementById('editPersonalEmail').value;
-        MOCK.student.workplace = document.getElementById('editWorkplace').value;
-        MOCK.student.position = document.getElementById('editPosition').value;
-        closeModal();
-        renderPage();
-        setTimeout(() => alert('บันทึกข้อมูลส่วนตัวเรียบร้อย (อัปเดตระบบชั่วคราว)'), 300);
+window.saveStudentProfileEdit = async function () {
+    const st = MOCK.student;
+    if (!st) return;
+
+    const isAdmin = (window.currentUserRole === 'staff' || window.currentUserRole === 'admin');
+    const updateData = {
+        phone: document.getElementById('editPhone').value,
+        personalEmail: document.getElementById('editPersonalEmail').value,
+        workplace: document.getElementById('editWorkplace').value,
+        position: document.getElementById('editPosition').value
+    };
+
+    if (isAdmin) {
+        updateData.advisor = document.getElementById('editAdvisor').value;
+        updateData.thesisAdvisor = document.getElementById('editThesisAdvisor').value;
+    }
+
+    showApiLoading('กำลังบันทึกข้อมูล...');
+    try {
+        const studentId = st.studentId || st.id;
+        const res = await window.api.updateStudentDetail(studentId, updateData);
+        
+        if (res && res.status === 'success') {
+            // Update local state
+            Object.assign(st, updateData);
+            
+            // Sync with global list
+            const idx = (MOCK.students || []).findIndex(s => (s.id || s.studentId) === studentId);
+            if (idx !== -1) {
+                Object.assign(MOCK.students[idx], updateData);
+            }
+
+            hideApiLoading();
+            closeModal();
+            renderPage();
+            setTimeout(() => alert('บันทึกข้อมูลส่วนตัวเรียบร้อยแล้ว'), 300);
+        } else {
+            throw new Error(res ? res.message : 'Unknown error');
+        }
+    } catch (err) {
+        hideApiLoading();
+        alert('เกิดข้อผิดพลาดในการบันทึกข้อมูล: ' + err.message);
     }
 };
 

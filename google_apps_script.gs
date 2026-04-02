@@ -212,6 +212,8 @@ function doPost(e) {
         return updateApplicantStatus(payload);
       case 'updateStudentStatus':
         return updateStudentStatus(payload);
+      case 'updateStudentDetail':
+        return updateStudentDetail(payload);
       case 'enrollApplicant':
         return enrollApplicantToStudent(payload);
       default:
@@ -1307,4 +1309,49 @@ function getDocumentsFolder() {
 function createResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+/**
+ * Update Student Detail Data (General)
+ */
+function updateStudentDetail(payload) {
+  try {
+    const sheet = SS.getSheetByName(SHEETS.STUDENTS);
+    if (!sheet) return createResponse({ status: 'error', message: 'Students sheet not found' });
+    
+    const values = sheet.getDataRange().getValues();
+    const headers = values[0].map(h => String(h).trim());
+    const idIdx = headers.indexOf('รหัสนักศึกษา');
+    
+    if (idIdx === -1) return createResponse({ status: 'error', message: 'Student ID column not found' });
+    
+    const targetId = String(payload.studentId || payload.id || '').trim();
+    const data = payload.data || {};
+    
+    for (let i = 1; i < values.length; i++) {
+      if (String(values[i][idIdx]).trim() === targetId) {
+        const rowIndex = i + 1;
+        
+        Object.keys(data).forEach(key => {
+          let colIdx = headers.indexOf(key);
+          // Fallback for Thai headers
+          if (colIdx === -1) {
+            if (key === 'advisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษา');
+            if (key === 'thesisAdvisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาวิทยานิพนธ์');
+          }
+          
+          if (colIdx !== -1) {
+            sheet.getRange(rowIndex, colIdx + 1).setValue(data[key]);
+          }
+        });
+        
+        return createResponse({ status: 'success' });
+      }
+    }
+    
+    return createResponse({ status: 'error', message: 'Student not found: ' + targetId });
+  } catch (err) {
+    console.error('updateStudentDetail Error:', err);
+    return createResponse({ status: 'error', message: err.toString() });
+  }
 }

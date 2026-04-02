@@ -131,6 +131,13 @@ window.api.updateStudentStatus = function (studentId, status) {
     return postData('updateStudentStatus', { studentId: studentId, status: status });
 };
 
+/**
+ * Update Student Detail
+ */
+window.api.updateStudentDetail = function (studentId, data) {
+    return postData('updateStudentDetail', { studentId: studentId, data: data });
+};
+
 // Backwards compatibility helper
 window.uploadFile = function(file, metadata) { return window.api.uploadFile(file, metadata); };
 
