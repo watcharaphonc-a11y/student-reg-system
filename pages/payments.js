@@ -10,23 +10,25 @@ pages.payments = function() {
         </div>
         <div class="payments-main-layout">
             <div class="card animate-in animate-delay-1 qr-payment-card">
-            <div style="max-width: 100%; margin: 0 auto;">
-                <h3 style="margin-bottom: 15px; color: var(--text-primary); font-size: 1.1rem; line-height: 1.3;">ระบบชำระเงินอิเล็กทรอนิกส์ (e-Payment)</h3>
-                <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.85rem;">
-                    นักศึกษาสามารถตรวจสอบยอดค้างชำระ และทำรายการผ่านระบบ e-Payment ได้โดยตรง
-                </p>
-                <div style="background: white; padding: 25px; border-radius: var(--radius-md); display: inline-block; margin-bottom: 24px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
-                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://e-payment.pi.ac.th/login" alt="QR Code for e-Payment" style="width: 220px; height: 220px; display: block;">
-                    <p style="margin-top: 15px; font-size: 0.95rem; color: var(--text-muted); font-weight: 600;">สแกนเพื่อเข้าสู่ระบบ</p>
+                <div class="card-header">
+                    <h3 class="card-title" style="color: var(--text-primary); font-size: 1.05rem;">ระบบชำระเงินอิเล็กทรอนิกส์ (e-Payment)</h3>
                 </div>
-                <div>
-                    <a href="https://e-payment.pi.ac.th/login" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; justify-content: center; width: 100%; max-width: 300px; margin: 0 auto; padding: 14px; font-size: 1.15rem; gap: 10px; text-decoration: none;">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                        เข้าสู่ระบบ e-Payment
-                    </a>
+                <div class="card-body">
+                    <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.85rem; line-height: 1.5;">
+                        นักศึกษาสามารถตรวจสอบยอดค้างชำระ และทำรายการผ่านระบบ e-Payment ได้โดยตรง
+                    </p>
+                    <div style="background: white; padding: 25px; border-radius: var(--radius-md); display: inline-block; margin-bottom: 24px; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=https://e-payment.pi.ac.th/login" alt="QR Code for e-Payment" style="width: 220px; height: 220px; display: block;">
+                        <p style="margin-top: 15px; font-size: 0.95rem; color: var(--text-muted); font-weight: 600;">สแกนเพื่อเข้าสู่ระบบ</p>
+                    </div>
+                    <div style="width: 100%;">
+                        <a href="https://e-payment.pi.ac.th/login" target="_blank" class="btn btn-primary" style="display: inline-flex; align-items: center; justify-content: center; width: 100%; max-width: 300px; margin: 0 auto; padding: 14px; font-size: 1.15rem; gap: 10px; text-decoration: none;">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                            เข้าสู่ระบบ e-Payment
+                        </a>
+                    </div>
                 </div>
             </div>
-        </div>
 
             <!-- Expense Table Reference -->
             <div class="card animate-in animate-delay-4 fee-table-card" style="min-width: 0; outline:none; border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden;">

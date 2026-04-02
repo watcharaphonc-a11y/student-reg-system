@@ -1812,11 +1812,11 @@ input, select, textarea {
     flex: 1;
     min-width: 350px;
     text-align: center;
-    padding: 30px 20px;
+    padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .fee-table-card {
