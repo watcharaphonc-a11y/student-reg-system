@@ -7,7 +7,8 @@ pages['thesis-advisor'] = function() {
     
     // Group all possible thesis teachers
     const allTeachers = MOCK.teachers || [];
-    const thesisTeachers = allTeachers.filter(t => (t.Type || t['ประเภทบคลากร']) === 'Thesis' || (t.position || '').includes('อาจารย์'));
+    // If not categorized, just use all teachers as potential advisors
+    const thesisTeachers = allTeachers.filter(t => (t.type || '').includes('Thesis') || (t.position || '').includes('อาจารย์') || (t.type || '') === 'อาจารย์ประจำ');
     
     // Active UI Filter State
     const activeAdvisorName = window.activeAdvisorName || null;
@@ -23,12 +24,11 @@ pages['thesis-advisor'] = function() {
     const advisorsInfo = (assignedName === '-' || !assignedName) 
         ? [] 
         : thesisTeachers.filter(t => {
-            const fullName = (t.Prefix || '') + (t.FirstName || '') + ' ' + (t.LastName || '');
-            return assignedName.includes(fullName);
+            return assignedName.includes(t.name);
         });
 
     // Content for Advisor Summary (if no student selected)
-    const activeTeacher = activeAdvisorName ? thesisTeachers.find(t => ((t.Prefix || '') + (t.FirstName || '') + ' ' + (t.LastName || '')) === activeAdvisorName) : null;
+    const activeTeacher = activeAdvisorName ? thesisTeachers.find(t => t.name === activeAdvisorName) : null;
     const studentsOfTeacher = activeAdvisorName ? (MOCK.students || []).filter(s => s.thesisAdvisor === activeAdvisorName) : [];
 
     return `
@@ -47,8 +47,7 @@ pages['thesis-advisor'] = function() {
                     <select class="form-input" onchange="changeAdvisorFilter(this.value)" style="height:42px; border-color:var(--accent-primary);">
                         <option value="">-- อาจารย์ทั้งหมด --</option>
                         ${thesisTeachers.map(t => {
-                            const name = (t.Prefix || '') + (t.FirstName || '') + ' ' + (t.LastName || '');
-                            return `<option value="${name}" ${activeAdvisorName === name ? 'selected' : ''}>${name}</option>`;
+                            return `<option value="${t.name}" ${activeAdvisorName === t.name ? 'selected' : ''}>${t.name}</option>`;
                         }).join('')}
                     </select>
                 </div>
@@ -83,7 +82,7 @@ pages['thesis-advisor'] = function() {
         <div class="animate-in animate-delay-1">
             <div class="card" style="margin-bottom:25px; border-left:5px solid var(--accent-primary);">
                 <div class="card-body" style="display:flex; align-items:center; gap:25px; padding:25px;">
-                    <div style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg, var(--accent-primary), #c026d3); display:flex; align-items:center; justify-content:center; color:white; font-size:1.8rem; font-weight:800;">${(activeTeacher.FirstName || 'T')[0]}</div>
+                    <div style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg, var(--accent-primary), #c026d3); display:flex; align-items:center; justify-content:center; color:white; font-size:1.8rem; font-weight:800;">${(activeTeacher.name || 'T')[0]}</div>
                     <div style="flex:1;">
                         <div style="font-size:1.4rem; font-weight:800; color:var(--text-primary);">${activeAdvisorName}</div>
                         <div style="color:var(--text-muted); font-weight:500; margin-bottom:8px;">สาขาเชี่ยวชาญ: ${activeTeacher.Expertise || activeTeacher.expertise || '-'}</div>
@@ -161,10 +160,10 @@ pages['thesis-advisor'] = function() {
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:16px;">
                 ${advisorsInfo.map(a => `
                     <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px; background:var(--bg-secondary); display:flex; align-items:center; gap:15px;">
-                        <div style="width:45px; height:45px; border-radius:50%; background:var(--accent-primary); display:flex; align-items:center; justify-content:center; color:white; font-weight:700;">${(a.FirstName || 'T')[0]}</div>
+                        <div style="width:45px; height:45px; border-radius:50%; background:var(--accent-primary); display:flex; align-items:center; justify-content:center; color:white; font-weight:700;">${(a.name || 'T')[0]}</div>
                         <div>
-                            <div style="font-weight:600;">${(a.Prefix || '') + (a.FirstName || '') + ' ' + (a.LastName || '')}</div>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">${a.position || a.Position || '-'}</div>
+                            <div style="font-weight:600;">${a.name}</div>
+                            <div style="font-size:0.8rem; color:var(--text-muted);">${a.position || '-'}</div>
                         </div>
                     </div>
                 `).join('')}

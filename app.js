@@ -338,6 +338,7 @@ async function bootApp() {
             }));
 
             // Filter for different roles/views
+            MOCK.teachers = allMappedTeachers; // Store all teachers for management pages
             MOCK.academicAdvisors = allMappedTeachers.filter(t => t.type === 'อาจารย์ประจำ');
             MOCK.specialLecturers = allMappedTeachers.filter(t => t.type === 'อาจารย์พิเศษ');
             
