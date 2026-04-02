@@ -859,4 +859,17 @@ window.refreshAllData = async function() {
     }
 };
 
+window.changeProfileStudent = function (studentId) {
+    if (!studentId) return;
+    const selected = (MOCK.students || []).find(s => (s.id || s.studentId) === studentId);
+    if (selected) {
+        MOCK.student = selected;
+        if (typeof window.syncActiveStudentData === 'function') {
+            window.syncActiveStudentData();
+        } else {
+            renderPage();
+        }
+    }
+};
+
 bootApp();

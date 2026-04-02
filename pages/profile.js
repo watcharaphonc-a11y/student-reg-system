@@ -251,23 +251,16 @@ window.importProfile = function () {
     });
 };
 
-window.changeProfileStudent = function (studentId) {
-    if (!studentId) return;
-    const selected = (MOCK.students || []).find(s => (s.id || s.studentId) === studentId);
-    if (selected) {
-        MOCK.student = selected;
-        if (typeof window.syncActiveStudentData === 'function') {
-            window.syncActiveStudentData();
-        }
-        renderPage();
-    }
-};
 
 // ============================
 // Edit Profile Modal
 // ============================
 window.openEditStudentProfile = function () {
     const st = MOCK.student;
+    if (!st) {
+        alert('กรุณาเลือกนักศึกษาที่ต้องการแก้ไขข้อมูลก่อนครับ');
+        return;
+    }
     const isAdmin = (window.currentUserRole === 'staff' || window.currentUserRole === 'admin');
     
     // Group teachers for advisor selection

@@ -19,9 +19,24 @@ pages['thesis-advisor'] = function() {
 
     return `
     <div class="animate-in">
-        <div class="page-header">
-            <h1 class="page-title">อาจารย์ที่ปรึกษาวิทยานิพนธ์</h1>
-            <p class="page-subtitle">ข้อมูลอาจารย์ที่ปรึกษาวิทยานิพนธ์ของนักศึกษา</p>
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+            <div>
+                <h1 class="page-title">อาจารย์ที่ปรึกษาวิทยานิพนธ์</h1>
+                <p class="page-subtitle">ข้อมูลอาจารย์ที่ปรึกษาวิทยานิพนธ์ของนักศึกษา</p>
+            </div>
+
+            ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+            <div style="flex-grow: 1; max-width: 400px;">
+                <select class="form-input" onchange="changeProfileStudent(this.value)" style="height:42px;">
+                    <option value="">-- ค้นหา/เลือกนักศึกษา --</option>
+                    ${(MOCK.students || []).map(s => `
+                        <option value="${s.id || s.studentId}" ${st && (st.id === s.id || st.studentId === s.studentId) ? 'selected' : ''}>
+                            ${s.studentId || ''} - ${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}
+                        </option>
+                    `).join('')}
+                </select>
+            </div>
+            ` : ''}
         </div>
 
         ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
