@@ -150,12 +150,10 @@ function doPost(e) {
     const action = request.action;
     const payload = request.payload;
 
-    console.log('Action: ' + action);
-    
+    let response;
     switch (action) {
       case 'registerStudent':
         appendRow(SHEETS.STUDENTS, payload);
-        // Also add to Users sheet for login
         appendRow(SHEETS.USERS, {
           Username: payload.username || payload.studentId || payload.idCard,
           Password: payload.password || '123456',
@@ -163,10 +161,10 @@ function doPost(e) {
           Role: 'student',
           Status: 'ใช้งาน'
         });
+        response = createResponse({ status: 'success' });
         break;
       case 'registerTeacher':
         appendRow(SHEETS.TEACHERS, payload);
-        // Also add to Users sheet for login
         appendRow(SHEETS.USERS, {
           Username: payload.username || payload.email,
           Password: payload.password || '111111',
@@ -174,54 +172,75 @@ function doPost(e) {
           Role: 'staff',
           Status: 'ใช้งาน'
         });
+        response = createResponse({ status: 'success' });
         break;
       case 'registerCourse':
         appendRow(SHEETS.COURSES, payload);
+        response = createResponse({ status: 'success' });
         break;
       case 'uploadDocument':
-        return uploadDocumentToDrive(payload);
+        response = uploadDocumentToDrive(payload);
+        break;
       case 'uploadFileOnly':
-        return uploadFileOnly(payload);
+        response = uploadFileOnly(payload);
+        break;
       case 'saveDocumentRecord':
-        return saveDocumentRecord(payload);
+        response = saveDocumentRecord(payload);
+        break;
       case 'uploadBatch':
-        return uploadBatch(payload);
+        response = uploadBatch(payload);
+        break;
       case 'updateDocumentStatus':
-        return updateDocumentStatus(payload);
+        response = updateDocumentStatus(payload);
+        break;
       case 'importGrades':
-        return importGradesBatch(payload);
+        response = importGradesBatch(payload);
+        break;
       case 'postAnnouncement':
-        return postAnnouncement(payload);
+        response = postAnnouncement(payload);
+        break;
       case 'updatePermission':
-        return updatePermission(payload);
+        response = updatePermission(payload);
+        break;
       case 'updateExam':
-        return updateExamResult(payload);
+        response = updateExamResult(payload);
+        break;
       case 'importExams':
-        return importExamsBatch(payload);
+        response = importExamsBatch(payload);
+        break;
       case 'batchImportExamCommittee':
-        return batchImportExamCommittee(payload);
+        response = batchImportExamCommittee(payload);
+        break;
       case 'submitEvaluation':
-        return submitEvaluationResult(payload);
+        response = submitEvaluationResult(payload);
+        break;
       case 'initializeApplication':
-        return initializeApplication(payload);
+        response = initializeApplication(payload);
+        break;
       case 'uploadApplicationFile':
-        return uploadApplicationFile(payload);
+        response = uploadApplicationFile(payload);
+        break;
       case 'submitApplication':
-        return submitApplication(payload);
+        response = submitApplication(payload);
+        break;
       case 'updateApplicantStatus':
-        return updateApplicantStatus(payload);
+        response = updateApplicantStatus(payload);
+        break;
       case 'updateStudentStatus':
-        return updateStudentStatus(payload);
+        response = updateStudentStatus(payload);
+        break;
       case 'updateStudentDetail':
-        return updateStudentDetail(payload);
+        response = updateStudentDetail(payload);
+        break;
       case 'enrollApplicant':
-        return enrollApplicantToStudent(payload);
+        response = enrollApplicantToStudent(payload);
+        break;
       default:
-        return createResponse({ status: 'error', message: 'Unknown POST action' });
+        response = createResponse({ status: 'error', message: 'Unknown POST action' });
     }
     
     lock.releaseLock();
-    return createResponse({ status: 'success' });
+    return response || createResponse({ status: 'success' });
   } catch (err) {
     if (lock) lock.releaseLock();
     return createResponse({ status: 'error', message: err.toString() });
