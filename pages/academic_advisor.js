@@ -3,69 +3,177 @@
 // ============================
 pages['academic-advisor'] = function() {
     const st = MOCK.student;
+    const isAdmin = (window.currentUserRole === 'staff' || window.currentUserRole === 'admin');
     
-    // Filter advisors to only show those assigned to the student
+    // Group all possible academic teachers
+    const allTeachers = MOCK.teachers || [];
+    const academicTeachers = allTeachers.filter(t => (t.Type || t['ประเภทบคลากร']) === 'Academic' || (t.position || '').includes('อาจารย์'));
+    
+    // Active UI Filter State
+    const activeAdvisorName = window.activeAdvisorName || null;
+    
+    // Students filtered by active advisor
+    const filteredStudents = (MOCK.students || []).filter(s => {
+        if (!activeAdvisorName || activeAdvisorName === '-') return true;
+        return (s.advisor === activeAdvisorName);
+    });
+
+    // Content for Student Detail
     const assignedName = (st && st.advisor) ? String(st.advisor).trim() : '';
-    const allAcademicAdvisors = MOCK.teachers ? MOCK.teachers.filter(t => (t.Type || t['ประเภทบคลากร']) === 'Academic' || (t.position || '').includes('อาจารย์')) : [];
-    
-    // The specific advisor(s) for the current student
-    const myAdvisors = (assignedName === '-' || !assignedName)
+    const advisorsInfo = (assignedName === '-' || !assignedName)
         ? []
-        : allAcademicAdvisors.filter(t => {
+        : academicTeachers.filter(t => {
             const fullName = (t.Prefix || '') + (t.FirstName || '') + ' ' + (t.LastName || '');
             return assignedName.includes(fullName);
         });
 
+    // Content for Advisor Summary (if no student selected)
+    const activeTeacher = activeAdvisorName ? academicTeachers.find(t => ((t.Prefix || '') + (t.FirstName || '') + ' ' + (t.LastName || '')) === activeAdvisorName) : null;
+    const studentsOfTeacher = activeAdvisorName ? (MOCK.students || []).filter(s => s.advisor === activeAdvisorName) : [];
+
     return `
     <div class="animate-in">
-        <div class="page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px;">
             <div>
                 <h1 class="page-title">อาจารย์ที่ปรึกษาด้านวิชาการ</h1>
-                <p class="page-subtitle">ข้อมูลอาจารย์ที่ปรึกษาด้านวิชาการประจำหลักสูตร</p>
+                <p class="page-subtitle">จัดการและติดตามสถานะการดูแลนักศึกษาตามหลักสูตร</p>
             </div>
 
-            ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
-            <div style="flex-grow: 1; max-width: 400px;">
-                <select class="form-input" onchange="changeProfileStudent(this.value)" style="height:42px;">
-                    <option value="">-- ค้นหา/เลือกนักศึกษา --</option>
-                    ${(MOCK.students || []).map(s => `
-                        <option value="${s.id || s.studentId}" ${st && (st.id === s.id || st.studentId === s.studentId) ? 'selected' : ''}>
-                            ${s.studentId || ''} - ${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}
-                        </option>
-                    `).join('')}
-                </select>
+            ${isAdmin ? `
+            <div style="display:flex; gap:10px; flex-grow: 1; max-width: 700px; justify-content: flex-end;">
+                <!-- Level 1: Advisor Selector -->
+                <div style="flex:1;">
+                    <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">1. เลือกชื่ออาจารย์ (Filter by Advisor)</label>
+                    <select class="form-input" onchange="changeAdvisorFilter(this.value)" style="height:42px; border-color:var(--accent-primary);">
+                        <option value="">-- อาจารย์ทั้งหมด --</option>
+                        ${academicTeachers.map(t => {
+                            const name = (t.Prefix || '') + (t.FirstName || '') + ' ' + (t.LastName || '');
+                            return `<option value="${name}" ${activeAdvisorName === name ? 'selected' : ''}>${name}</option>`;
+                        }).join('')}
+                    </select>
+                </div>
+                
+                <!-- Level 2: Student Selector (Filtered by Advisor) -->
+                <div style="flex:1.2;">
+                    <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">2. เลือกนักศึกษา (Select Student)</label>
+                    <select class="form-input" onchange="changeProfileStudent(this.value)" style="height:42px;">
+                        <option value="">-- ${activeAdvisorName ? 'เลือกคนในความดูแล' : 'เลือกนักศึกษา'} --</option>
+                        ${filteredStudents.map(s => `
+                            <option value="${s.id || s.studentId}" ${st && (st.id === s.id || st.studentId === s.studentId) ? 'selected' : ''}>
+                                ${s.studentId || ''} - ${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
             </div>
             ` : ''}
         </div>
 
-        ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+        ${isAdmin ? `
         <div style="margin-bottom:20px; display:flex; justify-content:flex-end;">
-            <button class="btn btn-primary" onclick="openEditStudentProfile()" style="gap:8px;">
+            <button class="btn btn-primary" onclick="${st ? 'openEditStudentProfile()' : 'alert(\'กรุณาเลือกนักศึกษาก่อนแต่งตั้งครับ\')'}" style="gap:8px; opacity:${st ? 1 : 0.6};">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
                 แต่งตั้ง/แก้ไขอาจารย์ที่ปรึกษา
             </button>
         </div>
         ` : ''}
 
-        <!-- My Academic Advisor -->
-        <div class="card animate-in animate-delay-1" style="margin-bottom:18px;">
-            <div class="card-header"><h3 class="card-title">อาจารย์ที่ปรึกษาของฉัน</h3></div>
-            <div class="card-body">
-                ${myAdvisors.length > 0 ? `
-                <div style="display:flex; align-items:center; gap:20px; padding:10px 0;">
-                    <div style="width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg, var(--accent-primary), #e74c3c);display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:1.5rem;">${myAdvisors[0].name[0]}</div>
-                    <div>
-                        <div style="font-weight:700; font-size:1.15rem;">${myAdvisors[0].name}</div>
-                        <div style="font-size:0.85rem; color:var(--accent-primary); font-weight:500;">${myAdvisors[0].position}</div>
-                        <div style="font-size:0.82rem; color:var(--text-muted); margin-top:4px;">📧 ${myAdvisors[0].email} &nbsp; 📱 ${myAdvisors[0].phone}</div>
+        ${(isAdmin && !st && activeAdvisorName && activeTeacher) ? `
+        <!-- Advisor Summary View -->
+        <div class="animate-in animate-delay-1">
+            <div class="card" style="margin-bottom:25px; border-left:5px solid var(--accent-primary); background:linear-gradient(to right, #fff, #fff5f7);">
+                <div class="card-body" style="display:flex; align-items:center; gap:25px; padding:25px;">
+                    <div style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg, var(--accent-primary), #4f46e5); display:flex; align-items:center; justify-content:center; color:white; font-size:1.8rem; font-weight:800;">${(activeTeacher.FirstName || 'T')[0]}</div>
+                    <div style="flex:1;">
+                        <div style="font-size:1.4rem; font-weight:800; color:var(--text-primary);">${activeAdvisorName}</div>
+                        <p style="font-size:0.9rem; color:var(--accent-primary); font-weight:600; margin-bottom:8px;">อาจารย์ที่ปรึกษาด้านวิชาการ</p>
+                        <button class="btn btn-secondary btn-sm" onclick="window.openBulkAssignAdvisor('${activeAdvisorName}', 'advisor')" style="padding:6px 12px; font-size:0.8rem; gap:6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
+                            มอบหมายนักศึกษาเพิ่ม (Bulk Assign)
+                        </button>
                     </div>
-                </div>` : '<div style="text-align:center; padding:30px; color:var(--text-muted);">ยังไม่ได้รับการแต่งตั้งอาจารย์ที่ปรึกษา</div>'}
+                    <div style="text-align:right;">
+                        <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">จำนวนนักศึกษาที่ดูแล</div>
+                        <div style="font-size:2rem; font-weight:900; color:var(--accent-primary); line-height:1;">${studentsOfTeacher.length} <span style="font-size:1rem; font-weight:600;">คน</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- List of Students for this Advisor -->
+            <div class="card">
+                <div class="card-header"><h3 class="card-title">รายชื่อนักศึกษาในความดูแล (Advisor: ${activeAdvisorName})</h3></div>
+                <div class="card-body">
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>รหัสนักศึกษา</th>
+                                    <th>ชื่อ-สกุล</th>
+                                    <th>หลักสูตร</th>
+                                    <th>สถานะ</th>
+                                    <th style="text-align:center;">จัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${studentsOfTeacher.map(s => `
+                                    <tr>
+                                        <td style="font-weight:600;">${s.studentId || ''}</td>
+                                        <td>${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}</td>
+                                        <td>${s.program || '-'}</td>
+                                        <td>${getStatusBadge(s.status || 'กำลังศึกษา')}</td>
+                                        <td style="text-align:center;">
+                                            <button class="btn btn-ghost btn-sm" onclick="changeProfileStudent('${s.id || s.studentId}')" style="color:var(--accent-primary); font-weight:700;">ดูโปรไฟล์</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                                ${studentsOfTeacher.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">ยังไม่มีนักศึกษาในความดูแล</td></tr>' : ''}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        ` : `
+        
+        <!-- Default Student Detail View -->
+        ${!st ? `
+            <div class="card animate-in animate-delay-1"><div class="card-body" style="text-align:center; padding:80px; color:var(--text-muted);">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:20px; opacity:0.3;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                <h3 style="font-weight:600;">กรุณาเลือกนักศึกษาเพื่อดูข้อมูลการปรึกษาวิชาการ</h3>
+                <p style="font-size:0.9rem;">คุณสามารถเลือกดูตามชื่ออาจารย์ที่ปรึกษา หรือค้นหารายชื่อนักศึกษาโดยตรงจากด้านบน</p>
+            </div></div>
+        ` : `
+        <div class="card animate-in animate-delay-1" style="margin-bottom:18px;">
+            <div class="card-header"><h3 class="card-title">ข้อมูลพื้นฐานของนักศึกษา</h3></div>
+            <div class="card-body" style="padding:20px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:20px;">
+                    <div><span style="color:var(--text-muted); font-size:0.8rem;">ชื่อ-นามสกุล</span><div style="font-weight:600;">${st.prefix || ''}${st.firstName || ''} ${st.lastName || ''}</div></div>
+                    <div><span style="color:var(--text-muted); font-size:0.8rem;">รหัสนักศึกษา</span><div style="font-weight:600;">${st.studentId || st.id || '-'}</div></div>
+                    <div><span style="color:var(--text-muted); font-size:0.8rem;">ชั้นปี / รุ่นการศึกษา</span><div style="font-weight:600;">ปีที่เข้าศึกษา ${st.admissionYear || '-'}</div></div>
+                    <div><span style="color:var(--text-muted); font-size:0.8rem;">สถานะภาพ</span><div>${getStatusBadge(st.status || 'กำลังศึกษา')}</div></div>
+                </div>
             </div>
         </div>
 
-        <!-- Consultation Schedule -->
         <div class="card animate-in animate-delay-2" style="margin-bottom:18px;">
-            <div class="card-header"><h3 class="card-title">ตารางให้คำปรึกษา</h3></div>
+            <div class="card-header"><h3 class="card-title">อาจารย์ที่ปรึกษาด้านวิชาการ</h3></div>
+            <div class="card-body">
+                ${advisorsInfo.length > 0 ? advisorsInfo.map(a => `
+                <div style="display:flex; align-items:center; gap:20px; padding:15px; border:1px solid var(--border-color); border-radius:12px; background:var(--bg-secondary);">
+                    <div style="width:60px; height:60px; border-radius:50%; background:linear-gradient(135deg, var(--accent-primary), #4f46e5); display:flex; align-items:center; justify-content:center; color:white; font-size:1.5rem; font-weight:700;">${(a.FirstName || 'T')[0]}</div>
+                    <div style="flex:1;">
+                        <div style="font-weight:700; font-size:1.1rem;">${(a.Prefix || '') + (a.FirstName || '') + ' ' + (a.LastName || '')}</div>
+                        <div style="font-size:0.85rem; color:var(--text-muted);">${a.position || a.Position || '-'}</div>
+                        <div style="font-size:0.82rem; color:var(--accent-primary); margin-top:4px;">📧 ${a.Email || a.email || '-'} &nbsp; 📱 ${a.Phone || a.phone || '-'}</div>
+                    </div>
+                </div>
+                `).join('') : '<div style="text-align:center; padding:30px; color:var(--text-muted);">ยังไม่ได้รับการแต่งตั้งอาจารย์ที่ปรึกษา</div>'}
+            </div>
+        </div>
+
+        <!-- Consultation Schedule (Contextual) -->
+        <div class="card animate-in animate-delay-3" style="margin-bottom:18px;">
+            <div class="card-header"><h3 class="card-title">ตารางให้คำปรึกษา ของอาจารย์</h3></div>
             <div class="card-body">
                 <div class="table-container">
                     <table class="data-table">
@@ -92,30 +200,7 @@ pages['academic-advisor'] = function() {
                 </div>
             </div>
         </div>
-
-        <!-- All Academic Advisors in Program -->
-        <div class="card animate-in animate-delay-3">
-            <div class="card-header"><h3 class="card-title">อาจารย์ที่ปรึกษาทั้งหมดในหลักสูตร</h3></div>
-            <div class="card-body">
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:16px;">
-                ${allAcademicAdvisors.map(a => `
-                    <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px; background:var(--bg-secondary);">
-                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px;">
-                            <div style="width:42px;height:42px;border-radius:50%;background:var(--accent-primary);display:flex;align-items:center;justify-content:center;color:white;font-weight:600;font-size:1rem;">${(a.FirstName||'A')[0]}</div>
-                            <div>
-                                <div style="font-weight:600;">${(a.Prefix||'')+(a.FirstName||'')+' '+(a.LastName||'')}</div>
-                                <div style="font-size:0.8rem; color:var(--text-muted);">${a.position || a.Position || '-'}</div>
-                            </div>
-                        </div>
-                        <div style="font-size:0.82rem; display:flex; flex-direction:column; gap:4px;">
-                            <div><span style="color:var(--text-muted);">สาขาเชี่ยวชาญ:</span> ${a.Expertise || a.expertise || '-'}</div>
-                            <div><span style="color:var(--text-muted);">อีเมล:</span> ${a.Email || a.email || '-'}</div>
-                            <div><span style="color:var(--text-muted);">โทรศัพท์:</span> ${a.Phone || a.phone || '-'}</div>
-                        </div>
-                    </div>
-                `).join('')}
-                </div>
-            </div>
-        </div>
+        `}
+        `}
     </div>`;
 };

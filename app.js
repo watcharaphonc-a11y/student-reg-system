@@ -859,17 +859,165 @@ window.refreshAllData = async function() {
     }
 };
 
-window.changeProfileStudent = function (studentId) {
-    if (!studentId) return;
-    const selected = (MOCK.students || []).find(s => (s.id || s.studentId) === studentId);
-    if (selected) {
-        MOCK.student = selected;
-        if (typeof window.syncActiveStudentData === 'function') {
-            window.syncActiveStudentData();
-        } else {
-            renderPage();
+window.changeAdvisorFilter = function (advisorName) {
+    window.activeAdvisorName = advisorName || null;
+    // When advisor changes, we might want to reset student selection if they don't belong to this advisor
+    const st = MOCK.student;
+    if (st && advisorName && advisorName !== '-') {
+        const isAssigned = (st.advisor === advisorName || st.thesisAdvisor === advisorName);
+        if (!isAssigned) {
+            MOCK.student = null;
+            if (typeof window.syncActiveStudentData === 'function') {
+                window.syncActiveStudentData();
+            }
         }
     }
+    renderPage();
+};
+
+window.changeProfileStudent = function (studentId) {
+    if (!studentId) {
+        MOCK.student = null;
+    } else {
+        const selected = (MOCK.students || []).find(s => (s.id || s.studentId) === studentId);
+        if (selected) {
+            MOCK.student = selected;
+        }
+    }
+    
+    if (typeof window.syncActiveStudentData === 'function') {
+        window.syncActiveStudentData();
+    } else {
+        renderPage();
+    }
+};
+
+/**
+ * Bulk Assign Advisor Modal
+ * @param {string} advisorName 
+ * @param {string} type - 'advisor' or 'thesisAdvisor'
+ */
+window.openBulkAssignAdvisor = function(advisorName, type) {
+    if (!advisorName) return;
+    
+    const students = MOCK.students || [];
+    // Suggest students who DON'T have this advisor yet
+    const unassignedStudents = students.filter(s => s[type] !== advisorName);
+
+    const modalHtml = `
+    <div style="padding:10px;">
+        <p style="margin-bottom:15px; color:var(--text-secondary);">เลือกนักศึกษาที่คุณต้องการมอบหมายให้เป็นลูกศิษย์ของ <strong>${advisorName}</strong></p>
+        
+        <div style="margin-bottom:15px;">
+            <input type="text" id="bulkStudentSearch" class="form-input" placeholder="🔍 ค้นหาชื่อหรือรหัสนักศึกษา..." onkeyup="window.filterBulkStudents(this.value)">
+        </div>
+
+        <div style="max-height:350px; overflow-y:auto; border:1px solid var(--border-color); border-radius:var(--radius-md); padding:5px; margin-bottom:20px;">
+            <table class="data-table" style="font-size:0.85rem;">
+                <thead>
+                    <tr>
+                        <th style="width:40px;"><input type="checkbox" id="selectAllBulk" onclick="window.toggleAllBulkStudents(this.checked)"></th>
+                        <th>รหัส</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>อาจารย์เดิม</th>
+                    </tr>
+                </thead>
+                <tbody id="bulkStudentTableBody">
+                    ${unassignedStudents.map(s => `
+                        <tr class="bulk-student-row">
+                            <td><input type="checkbox" name="bulkStudent" value="${s.id || s.studentId}" onchange="window.updateBulkCounter()"></td>
+                            <td style="font-weight:600;">${s.studentId || ''}</td>
+                            <td>${s.prefix||''}${s.firstName} ${s.lastName}</td>
+                            <td style="font-size:0.75rem; color:var(--text-muted);">${s[type] || '-'}</td>
+                        </tr>
+                    `).join('')}
+                    ${unassignedStudents.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:20px;">ไม่พบรายชื่อนักศึกษาเพิ่มเติม</td></tr>' : ''}
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+             <div id="selectionCounter" style="font-size:0.85rem; font-weight:700; color:var(--accent-primary);">เลือกแล้ว 0 คน</div>
+             <div style="display:flex; gap:10px;">
+                <button class="btn btn-secondary" onclick="closeModal()">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="saveBulkAdvisorAssignment('${advisorName}', '${type}')">บันทึกการมอบหมาย</button>
+             </div>
+        </div>
+    </div>
+    `;
+    
+    openModal('มอบหมายนักศึกษา : ' + advisorName, modalHtml);
+};
+
+window.filterBulkStudents = function(query) {
+    const trs = document.querySelectorAll('.bulk-student-row');
+    trs.forEach(tr => {
+        const text = tr.innerText.toLowerCase();
+        tr.style.display = text.includes(query.toLowerCase()) ? '' : 'none';
+    });
+};
+
+window.toggleAllBulkStudents = function(checked) {
+    const cbs = document.querySelectorAll('input[name="bulkStudent"]');
+    cbs.forEach(cb => {
+        if (cb.parentElement.parentElement.style.display !== 'none') {
+            cb.checked = checked;
+        }
+    });
+    window.updateBulkCounter();
+};
+
+window.updateBulkCounter = function() {
+    const selected = document.querySelectorAll('input[name="bulkStudent"]:checked').length;
+    const counter = document.getElementById('selectionCounter');
+    if (counter) counter.innerText = "เลือกแล้ว " + selected + " คน";
+};
+
+window.saveBulkAdvisorAssignment = async function(advisorName, type) {
+    const selectedCbs = document.querySelectorAll('input[name="bulkStudent"]:checked');
+    if (selectedCbs.length === 0) {
+        alert('กรุณาเลือกนักศึกษาอย่างน้อย 1 คน');
+        return;
+    }
+
+    if (!confirm('คุณยืนยันที่จะมอบหมายนักศึกษาทั้ง ' + selectedCbs.length + ' คน ให้แก่อาจารย์ ' + advisorName + ' ใช่หรือไม่?')) {
+        return;
+    }
+
+    const studentIds = Array.from(selectedCbs).map(cb => cb.value);
+    const updateData = { [type]: advisorName };
+
+    showApiLoading('กำลังบันทึกข้อมูลนักศึกษา ' + studentIds.length + ' คน...');
+    
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const sid of studentIds) {
+        try {
+            const res = await window.api.updateStudentDetail(sid, updateData);
+            if (res && res.status === 'success') {
+                successCount++;
+                // Sync local state for each success
+                const idx = (MOCK.students || []).findIndex(s => (s.id || s.studentId) === sid);
+                if (idx !== -1) {
+                    MOCK.students[idx][type] = advisorName;
+                    if (MOCK.student && (MOCK.student.id === sid || MOCK.student.studentId === sid)) {
+                        MOCK.student[type] = advisorName;
+                    }
+                }
+            } else {
+                failCount++;
+            }
+        } catch (e) {
+            console.error('Failed to update student ' + sid, e);
+            failCount++;
+        }
+    }
+
+    hideApiLoading();
+    closeModal();
+    renderPage();
+    alert('มอบหมายนักศึกษาสำเร็จ ' + successCount + ' คน' + (failCount > 0 ? ' (ผิดพลาด ' + failCount + ' คน)' : ''));
 };
 
 bootApp();
