@@ -13,10 +13,18 @@ pages['thesis-advisor'] = function() {
     // Active UI Filter State
     const activeAdvisorName = window.activeAdvisorName || null;
     
+    // Helper for robust name matching
+    const isMainMatch = (val, target) => {
+        if (!val || !target) return false;
+        const v = String(val).replace(/\s+/g, '').replace(/ผศ\.ดร\.|ดร\.|รศ\.ดร\.|พญ\.|นพ\.|นาง|นาย|นางสาว/g, '');
+        const t = String(target).replace(/\s+/g, '').replace(/ผศ\.ดร\.|ดร\.|รศ\.ดร\.|พญ\.|นพ\.|นาง|นาย|นางสาว/g, '');
+        return v.includes(t) || t.includes(v);
+    };
+
     // Students filtered by active advisor
     const filteredStudents = (MOCK.students || []).filter(s => {
         if (!activeAdvisorName || activeAdvisorName === '-') return true;
-        return (s.thesisAdvisor === activeAdvisorName);
+        return isMainMatch(s.thesisAdvisor, activeAdvisorName);
     });
 
     // Content for Student Detail
@@ -29,7 +37,7 @@ pages['thesis-advisor'] = function() {
 
     // Content for Advisor Summary (if no student selected)
     const activeTeacher = activeAdvisorName ? thesisTeachers.find(t => t.name === activeAdvisorName) : null;
-    const studentsOfTeacher = activeAdvisorName ? (MOCK.students || []).filter(s => s.thesisAdvisor === activeAdvisorName) : [];
+    const studentsOfTeacher = activeAdvisorName ? (MOCK.students || []).filter(s => isMainMatch(s.thesisAdvisor, activeAdvisorName)) : [];
 
     return `
     <div class="animate-in">
@@ -42,14 +50,13 @@ pages['thesis-advisor'] = function() {
             ${isAdmin ? `
             <div style="display:flex; gap:10px; flex-grow: 1; max-width: 700px; justify-content: flex-end;">
                 <!-- Level 1: Advisor Selector -->
-                <div style="flex:1;">
-                    <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">1. เลือกชื่ออาจารย์ (Filter by Advisor)</label>
-                    <select class="form-input" onchange="changeAdvisorFilter(this.value)" style="height:42px; border-color:var(--accent-primary);">
-                        <option value="">-- อาจารย์ทั้งหมด --</option>
-                        ${thesisTeachers.map(t => {
-                            return `<option value="${t.name}" ${activeAdvisorName === t.name ? 'selected' : ''}>${t.name}</option>`;
-                        }).join('')}
-                    </select>
+                <div style="flex:1; min-width:250px;">
+                    <label class="form-label" style="color:var(--text-secondary); font-weight:700;">1. เลือกชื่ออาจารย์ (FILTER BY ADVISOR)</label>
+                    ${renderSearchableSelect('advisorSearchSelect', 
+                        thesisTeachers.map(t => ({ value: t.name, label: t.name })), 
+                        activeAdvisorName, 
+                        '-- เลือกชื่ออาจารย์ --'
+                    )}
                 </div>
                 
                 <!-- Level 2: Student Selector (Filtered by Advisor) -->

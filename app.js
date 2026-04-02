@@ -324,21 +324,32 @@ async function bootApp() {
         }
 
         if (teachersData && teachersData.length > 0) {
-            const allMappedTeachers = teachersData.map(t => ({
-                name: (t['คำนำหน้า'] || '') + (t['ชื่อ'] ? (' ' + t['ชื่อ']) : '') + (t['นามสกุล'] ? (' ' + t['นามสกุล']) : '') || t.name,
-                position: t['ตำแหน่งทางวิชาการ'] || t['ตำแหน่ง'] || t.position || 'อาจารย์',
-                expertise: t['ความเชี่ยวชาญ'] || t.expertise || '-',
-                email: t['อีเมล'] || t.email || '-',
-                phone: t['เบอร์โทร'] || t['โทรศัพท์'] || t.phone || '-',
-                studentCount: parseInt(t['นศ. ในที่ปรึกษา'] || t['นศ.ในที่ปรึกษา'] || t.studentCount) || 0,
-                faculty: t['คณะ/สังกัด'] || t['คณะ'] || t.faculty || 'คณะพยาบาลศาสตร์',
-                username: t['Username'] || t.username,
-                password: t['Password'] || t.password,
-                type: t['ประเภทอาจารย์'] || t.type || 'อาจารย์ประจำ'
-            }));
+            const allMappedTeachers = teachersData.map(t => {
+                // Robust name resolution
+                let fullName = t.Name || t.name || '';
+                if (!fullName) {
+                    fullName = (t['คำนำหน้า'] || '') + (t['ชื่อ'] ? (' ' + t['ชื่อ']) : '') + (t['นามสกุล'] ? (' ' + t['นามสกุล']) : '');
+                }
+                if (!fullName) {
+                    fullName = (t.prefix || '') + (t.firstName ? (' ' + t.firstName) : '') + (t.lastName ? (' ' + t.lastName) : '');
+                }
+
+                return {
+                    name: fullName.trim() || 'ไม่ระบุชื่อ',
+                    position: t['ตำแหน่งทางวิชาการ'] || t['ตำแหน่ง'] || t.position || t.Position || 'อาจารย์',
+                    expertise: t['ความเชี่ยวชาญ'] || t.expertise || t.Expertise || '-',
+                    email: t['อีเมล'] || t.email || t.Email || '-',
+                    phone: t['เบอร์โทร'] || t['โทรศัพท์'] || t.phone || t.Phone || '-',
+                    studentCount: parseInt(t['นศ. ในที่ปรึกษา'] || t['นศ.ในที่ปรึกษา'] || t.studentCount || t.StudentCount) || 0,
+                    faculty: t['คณะ/สังกัด'] || t['คณะ'] || t.faculty || t.Faculty || 'คณะพยาบาลศาสตร์',
+                    username: t['Username'] || t.username,
+                    password: t['Password'] || t.password,
+                    type: t['ประเภทอาจารย์'] || t.type || t.Type || 'อาจารย์ประจำ'
+                };
+            });
 
             // Filter for different roles/views
-            MOCK.teachers = allMappedTeachers; // Store all teachers for management pages
+            MOCK.teachers = allMappedTeachers;
             MOCK.academicAdvisors = allMappedTeachers.filter(t => t.type === 'อาจารย์ประจำ');
             MOCK.specialLecturers = allMappedTeachers.filter(t => t.type === 'อาจารย์พิเศษ');
             
@@ -1020,5 +1031,135 @@ window.saveBulkAdvisorAssignment = async function(advisorName, type) {
     renderPage();
     alert('มอบหมายนักศึกษาสำเร็จ ' + successCount + ' คน' + (failCount > 0 ? ' (ผิดพลาด ' + failCount + ' คน)' : ''));
 };
+
+/**
+ * Searchable Select Component Utilities
+ */
+window.renderSearchableSelect = function(id, options, selectedValue = '', placeholder = '--- เลือกรายการ ---') {
+    const selectedOption = options.find(o => o.value === selectedValue);
+    const displayText = selectedOption ? selectedOption.label : placeholder;
+
+    return `
+    <div class="search-select-container" id="${id}_container">
+        <div class="search-select-display" onclick="window.toggleSearchSelect('${id}')">
+            <span class="search-select-label" id="${id}_label">${displayText}</span>
+            <input type="text" class="search-select-input" id="${id}_input" 
+                   placeholder="พิมพ์เพื่อค้นหา..." 
+                   onkeyup="window.filterSearchSelect('${id}', this.value)" 
+                   onclick="event.stopPropagation()">
+            <svg id="${id}_arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s;">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </div>
+        <div class="search-select-dropdown" id="${id}_dropdown" style="display:none;">
+            ${options.map(o => `
+                <div class="search-select-option ${selectedValue === o.value ? 'selected' : ''}" 
+                     data-value="${o.value}" 
+                     onclick="window.selectSearchOption('${id}', '${o.value.replace(/'/g, "\\'")}', '${o.label.replace(/'/g, "\\'")}')">
+                    ${o.label}
+                </div>
+            `).join('')}
+            ${options.length === 0 ? '<div class="search-select-no-results">ไม่พบข้อมูลอาจารย์</div>' : ''}
+            <div class="search-select-no-results" id="${id}_no_results" style="display:none;">ไม่พบข้อมูล</div>
+        </div>
+        <input type="hidden" id="${id}" value="${selectedValue}">
+    </div>
+    `;
+};
+
+window.toggleSearchSelect = function(id) {
+    const container = document.getElementById(id + '_container');
+    const input = document.getElementById(id + '_input');
+    const label = document.getElementById(id + '_label');
+    const dropdown = document.getElementById(id + '_dropdown');
+    const arrow = document.getElementById(id + '_arrow');
+    
+    if (!container || !dropdown) return;
+    
+    const isOpen = container.classList.contains('open');
+
+    if (isOpen) {
+        window.closeSearchSelect(id);
+    } else {
+        // Close other open selects
+        document.querySelectorAll('.search-select-container.open').forEach(c => {
+            const otherId = c.id.replace('_container', '');
+            window.closeSearchSelect(otherId);
+        });
+
+        container.classList.add('open');
+        dropdown.style.display = 'block';
+        label.style.display = 'none';
+        input.style.display = 'block';
+        input.value = '';
+        input.focus();
+        arrow.style.transform = 'rotate(180deg)';
+        window.filterSearchSelect(id, ''); 
+    }
+};
+
+window.closeSearchSelect = function(id) {
+    const container = document.getElementById(id + '_container');
+    const dropdown = document.getElementById(id + '_dropdown');
+    const input = document.getElementById(id + '_input');
+    const label = document.getElementById(id + '_label');
+    const arrow = document.getElementById(id + '_arrow');
+    
+    if (container && container.classList.contains('open')) {
+        container.classList.remove('open');
+        if (dropdown) dropdown.style.display = 'none';
+        if (label) label.style.display = 'block';
+        if (input) {
+            input.style.display = 'none';
+            input.value = '';
+        }
+        if (arrow) arrow.style.transform = 'rotate(0deg)';
+    }
+};
+
+window.filterSearchSelect = function(id, query) {
+    const dropdown = document.getElementById(id + '_dropdown');
+    if (!dropdown) return;
+    const options = dropdown.querySelectorAll('.search-select-option');
+    const noResults = document.getElementById(id + '_no_results');
+    let count = 0;
+
+    options.forEach(opt => {
+        const text = opt.innerText.toLowerCase();
+        if (text.includes(query.toLowerCase())) {
+            opt.style.display = 'block';
+            count++;
+        } else {
+            opt.style.display = 'none';
+        }
+    });
+
+    if (noResults) noResults.style.display = (count === 0 && options.length > 0) ? 'block' : 'none';
+};
+
+window.selectSearchOption = function(id, value, label) {
+    const hiddenInput = document.getElementById(id);
+    const displayLabel = document.getElementById(id + '_label');
+    
+    if (hiddenInput) hiddenInput.value = value;
+    if (displayLabel) displayLabel.innerText = label;
+    
+    // Trigger callback if defined (e.g. for advisor filter)
+    if (id === 'advisorSearchSelect') {
+        window.changeAdvisorFilter(value);
+    }
+    
+    window.closeSearchSelect(id);
+};
+
+// Global click listener to close dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.search-select-container')) {
+        document.querySelectorAll('.search-select-container.open').forEach(container => {
+            const id = container.id.replace('_container', '');
+            window.closeSearchSelect(id);
+        });
+    }
+});
 
 bootApp();
