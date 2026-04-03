@@ -212,9 +212,10 @@ pages['student-profile'] = function () {
                 <div style="margin-bottom:10px; font-size:1.1rem; font-weight:700; color:#1e293b; line-height:1.5;">${st.thesisInfo?.title || 'ยังไม่ได้ระบุหัวข้อวิทยานิพนธ์'}</div>
                 <div style="font-style:italic; color:#64748b; font-size:1rem; line-height:1.5; margin-bottom:15px;">${st.thesisInfo?.titleEn || 'Not specified'}</div>
                 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; border-top:1px dashed #e2e8f0; padding-top:15px; margin-top:10px;">
-                    <div><span style="font-weight:700; color:#475569;">อาจารย์ที่ปรึกษาวิทยานิพนธ์:</span> <span style="margin-left:8px; color:var(--accent-primary); font-weight:700;">${(st.thesisAdvisor && st.thesisAdvisor !== '-') ? st.thesisAdvisor : 'รอการจัดสรร'}</span></div>
-                    ${st.thesisInfo?.status ? `<div><span style="font-weight:700; color:#475569;">สถานะล่าสุด:</span> <span class="badge" style="background:#e0f2fe; color:#0369a1; border:none; margin-left:8px;">${st.thesisInfo.status}</span></div>` : ''}
+                <div style="border-top:1px dashed #e2e8f0; padding-top:15px; margin-top:10px; display:grid; gap:8px;">
+                    <div><span style="font-weight:700; color:#475569;">อาจารย์ที่ปรึกษาหลัก:</span> <span style="margin-left:8px; color:var(--accent-primary); font-weight:700;">${(st.mainAdvisor && st.mainAdvisor !== '-') ? st.mainAdvisor : 'รอการแต่งตั้ง'}</span></div>
+                    <div><span style="font-weight:700; color:#475569;">อาจารย์ที่ปรึกษาร่วม (1):</span> <span style="margin-left:8px; color:var(--text-primary);">${(st.coAdvisorInternal && st.coAdvisorInternal !== '-') ? st.coAdvisorInternal : '-'}</span></div>
+                    <div><span style="font-weight:700; color:#475569;">อาจารย์ที่ปรึกษาร่วม (2):</span> <span style="margin-left:8px; color:var(--text-primary);">${(st.coAdvisorExternal && st.coAdvisorExternal !== '-') ? st.coAdvisorExternal : '-'}</span></div>
                 </div>
             </div>
         </div>

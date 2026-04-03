@@ -20,9 +20,15 @@ pages['thesis-advisor'] = function () {
     const flow = window._thesisFlow;
     const students = MOCK.students || [];
     const internalTeachers = (MOCK.teachers || []).filter(t => 
-        (t.type || '').includes('Thesis') || (t.position || '').includes('อาจารย์') || (t.type || '') === 'อาจารย์ประจำ'
+        (t.type || '').includes('ประจำ') || 
+        (t.type || '').includes('ภายใน') || 
+        !(t.type || '').includes('พิเศษ') || 
+        (t.position || '').includes('อาจารย์')
     );
-    const externalTeachers = MOCK.specialLecturers || [];
+    const externalTeachers = [
+        ...(MOCK.teachers || []).filter(t => (t.type || '').includes('พิเศษ')),
+        ...(MOCK.specialLecturers || [])
+    ];
     
     // Helper to get name from ID/Value
     const getName = (list, val) => {
