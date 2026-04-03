@@ -48,7 +48,7 @@ pages['menu-permissions'] = function() {
 
     const roles = [
         { id: 'student', label: 'นักศึกษา' },
-        { id: 'staff', label: 'อาจารย์/บุคลากร' }
+        { id: 'teacher', label: 'อาจารย์/บุคลากร' }
     ];
 
     // Group menu items by section
