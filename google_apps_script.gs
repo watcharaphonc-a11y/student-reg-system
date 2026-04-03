@@ -833,7 +833,7 @@ function updatePermission(payload) {
 function setupInitialSheets() {
   const defaultHeaders = {
     [SHEETS.USERS]: ['Username', 'Password', 'Name', 'Role', 'Status'],
-    [SHEETS.STUDENTS]: ['คำนำหน้า','ชื่อ (ไทย)','นามสกุล (ไทย)','ชื่อ (EN)','นามสกุล (EN)','เลขบัตรประชาชน','รหัสนักศึกษา','วันเกิด (YYYY-MM-DD)','เพศ','อีเมล','E-mail ของสถาบัน','เบอร์โทร','สาขาวิชา','ปีการศึกษาที่เข้า','ที่อยู่','Username','Password','สถานะ'],
+    [SHEETS.STUDENTS]: ['คำนำหน้า','ชื่อ (ไทย)','นามสกุล (ไทย)','ชื่อ (EN)','นามสกุล (EN)','เลขบัตรประชาชน','รหัสนักศึกษา','วันเกิด (YYYY-MM-DD)','เพศ','อีเมล','E-mail ของสถาบัน','เบอร์โทร','สาขาวิชา','ปีการศึกษาที่เข้า','ที่อยู่','Username','Password','อาจารย์ที่ปรึกษาหลัก','อาจารย์ที่ปรึกษาร่วมภายใน','อาจารย์ที่ปรึกษาร่วมภายนอก','หัวข้อวิทยานิพนธ์','สถานะ'],
     [SHEETS.TEACHERS]: ['คำนำหน้า','ชื่อ','นามสกุล','ตำแหน่งทางวิชาการ','ความเชี่ยวชาญ','อีเมล','เบอร์โทร','คณะ/สังกัด','นศ. ในกำกับ','Username','Password','ประเภทอาจารย์'],
     [SHEETS.COURSES]: ['รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'กลุ่ม', 'อาจารย์ผู้สอน'],
     [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
@@ -1358,6 +1358,10 @@ function updateStudentDetail(payload) {
           if (colIdx === -1) {
             if (key === 'advisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษา');
             if (key === 'thesisAdvisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาวิทยานิพนธ์');
+            if (key === 'mainAdvisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาหลัก');
+            if (key === 'coAdvisorInternal') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาร่วมภายใน');
+            if (key === 'coAdvisorExternal') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาร่วมภายนอก');
+            if (key === 'thesisTopic') colIdx = headers.indexOf('หัวข้อวิทยานิพนธ์');
           }
           
           if (colIdx !== -1) {

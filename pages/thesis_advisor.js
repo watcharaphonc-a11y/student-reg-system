@@ -1,184 +1,310 @@
 // ============================
-// Thesis Advisor Page
+// Thesis Advisor Appointment Page
+// 5-Step Workflow: Student -> Main -> Co-1 -> Co-2 -> Confirm & Topic
 // ============================
-pages['thesis-advisor'] = function() {
-    const st = MOCK.student;
-    const isAdmin = (window.currentUserRole === 'staff' || window.currentUserRole === 'admin');
+
+pages['thesis-advisor'] = function () {
+    // Persistent state for the current 5-step flow
+    if (!window._thesisFlow) {
+        window._thesisFlow = {
+            step: 1,
+            studentId: '',
+            main: '-',
+            coInternal: '-',
+            coExternal: '-',
+            topicTh: '',
+            topicEn: ''
+        };
+    }
     
-    // Group all possible thesis teachers
-    const allTeachers = MOCK.teachers || [];
-    // If not categorized, just use all teachers as potential advisors
-    const thesisTeachers = allTeachers.filter(t => (t.type || '').includes('Thesis') || (t.position || '').includes('อาจารย์') || (t.type || '') === 'อาจารย์ประจำ');
+    const flow = window._thesisFlow;
+    const students = MOCK.students || [];
+    const internalTeachers = (MOCK.teachers || []).filter(t => 
+        (t.type || '').includes('Thesis') || (t.position || '').includes('อาจารย์') || (t.type || '') === 'อาจารย์ประจำ'
+    );
+    const externalTeachers = MOCK.specialLecturers || [];
     
-    // Active UI Filter State
-    const activeAdvisorName = window.activeAdvisorName || null;
-    
-    // Helper for robust name matching
-    const isMainMatch = (val, target) => {
-        if (!val || !target) return false;
-        const v = String(val).replace(/\s+/g, '').replace(/ผศ\.ดร\.|ดร\.|รศ\.ดร\.|พญ\.|นพ\.|นาง|นาย|นางสาว/g, '');
-        const t = String(target).replace(/\s+/g, '').replace(/ผศ\.ดร\.|ดร\.|รศ\.ดร\.|พญ\.|นพ\.|นาง|นาย|นางสาว/g, '');
-        return v.includes(t) || t.includes(v);
+    // Helper to get name from ID/Value
+    const getName = (list, val) => {
+        if (!val || val === '-') return '-';
+        const found = list.find(l => (l.id || l.studentId || l.name) === val);
+        return found ? (found.name || `${found.prefix || ''}${found.firstName} ${found.lastName}`) : val;
     };
 
-    // Students filtered by active advisor
-    const filteredStudents = (MOCK.students || []).filter(s => {
-        if (!activeAdvisorName || activeAdvisorName === '-') return true;
-        return isMainMatch(s.thesisAdvisor, activeAdvisorName);
-    });
-
-    // Content for Student Detail
-    const assignedName = (st && st.thesisAdvisor) ? String(st.thesisAdvisor).trim() : '';
-    const advisorsInfo = (assignedName === '-' || !assignedName) 
-        ? [] 
-        : thesisTeachers.filter(t => {
-            return assignedName.includes(t.name);
-        });
-
-    // Content for Advisor Summary (if no student selected)
-    const activeTeacher = activeAdvisorName ? thesisTeachers.find(t => t.name === activeAdvisorName) : null;
-    const studentsOfTeacher = activeAdvisorName ? (MOCK.students || []).filter(s => isMainMatch(s.thesisAdvisor, activeAdvisorName)) : [];
-
+    const studentName = getName(students, flow.studentId);
+    
     return `
     <div class="animate-in">
-        <div class="page-header" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom:25px;">
-            <div>
-                <h1 class="page-title">อาจารย์ที่ปรึกษาวิทยานิพนธ์</h1>
-                <p class="page-subtitle">จัดการและติดตามสถานะการแต่งตั้งอาจารย์ที่ปรึกษา</p>
-            </div>
+        <div class="page-header">
+            <h1 class="page-title">จัดการอาจารย์ที่ปรึกษาวิทยานิพนธ์</h1>
+            <p class="page-subtitle">ขั้นตอนการแต่งตั้งทีมที่ปรึกษาและกำหนดหัวข้อวิทยานิพนธ์เบื้องต้น</p>
+        </div>
 
-            ${isAdmin ? `
-            <div style="display:flex; gap:10px; flex-grow: 1; max-width: 700px; justify-content: flex-end;">
-                <!-- Level 1: Advisor Selector -->
-                <div style="flex:1; min-width:250px;">
-                    <label class="form-label" style="color:var(--text-secondary); font-weight:700;">1. เลือกชื่ออาจารย์ (FILTER BY ADVISOR)</label>
-                    ${renderSearchableSelect('advisorSearchSelect', 
-                        thesisTeachers.map(t => ({ value: t.name, label: t.name })), 
-                        activeAdvisorName, 
-                        '-- เลือกชื่ออาจารย์ --'
-                    )}
-                </div>
-                
-                <!-- Level 2: Student Selector (Filtered by Advisor) -->
-                <div style="flex:1.2;">
-                    <label style="display:block; font-size:0.75rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">2. เลือกนักศึกษา (Select Student)</label>
-                    <select class="form-input" onchange="changeProfileStudent(this.value)" style="height:42px;">
-                        <option value="">-- ${activeAdvisorName ? 'เลือกคนในความดูแล' : 'เลือกนักศึกษา'} --</option>
-                        ${filteredStudents.map(s => `
-                            <option value="${s.id || s.studentId}" ${st && (st.id === s.id || st.studentId === s.studentId) ? 'selected' : ''}>
-                                ${s.studentId || ''} - ${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}
-                            </option>
+        <div style="display:grid; grid-template-columns: 1fr 350px; gap:25px; align-items: start;">
+            
+            <!-- Left: Step Content -->
+            <div class="card" style="border:none; box-shadow:0 10px 30px -5px rgba(0,0,0,0.1);">
+                <div class="card-body" style="padding:0;">
+                    
+                    <!-- Progress Bar -->
+                    <div style="display:flex; border-bottom:1px solid var(--border-color); background:var(--bg-light);">
+                        ${[1, 2, 3, 4, 5].map(s => `
+                            <div style="flex:1; padding:15px; text-align:center; position:relative; border-right:1px solid var(--border-color); transition:all 0.3s;
+                                ${flow.step === s ? 'background:white; border-bottom:3px solid var(--accent-primary);' : 'opacity:0.6;'}">
+                                <div style="font-size:0.7rem; font-weight:700; color:var(--text-muted); margin-bottom:4px;">STEP ${s}</div>
+                                <div style="font-size:0.85rem; font-weight:600; color:${flow.step === s ? 'var(--accent-primary)' : 'inherit'};">
+                                    ${s === 1 ? 'เลือกนักศึกษา' : s === 2 ? 'ที่ปรึกษาหลัก' : s === 3 ? 'ร่วม (1)' : s === 4 ? 'ร่วม (2)' : 'ลงหัวข้อ'}
+                                </div>
+                            </div>
                         `).join('')}
-                    </select>
-                </div>
-            </div>
-            ` : ''}
-        </div>
-
-        ${isAdmin ? `
-        <div style="margin-bottom:20px; display:flex; justify-content:flex-end;">
-            <button class="btn btn-primary" onclick="${st ? 'openEditStudentProfile()' : 'alert(\'กรุณาเลือกนักศึกษาก่อนแต่งตั้งครับ\')'}" style="gap:8px; opacity:${st ? 1 : 0.6};">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="17" y1="11" x2="23" y2="11"/></svg>
-                แต่งตั้ง/แก้ไขอาจารย์ที่ปรึกษา
-            </button>
-        </div>
-        ` : ''}
-
-        ${(isAdmin && !st && activeAdvisorName && activeTeacher) ? `
-        <!-- Advisor Summary View -->
-        <div class="animate-in animate-delay-1">
-            <div class="card" style="margin-bottom:25px; border-left:5px solid var(--accent-primary);">
-                <div class="card-body" style="display:flex; align-items:center; gap:25px; padding:25px;">
-                    <div style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg, var(--accent-primary), #c026d3); display:flex; align-items:center; justify-content:center; color:white; font-size:1.8rem; font-weight:800;">${(activeTeacher.name || 'T')[0]}</div>
-                    <div style="flex:1;">
-                        <div style="font-size:1.4rem; font-weight:800; color:var(--text-primary);">${activeAdvisorName}</div>
-                        <div style="color:var(--text-muted); font-weight:500; margin-bottom:8px;">สาขาเชี่ยวชาญ: ${activeTeacher.Expertise || activeTeacher.expertise || '-'}</div>
-                        <button class="btn btn-secondary btn-sm" onclick="window.openBulkAssignAdvisor('${activeAdvisorName}', 'thesisAdvisor')" style="padding:6px 12px; font-size:0.8rem; gap:6px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="16" y1="11" x2="22" y2="11"/></svg>
-                            มอบหมายนักศึกษาเพิ่ม (Bulk Assign)
-                        </button>
                     </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">นักศึกษาในความดูแล</div>
-                        <div style="font-size:2rem; font-weight:900; color:var(--accent-primary); line-height:1;">${studentsOfTeacher.length} <span style="font-size:1rem; font-weight:600;">คน</span></div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="card">
-                <div class="card-header"><h3 class="card-title">รายชื่อนักศึกษาในความดูแลของ ${activeAdvisorName}</h3></div>
-                <div class="card-body">
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>รหัสนักศึกษา</th>
-                                    <th>ชื่อ-สกุล</th>
-                                    <th>หลักสูตร</th>
-                                    <th>สถานะ</th>
-                                    <th style="text-align:center;">จัดการ</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${studentsOfTeacher.map(s => `
-                                    <tr>
-                                        <td style="font-weight:600;">${s.studentId || ''}</td>
-                                        <td>${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}</td>
-                                        <td>${s.program || '-'}</td>
-                                        <td>${getStatusBadge(s.status || 'กำลังศึกษา')}</td>
-                                        <td style="text-align:center;">
-                                            <button class="btn btn-ghost btn-sm" onclick="changeProfileStudent('${s.id || s.studentId}')" style="color:var(--accent-primary); font-weight:700;">ดูข้อมูล</button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                                ${studentsOfTeacher.length === 0 ? '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--text-muted);">ยังไม่มีนักศึกษาในความดูแล</td></tr>' : ''}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-        ` : `
-        
-        <!-- Default Student Detail View -->
-        ${!st ? `
-            <div class="card animate-in animate-delay-1"><div class="card-body" style="text-align:center; padding:80px; color:var(--text-muted);">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:20px; opacity:0.3;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                <h3 style="font-weight:600;">กรุณาเลือกนักศึกษาเพื่อดูข้อมูล</h3>
-                <p style="font-size:0.9rem;">คุณสามารถเลือกดูตามชื่ออาจารย์ที่ปรึกษา หรือค้นหารายชื่อนักศึกษาโดยตรงจากด้านบน</p>
-            </div></div>
-        ` : `
-        <div class="card animate-in animate-delay-1" style="margin-bottom:18px;">
-            <div class="card-header"><h3 class="card-title">ข้อมูลวิทยานิพนธ์</h3></div>
-            <div class="card-body">
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:20px;">
-                    <div><span style="color:var(--text-muted); font-size:0.85rem;">ชื่อนักศึกษา:</span> <div style="font-weight:600;">${st.prefix || ''}${st.firstName || ''} ${st.lastName || ''}</div></div>
-                    <div><span style="color:var(--text-muted); font-size:0.85rem;">รหัสนักศึกษา:</span> <div style="font-weight:600;">${st.studentId || st.id || '-'}</div></div>
-                    <div style="grid-column: 1 / -1;"><span style="color:var(--text-muted); font-size:0.85rem;">หัวข้อวิทยานิพนธ์:</span> <div style="font-weight:600; line-height:1.5;">${st.thesisInfo?.title || 'ยังไม่ได้ระบุหัวข้อ'}</div></div>
-                    <div style="grid-column: 1 / -1;"><span style="color:var(--text-muted); font-size:0.85rem;">Thesis Topic (EN):</span> <div style="font-weight:600; font-style:italic; line-height:1.5;">${st.thesisInfo?.titleEn || 'Not specified'}</div></div>
-                    <div><span style="color:var(--text-muted); font-size:0.85rem;">สถานะวิทยานิพนธ์:</span> <div>${getStatusBadge(st.thesisInfo?.status || 'อยู่ระหว่างดำเนินการ')}</div></div>
-                </div>
-            </div>
-        </div>
+                    <!-- Step Content Areas -->
+                    <div style="padding:40px;">
+                        
+                        <!-- Step 1: Select Student -->
+                        <div style="display:${flow.step === 1 ? 'block' : 'none'}">
+                            <h3 style="margin-bottom:20px; font-size:1.3rem;">1. เลือกนักศึกษา</h3>
+                            <div class="form-group">
+                                <label class="form-label">ค้นหารายชื่อนักศึกษาที่ต้องการแต่งตั้ง</label>
+                                ${renderSearchableSelect('thesisStudentSelect', 
+                                    students.map(s => ({ value: s.id || s.studentId, label: `${s.studentId} - ${s.prefix || ''}${s.firstName} ${s.lastName}` })), 
+                                    flow.studentId, 
+                                    '--- ค้นหารหัสนักศึกษา หรือ ชื่อ ---'
+                                )}
+                            </div>
+                            <div style="margin-top:25px; padding:15px; background:rgba(37, 99, 235, 0.05); border-radius:12px; display:flex; gap:12px; align-items:center;">
+                                <div style="font-size:1.5rem;">💡</div>
+                                <div style="font-size:0.9rem; color:var(--text-secondary); line-height:1.4;">
+                                    ระบบจะดึงข้อมูลที่ปรึกษาและหัวข้อเดิมที่มีอยู่ในระบบมาแสดงให้ตรวจสอบโดยอัตโนมัติ
+                                </div>
+                            </div>
+                        </div>
 
-        <div class="card animate-in animate-delay-2">
-            <div class="card-header"><h3 class="card-title">อาจารย์ที่ปรึกษาวิทยานิพนธ์ที่แต่งตั้ง</h3></div>
-            <div class="card-body">
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:16px;">
-                ${advisorsInfo.map(a => `
-                    <div style="border:1px solid var(--border-color); border-radius:var(--radius-md); padding:16px; background:var(--bg-secondary); display:flex; align-items:center; gap:15px;">
-                        <div style="width:45px; height:45px; border-radius:50%; background:var(--accent-primary); display:flex; align-items:center; justify-content:center; color:white; font-weight:700;">${(a.name || 'T')[0]}</div>
-                        <div>
-                            <div style="font-weight:600;">${a.name}</div>
-                            <div style="font-size:0.8rem; color:var(--text-muted);">${a.position || '-'}</div>
+                        <!-- Step 2: Main Advisor -->
+                        <div style="display:${flow.step === 2 ? 'block' : 'none'}">
+                            <h3 style="margin-bottom:20px; font-size:1.3rem;">2. เลือกอาจารย์ที่ปรึกษาหลัก</h3>
+                            <div class="form-group">
+                                <label class="form-label">รายชื่ออาจารย์ภายใน สบช. (ประธานที่ปรึกษา)</label>
+                                ${renderSearchableSelect('mainAdvisorSelect', 
+                                    internalTeachers.map(t => ({ value: t.name, label: t.name })), 
+                                    flow.main === '-' ? '' : flow.main, 
+                                    '--- ค้นหาชื่ออาจารย์ ---'
+                                )}
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Co-Internal -->
+                        <div style="display:${flow.step === 3 ? 'block' : 'none'}">
+                            <h3 style="margin-bottom:20px; font-size:1.3rem;">3. เลือกอาจารย์ที่ปรึกษาร่วม (1)</h3>
+                            <div class="form-group">
+                                <label class="form-label">รายชื่ออาจารย์ภายใน สบช.</label>
+                                ${renderSearchableSelect('coInternalSelect', 
+                                    internalTeachers.map(t => ({ value: t.name, label: t.name })), 
+                                    flow.coInternal === '-' ? '' : flow.coInternal, 
+                                    '--- ค้นหาชื่ออาจารย์ (ถ้ามี) ---'
+                                )}
+                            </div>
+                        </div>
+
+                        <!-- Step 4: Co-External -->
+                        <div style="display:${flow.step === 4 ? 'block' : 'none'}">
+                            <h3 style="margin-bottom:20px; font-size:1.3rem;">4. เลือกอาจารย์ที่ปรึกษาร่วม (2)</h3>
+                            <div class="form-group">
+                                <label class="form-label">รายชื่ออาจารย์ภายนอก / ผู้เชี่ยวชาญ</label>
+                                ${renderSearchableSelect('coExternalSelect', 
+                                    externalTeachers.map(t => ({ value: t.name, label: t.name })), 
+                                    flow.coExternal === '-' ? '' : flow.coExternal, 
+                                    '--- ค้นหาชื่ออาจารย์ภายนอก (ถ้ามี) ---'
+                                )}
+                            </div>
+                        </div>
+
+                        <!-- Step 5: Confirmation & Topic -->
+                        <div style="display:${flow.step === 5 ? 'block' : 'none'}">
+                            <h3 style="margin-bottom:20px; font-size:1.3rem;">5. กำหนดหัวข้อวิทยานิพนธ์</h3>
+                            <div class="form-group">
+                                <label class="form-label">ชื่อหัวข้อวิทยานิพนธ์ (ภาษาไทย)</label>
+                                <textarea class="form-input" rows="3" placeholder="ระบุชื่อหัวข้อวิทยานิพนธ์ภาษาไทย" 
+                                    onchange="window._thesisFlow.topicTh = this.value">${flow.topicTh}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">ชื่อหัวข้อวิทยานิพนธ์ (ภาษาอังกฤษ)</label>
+                                <textarea class="form-input" rows="3" placeholder="Specify Thesis Title in English" 
+                                    onchange="window._thesisFlow.topicEn = this.value">${flow.topicEn}</textarea>
+                            </div>
+                            <div style="margin-top:10px; font-size:0.85rem; color:var(--text-muted);">
+                                * เมื่อบันทึกแล้ว นักศึกษาจะสามารถแจ้งขอเปลี่ยนแปลงหัวข้อได้ภายหลังทางหน้าเว็บ
+                            </div>
+                        </div>
+
+                        <!-- Navigation Buttons -->
+                        <div style="margin-top:50px; display:flex; justify-content:space-between; border-top:1px solid var(--border-color); padding-top:25px;">
+                            <button class="btn btn-secondary" onclick="window.thesisPrevStep()" ${flow.step === 1 ? 'disabled' : ''}>
+                                ย้อนกลับ
+                            </button>
+                            
+                            ${flow.step < 5 ? `
+                                <button class="btn btn-primary" onclick="window.thesisNextStep()" ${!flow.studentId ? 'disabled' : ''}>
+                                    ถัดไป
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:8px;"><polyline points="9 18 15 12 9 6"/></svg>
+                                </button>
+                            ` : `
+                                <button class="btn btn-primary" onclick="window.saveThesisAssignments()" style="background:var(--success-color); border:none; padding:10px 30px;">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:8px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                                    ยืนยันการบันทึก
+                                </button>
+                            `}
                         </div>
                     </div>
-                `).join('')}
-                ${advisorsInfo.length === 0 ? '<div style="text-align:center; padding:30px; color:var(--text-muted); width:100%;">ยังไม่ได้รับการแต่งตั้งอาจารย์ที่ปรึกษาวิทยานิพนธ์</div>' : ''}
                 </div>
             </div>
+
+            <!-- Right: Summary Sidebar -->
+            <div class="sticky-top" style="top:20px;">
+                <div class="card" style="border:none; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05); border-left:4px solid var(--accent-primary);">
+                    <div class="card-header"><h3 class="card-title">สรุปข้อมูลการแต่งตั้ง</h3></div>
+                    <div class="card-body">
+                        <div style="margin-bottom:20px;">
+                            <label style="font-size:0.7rem; text-transform:uppercase; color:var(--text-muted); font-weight:700; display:block; margin-bottom:5px;">นักศึกษา</label>
+                            <div style="font-weight:700; color:var(--accent-primary); font-size:1.05rem;">${studentName}</div>
+                        </div>
+                        
+                        <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:20px; padding:15px; background:var(--bg-light); border-radius:12px; border:1px solid var(--border-color);">
+                            <div>
+                                <label style="font-size:0.65rem; color:var(--text-muted); display:block; margin-bottom:2px;">ที่ปรึกษาหลัก (1)</label>
+                                <div style="font-size:0.85rem; font-weight:600;">${flow.main}</div>
+                            </div>
+                            <div>
+                                <label style="font-size:0.65rem; color:var(--text-muted); display:block; margin-bottom:2px;">ที่ปรึกษาร่วม (1)</label>
+                                <div style="font-size:0.85rem; font-weight:600;">${flow.coInternal}</div>
+                            </div>
+                            <div>
+                                <label style="font-size:0.65rem; color:var(--text-muted); display:block; margin-bottom:2px;">ที่ปรึกษาร่วม (2)</label>
+                                <div style="font-size:0.85rem; font-weight:600;">${flow.coExternal}</div>
+                            </div>
+                        </div>
+
+                        ${flow.topicTh ? `
+                        <div style="margin-bottom:20px;">
+                            <label style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:5px;">หัวข้อวิทยานิพนธ์</label>
+                            <div style="font-size:0.8rem; background:#fff; padding:12px; border:1px dashed var(--border-color); border-radius:8px; font-style:italic; line-height:1.4;">${flow.topicTh}</div>
+                        </div>
+                        ` : ''}
+
+                        <div style="font-size:0.75rem; color:var(--text-muted); line-height:1.5; padding-top:15px; border-top:1px solid var(--border-color);">
+                            <p><strong>กฎเกณฑ์:</strong> กำหนดที่ปรึกษาได้ไม่เกิน 3 ท่าน โดยเป็นประธาน 1 ท่าน และกรรมการร่วมไม่เกิน 2 ท่าน</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
-        `}
-        `}
-    </div>`;
+    </div>
+    `;
+};
+
+// ====== Navigation & Interaction Functions ======
+
+window.init_thesis_advisor = function() {
+    // Override the global SearchableSelect callback for this page
+    window.onSearchSelectChange = function(id, val) {
+        if (id === 'thesisStudentSelect') window.selectThesisStudent(val);
+        if (id === 'mainAdvisorSelect') window.selectMainAdvisor(val);
+        if (id === 'coInternalSelect') window.selectCoInternal(val);
+        if (id === 'coExternalSelect') window.selectCoExternal(val);
+    };
+};
+
+window.thesisNextStep = function() {
+    if (window._thesisFlow.step < 5) {
+        window._thesisFlow.step++;
+        renderPage();
+    }
+};
+
+window.thesisPrevStep = function() {
+    if (window._thesisFlow.step > 1) {
+        window._thesisFlow.step--;
+        renderPage();
+    }
+};
+
+window.selectThesisStudent = function(val) {
+    const st = (MOCK.students || []).find(s => String(s.id || s.studentId) === String(val));
+    window._thesisFlow = {
+        ...window._thesisFlow,
+        studentId: val,
+        main: st?.mainAdvisor || '-',
+        coInternal: st?.coAdvisorInternal || '-',
+        coExternal: st?.coAdvisorExternal || '-',
+        topicTh: st?.thesisTopic || st?.thesisInfo?.title || '',
+        topicEn: st?.thesisInfo?.titleEn || ''
+    };
+    renderPage();
+};
+
+window.selectMainAdvisor = function(val) {
+    window._thesisFlow.main = val || '-';
+    renderPage();
+};
+
+window.selectCoInternal = function(val) {
+    window._thesisFlow.coInternal = val || '-';
+    renderPage();
+};
+
+window.selectCoExternal = function(val) {
+    window._thesisFlow.coExternal = val || '-';
+    renderPage();
+};
+
+window.saveThesisAssignments = async function() {
+    const flow = window._thesisFlow;
+    if (!flow.studentId || flow.main === '-') {
+        showToast('กรุณาเลือกนักศึกษาและอาจารย์ที่ปรึกษาหลักให้ครบถ้วน', 'warning');
+        return;
+    }
+
+    if (!flow.topicTh) {
+        if (!confirm('คุณยังไม่ได้ระบุหัวข้อวิทยานิพนธ์ ต้องการบันทึกข้อมูลทีมที่ปรึกษาโดยไม่ระบุหัวข้อหรือไม่?')) return;
+    }
+
+    showApiLoading('กำลังบันทึกข้อมูลการแต่งตั้ง...');
+    try {
+        const payload = {
+            mainAdvisor: flow.main,
+            coAdvisorInternal: flow.coInternal,
+            coAdvisorExternal: flow.coExternal,
+            thesisTopic: flow.topicTh
+        };
+        
+        const res = await window.api.updateStudentDetail(flow.studentId, payload);
+        
+        if (res.status === 'success') {
+            showToast('บันทึกข้อมูลการแต่งตั้งและหัวข้อวิทยานิพนธ์เรียบร้อยแล้ว', 'success');
+            
+            // Update MOCK locally for immediate UI update
+            const stIdx = MOCK.students.findIndex(s => String(s.id || s.studentId) === String(flow.studentId));
+            if (stIdx !== -1) {
+                MOCK.students[stIdx].mainAdvisor = flow.main;
+                MOCK.students[stIdx].coAdvisorInternal = flow.coInternal;
+                MOCK.students[stIdx].coAdvisorExternal = flow.coExternal;
+                MOCK.students[stIdx].thesisTopic = flow.topicTh;
+                if (!MOCK.students[stIdx].thesisInfo) MOCK.students[stIdx].thesisInfo = {};
+                MOCK.students[stIdx].thesisInfo.title = flow.topicTh;
+                MOCK.students[stIdx].thesisInfo.titleEn = flow.topicEn;
+            }
+            
+            // Success State: Clear flow and reset to step 1
+            window._thesisFlow = null;
+            renderPage();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (err) {
+        showToast('เกิดข้อผิดพลาดในการบันทึก: ' + err.message, 'error');
+    } finally {
+        hideApiLoading();
+    }
 };

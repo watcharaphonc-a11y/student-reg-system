@@ -307,6 +307,11 @@ async function bootApp() {
                     admissionYear: s['admissionYear'] || s['ปีการศึกษา'] || s['ปีที่เข้าศึกษา'] || s.admissionYear,
                     advisor: s['อาจารย์ที่ปรึกษา'] || s.advisor || '-',
                     thesisAdvisor: s['อาจารย์ที่ปรึกษาวิทยานิพนธ์'] || s.thesisAdvisor || '-',
+                    mainAdvisor: s['อาจารย์ที่ปรึกษาหลัก'] || s.mainAdvisor || '-',
+                    coAdvisorInternal: s['อาจารย์ที่ปรึกษาร่วมภายใน'] || s.coAdvisorInternal || '-',
+                    coAdvisorExternal: s['อาจารย์ที่ปรึกษาร่วมภายนอก'] || s.coAdvisorExternal || '-',
+                    thesisTopic: s['หัวข้อวิทยานิพนธ์'] || s.thesisTopic || '-',
+                    thesisInfo: { title: s['หัวข้อวิทยานิพนธ์'] || '', titleEn: '' }, // Initial setup
                     email: s['อีเมล'] || s.email || '-',
                     personalEmail: s['อีเมลส่วนตัว'] || s.personalEmail || '-',
                     phone: s['โทรศัพท์'] || s.phone || '-',
@@ -1146,8 +1151,13 @@ window.selectSearchOption = function(id, value, label) {
     if (hiddenInput) hiddenInput.value = value;
     if (displayLabel) displayLabel.innerText = label;
     
-    // Trigger callback if defined (e.g. for advisor filter)
-    if (id === 'advisorSearchSelect') {
+    // Trigger callback if defined
+    if (typeof window.onSearchSelectChange === 'function') {
+        window.onSearchSelectChange(id, value, label);
+    }
+    
+    // Legacy support for advisor filter
+    if (id === 'advisorSearchSelect' && typeof window.changeAdvisorFilter === 'function') {
         window.changeAdvisorFilter(value);
     }
     
@@ -1163,5 +1173,12 @@ document.addEventListener('click', (e) => {
         });
     }
 });
+
+// Fallback for Toast notifications
+if (typeof window.showToast !== 'function') {
+    window.showToast = function(msg, type = 'info') {
+        alert(`${type.toUpperCase()}: ${msg}`);
+    };
+}
 
 bootApp();
