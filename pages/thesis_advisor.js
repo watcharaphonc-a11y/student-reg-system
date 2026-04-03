@@ -150,10 +150,11 @@ pages['thesis-advisor'] = function () {
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:8px;"><polyline points="9 18 15 12 9 6"/></svg>
                                 </button>
                             ` : `
-                                <button class="btn btn-primary" onclick="window.saveThesisAssignments()" style="background:#10b981; color:#fff; border:none; padding:10px 30px;">
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:8px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                    ยืนยันการบันทึก
-                                </button>
+                                <!-- Primary Save Button moved to Sidebar for better visibility -->
+                                <div style="color:var(--text-muted); font-size:0.85rem; display:flex; align-items:center; gap:8px;">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                    ตรวจสอบข้อมูลในแถบด้านขวาและกดบันทึก
+                                </div>
                             `}
                         </div>
                     </div>
