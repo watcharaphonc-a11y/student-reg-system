@@ -46,7 +46,7 @@ pages['thesis-advisor'] = function () {
             <p class="page-subtitle">ขั้นตอนการแต่งตั้งทีมที่ปรึกษาและกำหนดหัวข้อวิทยานิพนธ์เบื้องต้น</p>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 350px; gap:25px; align-items: start;">
+        <div style="display:flex; flex-direction:column; gap:25px;">
             
             <!-- Left: Step Content -->
             <div class="card" style="border:none; box-shadow:0 10px 30px -5px rgba(0,0,0,0.1);">
@@ -167,8 +167,8 @@ pages['thesis-advisor'] = function () {
                 </div>
             </div>
 
-            <!-- Right: Summary Sidebar -->
-            <div class="sticky-top" style="top:20px;">
+            <!-- Bottom: Summary Section -->
+            <div>
                 <div class="card" style="border:none; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05); border-left:4px solid var(--accent-primary);">
                     <div class="card-header"><h3 class="card-title">สรุปข้อมูลการแต่งตั้ง</h3></div>
                     <div class="card-body">
