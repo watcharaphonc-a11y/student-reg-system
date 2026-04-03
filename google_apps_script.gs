@@ -1341,41 +1341,62 @@ function updateStudentDetail(payload) {
     
     const values = sheet.getDataRange().getValues();
     const headers = values[0].map(h => String(h).trim());
-    const idIdx = headers.indexOf('รหัสนักศึกษา');
     
-    if (idIdx === -1) return createResponse({ status: 'error', message: 'Student ID column not found' });
+    // Primary lookup columns
+    const idIdx = headers.indexOf('รหัสนักศึกษา');
+    const citizenIdx = headers.indexOf('เลขบัตรประชาชน');
     
     const targetId = String(payload.studentId || payload.id || '').trim();
     const data = payload.data || {};
     
+    if (idIdx === -1 && citizenIdx === -1) {
+      return createResponse({ status: 'error', message: 'ID columns (รหัสนักศึกษา or เลขบัตรประชาชน) not found in sheet' });
+    }
+    
+    let rowIndex = -1;
     for (let i = 1; i < values.length; i++) {
-      if (String(values[i][idIdx]).trim() === targetId) {
-        const rowIndex = i + 1;
-        
-        Object.keys(data).forEach(key => {
-          let colIdx = headers.indexOf(key);
-          // Fallback for Thai headers
-          if (colIdx === -1) {
-            if (key === 'advisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษา');
-            if (key === 'thesisAdvisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาวิทยานิพนธ์');
-            if (key === 'mainAdvisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาหลัก');
-            if (key === 'coAdvisorInternal') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาร่วมภายใน');
-            if (key === 'coAdvisorExternal') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาร่วมภายนอก');
-            if (key === 'thesisTopic') colIdx = headers.indexOf('หัวข้อวิทยานิพนธ์');
-          }
-          
-          if (colIdx !== -1) {
-            sheet.getRange(rowIndex, colIdx + 1).setValue(data[key]);
-          }
-        });
-        
-        return createResponse({ status: 'success' });
+      const row = values[i];
+      // Robust comparison (check both Student ID and Citizen ID)
+      const stId = String(row[idIdx] || '').trim();
+      const ctId = String(row[citizenIdx] || '').trim();
+      
+      // Clean target and source of any trailing .0 (often seen in spreadsheet numeric to string conversion)
+      const cleanTarget = targetId.replace(/\.0$/, '');
+      const cleanStId = stId.replace(/\.0$/, '');
+      const cleanCtId = ctId.replace(/\.0$/, '');
+
+      if (cleanStId === cleanTarget || cleanCtId === cleanTarget) {
+        rowIndex = i + 1;
+        break;
       }
     }
     
-    return createResponse({ status: 'error', message: 'Student not found: ' + targetId });
+    if (rowIndex === -1) {
+      console.error('updateStudentDetail: Student not found -> ' + targetId);
+      return createResponse({ status: 'error', message: 'ไม่พบข้อมูลนักศึกษาในระบบ: ' + targetId });
+    }
+    
+    // Update fields
+    Object.keys(data).forEach(key => {
+      let colIdx = headers.indexOf(key);
+      // Mapping from camelCase keys to Thai Headers
+      if (colIdx === -1) {
+        if (key === 'advisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษา');
+        if (key === 'thesisAdvisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาวิทยานิพนธ์');
+        if (key === 'mainAdvisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาหลัก');
+        if (key === 'coAdvisorInternal') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาร่วมภายใน');
+        if (key === 'coAdvisorExternal') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาร่วมภายนอก');
+        if (key === 'thesisTopic') colIdx = headers.indexOf('หัวข้อวิทยานิพนธ์');
+      }
+      
+      if (colIdx !== -1) {
+        sheet.getRange(rowIndex, colIdx + 1).setValue(data[key]);
+      }
+    });
+    
+    return createResponse({ status: 'success' });
   } catch (err) {
     console.error('updateStudentDetail Error:', err);
-    return createResponse({ status: 'error', message: err.toString() });
+    return createResponse({ status: 'error', message: 'SERVER ERROR: ' + err.toString() });
   }
 }

@@ -150,7 +150,7 @@ pages['thesis-advisor'] = function () {
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:8px;"><polyline points="9 18 15 12 9 6"/></svg>
                                 </button>
                             ` : `
-                                <button class="btn btn-primary" onclick="window.saveThesisAssignments()" style="background:var(--success-color); border:none; padding:10px 30px;">
+                                <button class="btn btn-primary" onclick="window.saveThesisAssignments()" style="background:#10b981; color:#fff; border:none; padding:10px 30px;">
                                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:8px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                                     ยืนยันการบันทึก
                                 </button>
@@ -197,7 +197,7 @@ pages['thesis-advisor'] = function () {
                         </div>
 
                         ${flow.step === 5 ? `
-                        <button class="btn btn-primary" style="width:100%; height:45px; font-weight:700; background:var(--success-color); border:none; box-shadow:0 4px 12px rgba(16, 185, 129, 0.2);" 
+                        <button class="btn btn-primary" style="width:100%; height:45px; font-weight:700; background:#10b981; color:#fff; border:none; box-shadow:0 4px 12px rgba(16, 185, 129, 0.2);" 
                                 onclick="window.saveThesisAssignments()">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:8px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
                             ยืนยันการบันทึก
