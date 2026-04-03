@@ -175,9 +175,11 @@ async function bootApp() {
             examCommittees: examCommitteesData,
             evalQuestions: evalQuestionsData,
             courseInstructors: courseInstructorsData,
-            evalInstructorQuestions: evalInstructorQuestionsData
+            evalInstructorQuestions: evalInstructorQuestionsData,
+            applicants: applicantsData
         } = allData;
 
+        MOCK.applicants = applicantsData || [];
         MOCK.allExams = examsData || []; // Global for admin view
 
         // Map Students and attach Grades from Enrollments

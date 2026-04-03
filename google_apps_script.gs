@@ -32,7 +32,7 @@ const SHEETS = {
   APPLICANTS: 'Applicants'
 };
 
-const DRIVE_FOLDER_ID = '1Zp4XU-m1I8o_g6Y6X6X6X6X6X6X6X6'; // Optional: Use ID for faster access
+const DRIVE_FOLDER_ID = '1zOq4BkaxMqZFyUvBz1eaYEzXjWd3lXrJ'; // Updated folder ID
 let CACHED_FOLDER = null;
 
 /**
@@ -319,9 +319,18 @@ function appendRow(sheetName, payload) {
 function getDocumentsFolder() {
   if (CACHED_FOLDER) return CACHED_FOLDER;
   
-  const folderName = "Student_Documents";
-  const folders = DriveApp.getFoldersByName(folderName);
-  const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+  let folder;
+  try {
+    if (DRIVE_FOLDER_ID && DRIVE_FOLDER_ID !== '') {
+      folder = DriveApp.getFolderById(DRIVE_FOLDER_ID);
+    } else {
+      throw new Error('No folder ID provided');
+    }
+  } catch (e) {
+    const folderName = "Admission_Documents";
+    const folders = DriveApp.getFoldersByName(folderName);
+    folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+  }
   
   CACHED_FOLDER = folder;
   return folder;
@@ -1310,16 +1319,8 @@ function updateStudentStatus(payload) {
 /**
  * Helper: Get or Create the root folder for Admission Documents
  */
-function getDocumentsFolder() {
-  const FOLDER_NAME = 'Admission_Documents';
-  const folders = DriveApp.getFoldersByName(FOLDER_NAME);
-  if (folders.hasNext()) {
-    return folders.next();
-  } else {
-    const folder = DriveApp.createFolder(FOLDER_NAME);
-    folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-    return folder;
-  }
+function getDocumentsFolder_Legacy() {
+  return getDocumentsFolder(); // Redirect to consolidated function above
 }
 
 /**
