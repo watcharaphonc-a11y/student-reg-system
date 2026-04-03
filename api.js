@@ -2,7 +2,7 @@
 // Google Sheets API Integration
 // ============================
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwoeVHFYsghNTI30QKKIBOAKugDfDLwdQeuGmoDYVPOebH479wu50v98Z1gFM5SJVBB/exec'.trim();
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyQya7BGCJW5cQ7LDZk3qzIxt5DUDD6aERi_VoMAwOgjCV3vrFKL9UKXsdY3bAIpEGj/exec'.trim();
 
 // Ensure api namespace exists
 window.api = window.api || {};
@@ -139,12 +139,12 @@ window.api.updateStudentDetail = function (studentId, data) {
 };
 
 // Backwards compatibility helper
-window.uploadFile = function(file, metadata) { return window.api.uploadFile(file, metadata); };
+window.uploadFile = function (file, metadata) { return window.api.uploadFile(file, metadata); };
 
 // Generic POST helper with custom timeout
 async function postData(action, payload, timeoutMs = 120000) {
-    console.log(`[API] >>> Call: ${action} | Size: ${Math.round(JSON.stringify(payload).length/1024)} KB`);
-    
+    console.log(`[API] >>> Call: ${action} | Size: ${Math.round(JSON.stringify(payload).length / 1024)} KB`);
+
     // Use an AbortSignal for the timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -157,23 +157,23 @@ async function postData(action, payload, timeoutMs = 120000) {
             body: JSON.stringify({ action: action, payload: payload }),
             signal: controller.signal
         });
-        
+
         clearTimeout(timeoutId);
         console.log(`[API] <<< Status: ${response.status}`);
 
         if (!response.ok) {
             throw new Error(`HTTP Error: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log(`[API] Result:`, data);
         return data;
     } catch (err) {
         clearTimeout(timeoutId);
         console.error(`[API] FAIL:`, err);
-        
+
         if (err.name === 'AbortError') {
-            throw new Error(`หมดเวลารอ (${timeoutMs/1000} วินาที)`);
+            throw new Error(`หมดเวลารอ (${timeoutMs / 1000} วินาที)`);
         }
         throw err;
     }
