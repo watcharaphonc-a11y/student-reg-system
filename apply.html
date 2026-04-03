@@ -471,7 +471,7 @@
                             <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr; gap:10px;">
                                 <select class="form-select" id="dob_day" required onchange="updateDobValue()">
                                     <option value="">วัน</option>
-                                    ${Array.from({length: 31}, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join('')}
+                                    <!-- Populated by JS -->
                                 </select>
                                 <select class="form-select" id="dob_month" required onchange="updateDobValue()">
                                     <option value="">เดือน</option>
@@ -824,9 +824,20 @@
         }
 
         function initDobDropdowns() {
+            const daySelect = document.getElementById('dob_day');
             const yearSelect = document.getElementById('dob_year');
             const currentYearBE = new Date().getFullYear() + 543;
-            // Generate years for age 15 to 80 (e.g. current - 15 down to current - 80)
+
+            // Populate Days (1-31)
+            for (let i = 1; i <= 31; i++) {
+                const option = document.createElement('option');
+                const val = String(i).padStart(2, '0');
+                option.value = val;
+                option.textContent = i;
+                daySelect.appendChild(option);
+            }
+
+            // Populate Years for age 15 to 80
             for (let i = 15; i <= 80; i++) {
                 const yearBE = currentYearBE - i;
                 const yearCE = yearBE - 543;
