@@ -1337,56 +1337,80 @@ function createResponse(data) {
 function updateStudentDetail(payload) {
   try {
     const sheet = SS.getSheetByName(SHEETS.STUDENTS);
-    if (!sheet) return createResponse({ status: 'error', message: 'Students sheet not found' });
+    if (!sheet) return createResponse({ status: 'error', message: 'ERROR: Students sheet not found' });
     
     const values = sheet.getDataRange().getValues();
-    const headers = values[0].map(h => String(h).trim());
+    const rawHeaders = values[0].map(h => String(h).trim());
+    const headers = rawHeaders.map(h => h.toLowerCase());
     
-    // Primary lookup columns
-    const idIdx = headers.indexOf('รหัสนักศึกษา');
-    const citizenIdx = headers.indexOf('เลขบัตรประชาชน');
-    
-    const targetId = String(payload.studentId || payload.id || '').trim();
-    const data = payload.data || {};
-    
-    if (idIdx === -1 && citizenIdx === -1) {
-      return createResponse({ status: 'error', message: 'ID columns (รหัสนักศึกษา or เลขบัตรประชาชน) not found in sheet' });
+    // Flexible header lookup for ID
+    const possibleIdHeaders = ['รหัสนักศึกษา', 'student id', 'id', 'student_id', 'studentid', 'รหัส', 'code'];
+    let idIdx = -1;
+    for (let h of possibleIdHeaders) {
+      idIdx = headers.indexOf(h.toLowerCase());
+      if (idIdx !== -1) break;
     }
+    
+    // Citizen ID lookup (fallback)
+    const citizenIdx = headers.indexOf('เลขบัตรประชาชน') !== -1 ? headers.indexOf('เลขบัตรประชาชน') : headers.indexOf('citizenid');
+    
+    const targetId = String(payload.studentId || payload.id || '').trim().replace(/\.0$/, '');
+    const data = payload.data || {};
     
     let rowIndex = -1;
     for (let i = 1; i < values.length; i++) {
       const row = values[i];
-      // Robust comparison (check both Student ID and Citizen ID)
-      const stId = String(row[idIdx] || '').trim();
-      const ctId = String(row[citizenIdx] || '').trim();
+      const stId = String(row[idIdx] || '').trim().replace(/\.0$/, '');
+      const ctId = String(row[citizenIdx] || '').trim().replace(/\.0$/, '');
       
-      // Clean target and source of any trailing .0 (often seen in spreadsheet numeric to string conversion)
-      const cleanTarget = targetId.replace(/\.0$/, '');
-      const cleanStId = stId.replace(/\.0$/, '');
-      const cleanCtId = ctId.replace(/\.0$/, '');
-
-      if (cleanStId === cleanTarget || cleanCtId === cleanTarget) {
+      // 1. Direct match with Primary/Citizen ID
+      if (stId === targetId || ctId === targetId || (targetId && stId.includes(targetId))) {
         rowIndex = i + 1;
         break;
       }
+      
+      // 2. Soft Search fallback: Check if the ID exists in ANY column for this row (case-insensitive)
+      if (rowIndex === -1) {
+        for (let cell of row) {
+          if (String(cell).trim().replace(/\.0$/, '') === targetId) {
+            rowIndex = i + 1;
+            break;
+          }
+        }
+      }
+      if (rowIndex !== -1) break;
     }
     
     if (rowIndex === -1) {
-      console.error('updateStudentDetail: Student not found -> ' + targetId);
-      return createResponse({ status: 'error', message: 'ไม่พบข้อมูลนักศึกษาในระบบ: ' + targetId });
+      // Diagnostic Error Message
+      const sampleIds = values.slice(1, 6).map(row => String(row[idIdx] || 'N/A')).join(', ');
+      const diagnosticMsg = [
+        'ไม่พบข้อมูลนักศึกษาในระบบ: ' + targetId,
+        'Found Headers: ' + rawHeaders.join(' | '),
+        'ID Column Index: ' + idIdx,
+        'Sample IDs Found: ' + sampleIds
+      ].join('\n');
+      
+      console.error('updateStudentDetail DIAGNOSTIC Fail:', diagnosticMsg);
+      return createResponse({ status: 'error', message: diagnosticMsg });
     }
     
     // Update fields
     Object.keys(data).forEach(key => {
-      let colIdx = headers.indexOf(key);
+      let colIdx = rawHeaders.indexOf(key);
       // Mapping from camelCase keys to Thai Headers
       if (colIdx === -1) {
-        if (key === 'advisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษา');
-        if (key === 'thesisAdvisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาวิทยานิพนธ์');
-        if (key === 'mainAdvisor') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาหลัก');
-        if (key === 'coAdvisorInternal') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาร่วมภายใน');
-        if (key === 'coAdvisorExternal') colIdx = headers.indexOf('อาจารย์ที่ปรึกษาร่วมภายนอก');
-        if (key === 'thesisTopic') colIdx = headers.indexOf('หัวข้อวิทยานิพนธ์');
+        const lowerKey = key.toLowerCase();
+        if (lowerKey.includes('mainadvisor')) colIdx = rawHeaders.indexOf('อาจารย์ที่ปรึกษาหลัก');
+        if (lowerKey.includes('cointernal')) colIdx = rawHeaders.indexOf('อาจารย์ที่ปรึกษาร่วมภายใน');
+        if (lowerKey.includes('coexternal')) colIdx = rawHeaders.indexOf('อาจารย์ที่ปรึกษาร่วมภายนอก');
+        if (lowerKey.includes('thesistopic')) colIdx = rawHeaders.indexOf('หัวข้อวิทยานิพนธ์');
+        
+        // Final fallback heuristics
+        if (colIdx === -1) {
+          if (key === 'advisor') colIdx = rawHeaders.indexOf('อาจารย์ที่ปรึกษา');
+          if (key === 'thesisAdvisor') colIdx = rawHeaders.indexOf('อาจารย์ที่ปรึกษาวิทยานิพนธ์');
+        }
       }
       
       if (colIdx !== -1) {
