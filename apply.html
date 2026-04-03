@@ -467,9 +467,33 @@
                                 required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label">วัน/เดือน/ปี เกิด</label>
-                            <input type="date" class="form-input" id="dobInput" name="Dob" required
-                                onchange="calculateAge()">
+                            <label class="form-label">วัน/เดือน/ปี เกิด (DAY/MONTH/YEAR)</label>
+                            <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr; gap:10px;">
+                                <select class="form-select" id="dob_day" required onchange="updateDobValue()">
+                                    <option value="">วัน</option>
+                                    ${Array.from({length: 31}, (_, i) => `<option value="${String(i + 1).padStart(2, '0')}">${i + 1}</option>`).join('')}
+                                </select>
+                                <select class="form-select" id="dob_month" required onchange="updateDobValue()">
+                                    <option value="">เดือน</option>
+                                    <option value="01">มกราคม (Jan)</option>
+                                    <option value="02">กุมภาพันธ์ (Feb)</option>
+                                    <option value="03">มีนาคม (Mar)</option>
+                                    <option value="04">เมษายน (Apr)</option>
+                                    <option value="05">พฤษภาคม (May)</option>
+                                    <option value="06">มิถุนายน (Jun)</option>
+                                    <option value="07">กรกฎาคม (Jul)</option>
+                                    <option value="08">สิงหาคม (Aug)</option>
+                                    <option value="09">กันยายน (Sep)</option>
+                                    <option value="10">ตุลาคม (Oct)</option>
+                                    <option value="11">พฤศจิกายน (Nov)</option>
+                                    <option value="12">ธันวาคม (Dec)</option>
+                                </select>
+                                <select class="form-select" id="dob_year" required onchange="updateDobValue()">
+                                    <option value="">ปี (พ.ศ.)</option>
+                                    <!-- Populated by JS -->
+                                </select>
+                            </div>
+                            <input type="hidden" id="dobInput" name="Dob" required>
                         </div>
                     </div>
 
@@ -537,7 +561,7 @@
                     <button type="button" class="btn btn-secondary" style="margin-top:10px; font-size:13px;"
                         onclick="addRow('eduTable')">+ เพิ่มรายการการศึกษา</button>
 
-                    <h3 style="margin-top:30px; margin-bottom:10px;">3. ประวัติการฝึกอบรม/ประกาศนียบัตร</h3>
+                    <h3 style="margin-top:30px; margin-bottom:10px;">3. ประวัติการฝึกอบรม/ประกาศนียบัตร (ถ้ามี)</h3>
                     <div style="overflow-x:auto;">
                         <table class="data-table-input" id="trainTable">
                             <thead>
@@ -799,15 +823,52 @@
             }
         }
 
+        function initDobDropdowns() {
+            const yearSelect = document.getElementById('dob_year');
+            const currentYearBE = new Date().getFullYear() + 543;
+            // Generate years for age 15 to 80 (e.g. current - 15 down to current - 80)
+            for (let i = 15; i <= 80; i++) {
+                const yearBE = currentYearBE - i;
+                const yearCE = yearBE - 543;
+                const option = document.createElement('option');
+                option.value = yearCE;
+                option.textContent = yearBE;
+                yearSelect.appendChild(option);
+            }
+        }
+
+        function updateDobValue() {
+            const d = document.getElementById('dob_day').value;
+            const m = document.getElementById('dob_month').value;
+            const y = document.getElementById('dob_year').value;
+            
+            if (d && m && y) {
+                const combined = `${y}-${m}-${d}`;
+                document.getElementById('dobInput').value = combined;
+                calculateAge();
+            } else {
+                document.getElementById('dobInput').value = '';
+                document.getElementById('ageInput').value = '';
+            }
+        }
+
         function calculateAge() {
             const dob = document.getElementById('dobInput').value;
             if (!dob) return;
             const birthDate = new Date(dob);
-            const diff = Date.now() - birthDate.getTime();
-            const ageDate = new Date(diff);
-            const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+            if (isNaN(birthDate)) return;
+            
+            const today = new Date();
+            let age = today.getFullYear() - birthDate.getFullYear();
+            const monthDiff = today.getMonth() - birthDate.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+                age--;
+            }
             document.getElementById('ageInput').value = age;
         }
+        
+        // Call init on load
+        window.addEventListener('DOMContentLoaded', initDobDropdowns);
 
         function addRow(tableId) {
             const tbody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
