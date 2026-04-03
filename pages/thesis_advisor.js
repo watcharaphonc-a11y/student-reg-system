@@ -125,12 +125,12 @@ pages['thesis-advisor'] = function () {
                             <h3 style="margin-bottom:20px; font-size:1.3rem;">5. กำหนดหัวข้อวิทยานิพนธ์</h3>
                             <div class="form-group">
                                 <label class="form-label">ชื่อหัวข้อวิทยานิพนธ์ (ภาษาไทย)</label>
-                                <textarea class="form-input" rows="3" placeholder="ระบุชื่อหัวข้อวิทยานิพนธ์ภาษาไทย" 
+                                <textarea class="form-input" rows="2" placeholder="ระบุชื่อหัวข้อวิทยานิพนธ์ภาษาไทย" 
                                     onchange="window._thesisFlow.topicTh = this.value">${flow.topicTh}</textarea>
                             </div>
                             <div class="form-group">
                                 <label class="form-label">ชื่อหัวข้อวิทยานิพนธ์ (ภาษาอังกฤษ)</label>
-                                <textarea class="form-input" rows="3" placeholder="Specify Thesis Title in English" 
+                                <textarea class="form-input" rows="2" placeholder="Specify Thesis Title in English" 
                                     onchange="window._thesisFlow.topicEn = this.value">${flow.topicEn}</textarea>
                             </div>
                             <div style="margin-top:10px; font-size:0.85rem; color:var(--text-muted);">
@@ -139,7 +139,7 @@ pages['thesis-advisor'] = function () {
                         </div>
 
                         <!-- Navigation Buttons -->
-                        <div style="margin-top:50px; display:flex; justify-content:space-between; border-top:1px solid var(--border-color); padding-top:25px;">
+                        <div style="margin-top:25px; display:flex; justify-content:space-between; border-top:1px solid var(--border-color); padding-top:20px;">
                             <button class="btn btn-secondary" onclick="window.thesisPrevStep()" ${flow.step === 1 ? 'disabled' : ''}>
                                 ย้อนกลับ
                             </button>
@@ -192,9 +192,17 @@ pages['thesis-advisor'] = function () {
                         </div>
                         ` : ''}
 
-                        <div style="font-size:0.75rem; color:var(--text-muted); line-height:1.5; padding-top:15px; border-top:1px solid var(--border-color);">
+                        <div style="font-size:0.75rem; color:var(--text-muted); line-height:1.5; padding-top:15px; border-top:1px solid var(--border-color); margin-bottom:20px;">
                             <p><strong>กฎเกณฑ์:</strong> กำหนดที่ปรึกษาได้ไม่เกิน 3 ท่าน โดยเป็นประธาน 1 ท่าน และกรรมการร่วมไม่เกิน 2 ท่าน</p>
                         </div>
+
+                        ${flow.step === 5 ? `
+                        <button class="btn btn-primary" style="width:100%; height:45px; font-weight:700; background:var(--success-color); border:none; box-shadow:0 4px 12px rgba(16, 185, 129, 0.2);" 
+                                onclick="window.saveThesisAssignments()">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:8px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                            ยืนยันการบันทึก
+                        </button>
+                        ` : ''}
                     </div>
                 </div>
             </div>
