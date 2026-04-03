@@ -268,6 +268,22 @@
             text-align: center;
         }
 
+        .row-date-group {
+            display: flex;
+            gap: 4px;
+            min-width: 140px;
+        }
+
+        .row-date-group .form-select {
+            padding: 6px 4px !important;
+            font-size: 11px !important;
+            height: auto !important;
+        }
+
+        .date-d { flex: 1; }
+        .date-m { flex: 1.5; }
+        .date-y { flex: 1.5; }
+
         .data-table-input input {
             width: 100%;
             border: none;
@@ -463,8 +479,8 @@
                     <div class="grid-2">
                         <div class="form-group">
                             <label class="form-label">เลขบัตรประจำตัวประชาชน</label>
-                            <input type="text" class="form-input" name="IdCard" placeholder="x-xxxx-xxxxx-xx-x"
-                                required>
+                            <input type="text" class="form-input" name="IdCard" id="idCardInput" placeholder="x-xxxx-xxxxx-xx-x"
+                                maxlength="17" oninput="formatIdCard(this)" required>
                         </div>
                         <div class="form-group">
                             <label class="form-label">วัน/เดือน/ปี เกิด (DAY/MONTH/YEAR)</label>
@@ -543,7 +559,7 @@
                                     <th>ชื่อปริญญา</th>
                                     <th>สถาบันการศึกษา</th>
                                     <th>สาขาวิชา</th>
-                                    <th>วัน/เดือน/ปี ที่สำเร็จการศึกษา</th>
+                                    <th>วัน/เดือน/ปี <br> ที่สำเร็จการศึกษา</th>
                                     <th>เกรดเฉลี่ย (GPA)</th>
                                 </tr>
                             </thead>
@@ -552,7 +568,31 @@
                                     <td><input type="text" name="edu_degree[]" required></td>
                                     <td><input type="text" name="edu_inst[]" required></td>
                                     <td><input type="text" name="edu_major[]" required></td>
-                                    <td><input type="text" name="edu_year[]" required></td>
+                                    <td>
+                                        <div class="row-date-group">
+                                            <select class="form-select date-d" data-name="edu_year" required>
+                                                <option value="">ว</option>
+                                            </select>
+                                            <select class="form-select date-m" required>
+                                                <option value="">ด</option>
+                                                <option value="01">ม.ค.</option>
+                                                <option value="02">ก.พ.</option>
+                                                <option value="03">มี.ค.</option>
+                                                <option value="04">เม.ย.</option>
+                                                <option value="05">พ.ค.</option>
+                                                <option value="06">มิ.ย.</option>
+                                                <option value="07">ก.ค.</option>
+                                                <option value="08">ส.ค.</option>
+                                                <option value="09">ก.ย.</option>
+                                                <option value="10">ต.ค.</option>
+                                                <option value="11">พ.ย.</option>
+                                                <option value="12">ธ.ค.</option>
+                                            </select>
+                                            <select class="form-select date-y" required>
+                                                <option value="">ป</option>
+                                            </select>
+                                        </div>
+                                    </td>
                                     <td><input type="text" name="edu_gpa[]" required></td>
                                 </tr>
                             </tbody>
@@ -823,6 +863,57 @@
             }
         }
 
+        function formatIdCard(input) {
+            let value = input.value.replace(/\D/g, '');
+            let formatted = '';
+            if (value.length > 0) {
+                formatted += value.substring(0, 1);
+                if (value.length > 1) {
+                    formatted += '-' + value.substring(1, 5);
+                    if (value.length > 5) {
+                        formatted += '-' + value.substring(5, 10);
+                        if (value.length > 10) {
+                            formatted += '-' + value.substring(10, 12);
+                            if (value.length > 12) {
+                                formatted += '-' + value.substring(12, 13);
+                            }
+                        }
+                    }
+                }
+            }
+            input.value = formatted;
+        }
+
+        function populateDateDropdowns(container) {
+            const daySelect = container.querySelector('.date-d');
+            const yearSelect = container.querySelector('.date-y');
+            if (!daySelect || !yearSelect) return;
+
+            const currentYearBE = new Date().getFullYear() + 543;
+
+            // Day 1-31
+            if (daySelect.options.length <= 1) {
+                for (let i = 1; i <= 31; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = String(i).padStart(2, '0');
+                    opt.textContent = i;
+                    daySelect.appendChild(opt);
+                }
+            }
+
+            // Year (Current back to 40 years ago)
+            if (yearSelect.options.length <= 1) {
+                for (let i = 0; i <= 40; i++) {
+                    const yBE = currentYearBE - i;
+                    const yCE = yBE - 543;
+                    const opt = document.createElement('option');
+                    opt.value = yCE;
+                    opt.textContent = yBE;
+                    yearSelect.appendChild(opt);
+                }
+            }
+        }
+
         function initDobDropdowns() {
             const daySelect = document.getElementById('dob_day');
             const yearSelect = document.getElementById('dob_year');
@@ -846,6 +937,11 @@
                 option.textContent = yearBE;
                 yearSelect.appendChild(option);
             }
+
+            // Populate any existing row-date-groups (like the first row of eduTable)
+            document.querySelectorAll('.row-date-group').forEach(group => {
+                populateDateDropdowns(group);
+            });
         }
 
         function updateDobValue() {
@@ -885,7 +981,7 @@
             const tbody = document.getElementById(tableId).getElementsByTagName('tbody')[0];
             const lastRow = tbody.rows[tbody.rows.length - 1];
             const newRow = lastRow.cloneNode(true);
-            const inputs = newRow.getElementsByTagName('input');
+            const inputs = newRow.querySelectorAll('input, select');
             for (let i = 0; i < inputs.length; i++) inputs[i].value = '';
 
             // Ensure delete button cell exists and add button
@@ -957,7 +1053,14 @@
             const formData = new FormData(e.target);
             const payload = {};
             formData.forEach((value, key) => {
-                if (!key.endsWith('[]')) payload[key] = value;
+                if (!key.endsWith('[]')) {
+                    // Strip hyphens from IdCard before sending
+                    if (key === 'IdCard') {
+                        payload[key] = value.replace(/-/g, '');
+                    } else {
+                        payload[key] = value;
+                    }
+                }
             });
 
             // Helper to extract table data
@@ -969,6 +1072,19 @@
                         const name = input.name.replace('[]', '');
                         rowObj[name] = input.value;
                     });
+                    // Handle split date dropdowns
+                    const dateGroup = row.querySelector('.row-date-group');
+                    if (dateGroup) {
+                        const d = dateGroup.querySelector('.date-d').value;
+                        const m = dateGroup.querySelector('.date-m').value;
+                        const y = dateGroup.querySelector('.date-y').value;
+                        const fieldName = dateGroup.querySelector('.date-d').dataset.name;
+                        if (d && m && y) {
+                            rowObj[fieldName] = `${y}-${m}-${d}`;
+                        } else {
+                            rowObj[fieldName] = '';
+                        }
+                    }
                     return rowObj;
                 }).filter(obj => Object.values(obj).some(v => v !== ''));
             };

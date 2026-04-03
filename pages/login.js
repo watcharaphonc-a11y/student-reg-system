@@ -28,7 +28,7 @@ function renderLoginUI() {
             <div class="login-form" id="loginFormStudent">
                 <div class="form-group">
                     <label class="form-label">เลขประจำตัวประชาชน (13 หลัก)</label>
-                    <input type="text" id="studentIdInput" class="form-input" placeholder="เลขบัตรประชาชน 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onkeydown="if(event.key === 'Enter') handleLogin('student')">
+                    <input type="text" id="studentIdInput" class="form-input" placeholder="x-xxxx-xxxxx-xx-x" maxlength="17" oninput="formatLoginIdCard(this)" onkeydown="if(event.key === 'Enter') handleLogin('student')">
                 </div>
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('student')">เข้าสู่ระบบ</button>
             </div>
@@ -91,7 +91,8 @@ function showError(msg) {
 
 function handleLogin(role) {
     if (role === 'student') {
-        const id = document.getElementById('studentIdInput').value;
+        const rawId = document.getElementById('studentIdInput').value;
+        const id = rawId.replace(/\D/g, ''); // Strip hyphens for validation and matching
         if (id.length !== 13) {
             return showError("กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก");
         }
@@ -353,3 +354,24 @@ setInterval(() => {
         buttons.forEach(b => b.disabled = true);
     }
 }, 1000);
+
+function formatLoginIdCard(input) {
+    let value = input.value.replace(/\D/g, '');
+    let formatted = '';
+    if (value.length > 0) {
+        formatted += value.substring(0, 1);
+        if (value.length > 1) {
+            formatted += '-' + value.substring(1, 5);
+            if (value.length > 5) {
+                formatted += '-' + value.substring(5, 10);
+                if (value.length > 10) {
+                    formatted += '-' + value.substring(10, 12);
+                    if (value.length > 12) {
+                        formatted += '-' + value.substring(12, 13);
+                    }
+                }
+            }
+        }
+    }
+    input.value = formatted;
+}
