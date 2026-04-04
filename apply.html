@@ -146,7 +146,7 @@
         .form-select,
         .form-textarea {
             width: 100%;
-            padding: 12px 16px;
+            padding: 10px 16px;
             border: 1px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
@@ -484,7 +484,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">วัน/เดือน/ปี เกิด (DAY/MONTH/YEAR)</label>
-                            <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr; gap:10px;">
+                            <div style="display:grid; grid-template-columns: 1fr 1.5fr 1fr; gap:10px; margin-top: 12px;">
                                 <select class="form-select" id="dob_day" required onchange="updateDobValue()">
                                     <option value="">วัน</option>
                                     <!-- Populated by JS -->
@@ -847,7 +847,7 @@
     </div>
 
     <script>
-        const SCRIPT_URL = '<?= ScriptApp.getService().getUrl() ?>' || 'https://script.google.com/macros/s/AKfycbwoeVHFYsghNTI30QKKIBOAKugDfDLwdQeuGmoDYVPOebH479wu50v98Z1gFM5SJVBB/exec';
+        const SCRIPT_URL = '<?= ScriptApp.getService().getUrl() ?>' || 'https://script.google.com/macros/s/AKfycbxQNw9pI0QCc__UjR4JhmR8r3seti_EqmWhO9TS2t6tHCowqoK2UBKVZkxQveX_iNut/exec';
         let currentStep = 1;
         const totalSteps = 5;
 
@@ -945,9 +945,45 @@
         }
 
         function updateDobValue() {
-            const d = document.getElementById('dob_day').value;
-            const m = document.getElementById('dob_month').value;
-            const y = document.getElementById('dob_year').value;
+            const dSelect = document.getElementById('dob_day');
+            const mSelect = document.getElementById('dob_month');
+            const ySelect = document.getElementById('dob_year');
+            
+            const month = mSelect.value;
+            const currentDay = dSelect.value;
+
+            // Handle February cap at 29
+            if (month === '02') {
+                // If currently select 30 or 31, reset to 29 or empty
+                if (parseInt(currentDay) > 29) {
+                    dSelect.value = '';
+                }
+                
+                // Show/Hide days 30, 31
+                for (let i = 29; i < dSelect.options.length; i++) {
+                    const opt = dSelect.options[i];
+                    if (opt.value === '30' || opt.value === '31') {
+                        opt.style.display = 'none';
+                    }
+                }
+            } else if (['04', '06', '09', '11'].includes(month)) {
+                 // Months with 30 days
+                 if (parseInt(currentDay) === 31) dSelect.value = '';
+                 for (let i = 0; i < dSelect.options.length; i++) {
+                    const opt = dSelect.options[i];
+                    if (opt.value === '31') opt.style.display = 'none';
+                    else opt.style.display = 'block';
+                 }
+            } else {
+                // Months with 31 days
+                for (let i = 0; i < dSelect.options.length; i++) {
+                    dSelect.options[i].style.display = 'block';
+                }
+            }
+
+            const d = dSelect.value;
+            const m = mSelect.value;
+            const y = ySelect.value;
             
             if (d && m && y) {
                 const combined = `${y}-${m}-${d}`;
