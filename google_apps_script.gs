@@ -30,7 +30,8 @@ const SHEETS = {
   COURSE_INSTRUCTORS: 'CourseInstructors',
   EVAL_INSTRUCTOR_QUESTIONS: 'EvalInstructorQuestions',
   APPLICANTS: 'Applicants',
-  SCHEDULE: 'Schedule'
+  SCHEDULE: 'Schedule',
+  DOCUMENT_TEMPLATES: 'DocumentTemplates'
 };
 
 const DRIVE_FOLDER_ID = '1zOq4BkaxMqZFyUvBz1eaYEzXjWd3lXrJ'; // Updated folder ID
@@ -101,7 +102,8 @@ function doGet(e) {
           exams: getSheetData(SHEETS.EXAMS),
           examCommittees: getSheetData(SHEETS.EXAM_COMMITTEES),
           applicants: getSheetData(SHEETS.APPLICANTS),
-          schedules: getSheetData(SHEETS.SCHEDULE)
+          schedules: getSheetData(SHEETS.SCHEDULE),
+          documentTemplates: getSheetData(SHEETS.DOCUMENT_TEMPLATES)
         };
         break;
       case 'getPermissions':
@@ -206,6 +208,9 @@ function doPost(e) {
         break;
       case 'importSchedule':
         response = importScheduleBatch(payload);
+        break;
+      case 'importDocumentTemplates':
+        response = importDocumentTemplatesBatch(payload);
         break;
       case 'updatePermission':
         response = updatePermission(payload);
@@ -879,6 +884,35 @@ function importScheduleBatch(payload) {
 }
 
 /**
+ * Helper: Import Document Templates in Batch
+ */
+function importDocumentTemplatesBatch(payload) {
+  const sheet = SS.getSheetByName(SHEETS.DOCUMENT_TEMPLATES);
+  if (!sheet) return createResponse({ status: 'error', message: 'Document Templates sheet not found' });
+  
+  const data = payload.templates;
+  if (!data || !Array.isArray(data)) return createResponse({ status: 'error', message: 'Invalid templates data' });
+  
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  
+  if (payload.clearExisting) {
+    if (sheet.getLastRow() > 1) {
+      sheet.getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn()).clearContent();
+    }
+  }
+  
+  const newRows = data.map(item => {
+    return headers.map(h => item[h] || '');
+  });
+  
+  if (newRows.length > 0) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, headers.length).setValues(newRows);
+  }
+  
+  return createResponse({ status: 'success', count: data.length });
+}
+
+/**
  * Run this once to initialize all sheets
  */
 function setupInitialSheets() {
@@ -896,14 +930,15 @@ function setupInitialSheets() {
                             'nav-dashboard', 'nav-student-profile', 'nav-teacher-profile', 'nav-special-lecturers', 'nav-alumni', 'nav-new-registration', 'nav-teacher-registration', 'nav-courses', 'nav-study-plan', 
                             'nav-grades', 'nav-schedule', 'nav-eval-course', 'nav-eval-instructor', 'nav-transcript', 'nav-exams', 'nav-graduation', 
                             'nav-thesis-advisor', 'nav-thesis-topic', 'nav-academic-advisor', 'nav-exam-committee', 
-                            'nav-payments', 'nav-petitions-student', 'nav-documents-status', 'nav-documents-admin', 'nav-manage-evals', 'nav-eval-reports', 'nav-calendar', 'nav-announcements', 'nav-settings', 'nav-user-management', 'nav-admission'],
+                            'nav-payments', 'nav-petitions-student', 'nav-documents-status', 'nav-documents-admin', 'nav-manage-evals', 'nav-eval-reports', 'nav-teaching-fees', 'nav-calendar', 'nav-announcements', 'nav-settings', 'nav-user-management', 'nav-admission', 'nav-manage-schedule', 'nav-manage-forms'],
     [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note'],
     [SHEETS.EXAM_COMMITTEES]: ['ExamID', 'StudentID', 'ExamType', 'ExamDate', 'ExamTime', 'ExamRoom', 'Advisor', 'ThesisTitle', 'Role', 'Prefix', 'FirstName', 'LastName', 'Position', 'Affiliation'],
     [SHEETS.EVAL_QUESTIONS]: ['course_code', 'section', 'category', 'question_id', 'question_text'],
     [SHEETS.COURSE_INSTRUCTORS]: ['course_code', 'course_name', 'instructor_id', 'instructor_name', 'group', 'semester', 'academic_year'],
     [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text'],
     [SHEETS.APPLICANTS]: ['ApplicationID', 'Status', 'Date', 'Prefix', 'FirstName', 'LastName', 'FirstNameEn', 'LastNameEn', 'IdCard', 'Dob', 'Age', 'Religion', 'Nationality', 'Email', 'Phone', 'PhoneHome', 'PhoneWork', 'Program', 'Major', 'Address', 'EducationHistory', 'TrainingHistory', 'WorkStatus', 'WorkHistory', 'CurrentWorkplace', 'ResearchTopic', 'DocumentsLink', 'Notes'],
-    [SHEETS.SCHEDULE]: ['CourseCode', 'CourseName', 'Day', 'StartSlot', 'EndSlot', 'Room', 'InstructorID', 'InstructorName', 'Color', 'Semester', 'AcademicYear', 'Section']
+    [SHEETS.SCHEDULE]: ['CourseCode', 'CourseName', 'Day', 'StartSlot', 'EndSlot', 'Room', 'InstructorID', 'InstructorName', 'Color', 'Semester', 'AcademicYear', 'Section'],
+    [SHEETS.DOCUMENT_TEMPLATES]: ['id', 'name', 'type']
   };
 
   const defaultPermissions = [

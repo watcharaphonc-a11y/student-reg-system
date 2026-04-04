@@ -45,6 +45,7 @@ pages['menu-permissions'] = function() {
         { id: 'nav-user-management', label: 'จัดการผู้ใช้งาน', section: 'ตั้งค่าระบบ' },
         { id: 'nav-menu-permissions', label: 'จัดการสิทธิ์การเข้าถึงเมนู', section: 'ตั้งค่าระบบ' },
         { id: 'nav-manage-schedule', label: 'จัดการตารางเรียน', section: 'ตั้งค่าระบบ' },
+        { id: 'nav-manage-forms', label: 'จัดการแบบฟอร์ม', section: 'ตั้งค่าระบบ' },
         { id: 'nav-admission', label: 'จัดการการรับสมัคร', section: 'ตั้งค่าระบบ' }
     ];
 

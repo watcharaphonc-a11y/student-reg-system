@@ -178,46 +178,8 @@ const MOCK = {
     // รายการคำร้องขอสำเร็จการศึกษา
     graduationRequests: [],
 
-    // แบบฟอร์มคำร้องออนไลน์ (Document Templates)
-    documentTemplates: [
-        { id: 'PI-GSR-01', name: 'PI-GSR-01 คำร้องทั่วไป', type: 'general' },
-        { id: 'PI-GSR-02', name: 'PI-GSR-02 คำร้องขอผ่อนผันการชำระค่าธรรมเนียมการศึกษา', type: 'general' },
-        { id: 'PI-GSR-03', name: 'PI-GSR-03 คำร้องขอเทียบโอนรายวิชา', type: 'general' },
-        { id: 'PI-GSR-04', name: 'PI-GSR-04 คำร้องขอเพิ่ม/ ถอน/ ยกเลิกรายวิชาเรียน', type: 'general' },
-        { id: 'PI-GSR-05', name: 'PI-GSR-05 คำร้องขอขยายเวลาการศึกษา', type: 'general' },
-        { id: 'PI-GSR-06', name: 'PI-GSR-06 คำร้องขอลาพักการศึกษา', type: 'leave' },
-        { id: 'PI-GSR-07', name: 'PI-GSR-07 คำร้องขอรักษาสภาพการเป็นนักศึกษา', type: 'general' },
-        { id: 'PI-GSR-08', name: 'PI-GSR-08 คำร้องขอลาออก', type: 'leave' },
-        { id: 'PI-GSR-09', name: 'PI-GSR-09 คำร้องขอกลับเข้าเป็นนักศึกษา', type: 'general' },
-        { id: 'PI-GSR-10', name: 'PI-GSR-10 คำร้องขอสำเร็จการศึกษา', type: 'general' },
-        { id: 'PI-GST-01', name: 'PI-GST-01 แบบขออนุมัติแต่งตั้งอาจารย์ที่ปรึกษาวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-02', name: 'PI-GST-02 แบบขออนุมัติหัวข้อวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-03', name: 'PI-GST-03 แบบตรวจสอบโครงร่างวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-04', name: 'PI-GST-04 แบบขอตรวจการคัดลอกผลงาน (Plagiarism)', type: 'thesis' },
-        { id: 'PI-GST-05', name: 'PI-GST-05 รายงานต้นฉบับแสดงผลการตรวจสอบการคัดลอกผลงาน (Originality Report) จากเล่มโครงร่างวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-06', name: 'PI-GST-06 แบบขออนุมัติสอบโครงร่างวิทยานิพนธ์และแต่งตั้งคณะกรรมการสอบ', type: 'exam' },
-        { id: 'PI-GST-07', name: 'PI-GST-07 แบบประเมินผลการสอบโครงร่างวิทยานิพนธ์', type: 'exam' },
-        { id: 'PI-GST-08', name: 'PI-GST-08 แบบแจ้งผลการสอบโครงร่างวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-09', name: 'PI-GST-09 แบบรายงานแก้ไขและอนุมัติโครงร่างวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-10', name: 'PI-GST-10 แบบขอหนังสือเชิญผู้เชี่ยวชาญพิจารณาเครื่องมือการวิจัย', type: 'thesis' },
-        { id: 'PI-GST-11', name: 'PI-GST-11 แบบขอหนังสือลงพื้นที่เพื่อเก็บข้อมูลการวิจัย', type: 'thesis' },
-        { id: 'PI-GST-12', name: 'PI-GST-12 แบบขอหนังสือขออนุญาตใช้/ ดัดแปลงเครื่องมือวิจัย', type: 'thesis' },
-        { id: 'PI-GST-13', name: 'PI-GST-13 แบบตรวจสอบวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-14', name: 'PI-GST-14 รายงานต้นฉบับแสดงผลการตรวจสอบการคัดลอกผลงาน (Originality Report) จากเล่มวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-15', name: 'PI-GST-15 แบบตรวจสอบคุณสมบัติของผู้ขอสอบวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-16', name: 'PI-GST-16 แบบขออนุมัติสอบวิทยานิพนธ์และแต่งตั้งคณะกรรมการสอบ', type: 'exam' },
-        { id: 'PI-GST-17', name: 'PI-GST-17 แบบประเมินผลการสอบวิทยานิพนธ์', type: 'exam' },
-        { id: 'PI-GST-18', name: 'PI-GST-18 แบบแจ้งผลการสอบวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-19', name: 'PI-GST-19 แบบสรุปการปรับปรุงแก้ไขวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-20', name: 'PI-GST-20 แบบรายงานการปรับปรุงแก้ไขวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-21', name: 'PI-GST-21 แบบขออนุมัติเปลี่ยนแปลงอาจารย์ที่ปรึกษาวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-22', name: 'PI-GST-22 แบบขออนุมัติเปลี่ยนแปลงคณะกรรมการสอบวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-23', name: 'PI-GST-23 แบบประเมินความก้าวหน้าการทำวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-24', name: 'PI-GST-24 แบบคำร้องขอขยายเวลาแก้ไขวิทยานิพนธ์', type: 'thesis' },
-        { id: 'PI-GST-25', name: 'PI-GST-25 แบบหนังสือยินยอมมอบลิขสิทธิ์', type: 'thesis' },
-        { id: 'PI-GST-26', name: 'PI-GST-26 แบบขอส่งวิทยานิพนธ์ฉบับสมบูรณ์', type: 'thesis' },
-        { id: 'PI-GST-27', name: 'PI-GST-27 แบบข้อมูลการเผยแพร่ผลงานวิทยานิพนธ์', type: 'thesis' }
-    ],
+    // แบบฟอร์มคำร้องออนไลน์ (Document Templates - loaded from API)
+    documentTemplates: [],
 
     // เอกสารที่นักศึกษาส่ง (จาก API)
     studentDocuments: [],
