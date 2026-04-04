@@ -30,23 +30,39 @@ pages['teacher-profile'] = function() {
 
     return `
     <div class="animate-in">
-        <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:15px;">
             <div>
                 <h1 class="page-title">ข้อมูลอาจารย์</h1>
                 <p class="page-subtitle">ข้อมูลส่วนตัวและภาระงานสอน</p>
             </div>
-            ${(window.currentUserRole === 'admin') ? `
-            <div style="display:flex; gap:10px;">
-                <button class="btn btn-secondary" onclick="exportTeacherTemplate()" style="gap:6px; font-size:0.85rem;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    Template
-                </button>
-                <button class="btn btn-primary" onclick="importTeacherData()" style="gap:6px; font-size:0.85rem;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    นำเข้าข้อมูล
-                </button>
+            
+            <div style="display:flex; gap:12px; align-items: center;">
+                ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
+                <div style="flex-grow: 1; min-width: 250px;">
+                    <select id="teacherSelector" class="form-input" onchange="window.changeProfileTeacher(this.value)" style="padding-right: 30px; height:38px;">
+                        <option value="">-- เลือกอาจารย์ --</option>
+                        ${(MOCK.academicAdvisors || []).map(t => `
+                            <option value="${t.name}" ${(teacher && teacher.name === t.name) ? 'selected' : ''}>
+                                ${t.name}
+                            </option>
+                        `).join('')}
+                    </select>
+                </div>
+                ` : ''}
+
+                ${(window.currentUserRole === 'admin') ? `
+                <div style="display:flex; gap:10px;">
+                    <button class="btn btn-secondary" onclick="exportTeacherTemplate()" style="gap:6px; font-size:0.85rem; height:38px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        Template
+                    </button>
+                    <button class="btn btn-primary" onclick="importTeacherData()" style="gap:6px; font-size:0.85rem; height:38px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        นำเข้าข้อมูล
+                    </button>
+                </div>
+                ` : ''}
             </div>
-            ` : ''}
         </div>
 
         <div class="profile-header animate-in animate-delay-1">
@@ -126,6 +142,15 @@ pages['teacher-profile'] = function() {
 };
 
 window.selectTeacher = function(name) {
+    const teacher = MOCK.academicAdvisors.find(t => t.name === name);
+    if (teacher) {
+        MOCK.selectedTeacher = teacher;
+        renderPage();
+    }
+};
+
+window.changeProfileTeacher = function(name) {
+    if (!name) return;
     const teacher = MOCK.academicAdvisors.find(t => t.name === name);
     if (teacher) {
         MOCK.selectedTeacher = teacher;

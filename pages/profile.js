@@ -190,7 +190,7 @@ pages['student-profile'] = function () {
                                 <span>หน่วยกิตสะสม</span><span>${totalCredits} / ${requiredCredits}</span>
                             </div>
                             <div class="progress-bar" style="height:10px; background:#e2e8f0; border-radius:10px; overflow:hidden;">
-                                <div class="progress-fill" style="width:${creditPercent}%; background:linear-gradient(90deg, var(--primary-color), var(--accent-primary)); height:100%;"></div>
+                                <div class="progress-fill" style="width:${creditPercent}%; background:linear-gradient(90deg, #10b981, #059669); height:100%;"></div>
                             </div>
                             <div style="text-align:right; font-size:0.75rem; color:var(--text-muted); margin-top:4px; font-weight:600;">${creditPercent}% สำเร็จการศึกษา</div>
                         </div>
