@@ -176,11 +176,28 @@ async function bootApp() {
             evalQuestions: evalQuestionsData,
             courseInstructors: courseInstructorsData,
             evalInstructorQuestions: evalInstructorQuestionsData,
-            applicants: applicantsData
+            applicants: applicantsData,
+            schedules: schedulesData
         } = allData;
 
         MOCK.applicants = applicantsData || [];
-        MOCK.allExams = examsData || []; // Global for admin view
+        MOCK.allExams = examsData || []; 
+
+        MOCK.schedule.items = (schedulesData || []).map(s => ({
+            day: parseInt(s.Day) || 0,
+            startSlot: parseInt(s.StartSlot) || 0,
+            endSlot: parseInt(s.EndSlot) || 0,
+            code: s.CourseCode || '',
+            name: s.CourseName || '',
+            room: s.Room || '',
+            color: s.Color || 'blue',
+            instructorId: s.InstructorID || '',
+            instructorName: s.InstructorName || '',
+            semester: s.Semester || '',
+            academicYear: s.AcademicYear || '',
+            section: s.Section || ''
+        }));
+// Global for admin view
 
         // Map Students and attach Grades from Enrollments
         if (studentsData && studentsData.length > 0) {

@@ -29,7 +29,8 @@ const SHEETS = {
   EVAL_QUESTIONS: 'EvalQuestions',
   COURSE_INSTRUCTORS: 'CourseInstructors',
   EVAL_INSTRUCTOR_QUESTIONS: 'EvalInstructorQuestions',
-  APPLICANTS: 'Applicants'
+  APPLICANTS: 'Applicants',
+  SCHEDULE: 'Schedule'
 };
 
 const DRIVE_FOLDER_ID = '1zOq4BkaxMqZFyUvBz1eaYEzXjWd3lXrJ'; // Updated folder ID
@@ -99,7 +100,8 @@ function doGet(e) {
           permissions: getSheetData(SHEETS.PERMISSIONS),
           exams: getSheetData(SHEETS.EXAMS),
           examCommittees: getSheetData(SHEETS.EXAM_COMMITTEES),
-          applicants: getSheetData(SHEETS.APPLICANTS)
+          applicants: getSheetData(SHEETS.APPLICANTS),
+          schedules: getSheetData(SHEETS.SCHEDULE)
         };
         break;
       case 'getPermissions':
@@ -119,6 +121,9 @@ function doGet(e) {
         break;
       case 'getDocuments':
         data = getSheetData(SHEETS.DOCUMENTS);
+        break;
+      case 'getSchedule':
+        data = getSheetData(SHEETS.SCHEDULE);
         break;
       default:
         return createResponse({ status: 'error', message: 'Unknown action' });
@@ -198,6 +203,9 @@ function doPost(e) {
         break;
       case 'postAnnouncement':
         response = postAnnouncement(payload);
+        break;
+      case 'importSchedule':
+        response = importScheduleBatch(payload);
         break;
       case 'updatePermission':
         response = updatePermission(payload);
@@ -828,6 +836,49 @@ function updatePermission(payload) {
 }
 
 /**
+ * Helper: Import Schedule in Batch
+ */
+function importScheduleBatch(payload) {
+  const sheet = SS.getSheetByName(SHEETS.SCHEDULE);
+  if (!sheet) return createResponse({ status: 'error', message: 'Schedule sheet not found' });
+  
+  const data = payload.schedules; // Array of objects
+  if (!data || !Array.isArray(data)) return createResponse({ status: 'error', message: 'Invalid schedule data' });
+  
+  const sheetData = sheet.getDataRange().getValues();
+  const headers = sheetData[0].map(h => String(h).trim());
+  
+  const newRows = data.map(item => {
+    return headers.map(h => {
+      // Map case-insensitive or common variants
+      if (item[h] !== undefined) return item[h];
+      const lowerH = h.toLowerCase();
+      const keys = Object.keys(item);
+      for (let k of keys) {
+        if (k.toLowerCase() === lowerH) return item[k];
+      }
+      return '';
+    });
+  });
+
+  if (newRows.length > 0) {
+    // For Schedule, we typically CLEAR and REPLACE or APPEND. 
+    // Usually, a new import REPLACES the whole schedule for a semester.
+    // However, to be safe, let's APPEND and user can clear manually or we add a 'clear' flag.
+    if (payload.clearExisting) {
+       if (sheet.getLastRow() > 1) {
+         sheet.getRange(2, 1, sheet.getLastRow() - 1, headers.length).clearContent();
+       }
+       sheet.getRange(2, 1, newRows.length, headers.length).setValues(newRows);
+    } else {
+       sheet.getRange(sheet.getLastRow() + 1, 1, newRows.length, headers.length).setValues(newRows);
+    }
+  }
+  
+  return createResponse({ status: 'success', count: data.length });
+}
+
+/**
  * Run this once to initialize all sheets
  */
 function setupInitialSheets() {
@@ -851,7 +902,8 @@ function setupInitialSheets() {
     [SHEETS.EVAL_QUESTIONS]: ['course_code', 'section', 'category', 'question_id', 'question_text'],
     [SHEETS.COURSE_INSTRUCTORS]: ['course_code', 'course_name', 'instructor_id', 'instructor_name', 'group', 'semester', 'academic_year'],
     [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text'],
-    [SHEETS.APPLICANTS]: ['ApplicationID', 'Status', 'Date', 'Prefix', 'FirstName', 'LastName', 'FirstNameEn', 'LastNameEn', 'IdCard', 'Dob', 'Age', 'Religion', 'Nationality', 'Email', 'Phone', 'PhoneHome', 'PhoneWork', 'Program', 'Major', 'Address', 'EducationHistory', 'TrainingHistory', 'WorkStatus', 'WorkHistory', 'CurrentWorkplace', 'ResearchTopic', 'DocumentsLink', 'Notes']
+    [SHEETS.APPLICANTS]: ['ApplicationID', 'Status', 'Date', 'Prefix', 'FirstName', 'LastName', 'FirstNameEn', 'LastNameEn', 'IdCard', 'Dob', 'Age', 'Religion', 'Nationality', 'Email', 'Phone', 'PhoneHome', 'PhoneWork', 'Program', 'Major', 'Address', 'EducationHistory', 'TrainingHistory', 'WorkStatus', 'WorkHistory', 'CurrentWorkplace', 'ResearchTopic', 'DocumentsLink', 'Notes'],
+    [SHEETS.SCHEDULE]: ['CourseCode', 'CourseName', 'Day', 'StartSlot', 'EndSlot', 'Room', 'InstructorID', 'InstructorName', 'Color', 'Semester', 'AcademicYear', 'Section']
   };
 
   const defaultPermissions = [
