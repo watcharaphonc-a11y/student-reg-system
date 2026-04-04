@@ -38,7 +38,7 @@ pages['menu-permissions'] = function() {
         { id: 'nav-documents-admin', label: 'อนุมัติเอกสาร', section: 'บริการ' },
         { id: 'nav-manage-evals', label: 'จัดการแบบประเมิน (Admin)', section: 'บริการ' },
         { id: 'nav-eval-reports', label: 'รายงานผลการประเมิน', section: 'บริการ' },
-        { id: 'nav-teaching-fees', label: 'รายงานค่าสอนอาจารย์', section: 'บริการ' },
+        { id: 'teaching-fees', label: 'ค่าตอบแทนการสอน', section: 'บริการ' },
         { id: 'nav-calendar', label: 'ปฏิทินการศึกษา', section: 'บริการ' },
         { id: 'nav-announcements', label: 'ประกาศ', section: 'บริการ' },
         { id: 'nav-settings', label: 'ตั้งค่า', section: 'บริการ' },
