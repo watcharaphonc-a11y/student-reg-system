@@ -16,9 +16,9 @@ const MOCK = {
         avgGPA: 0,
     },
     permissions: [
-        { Role: 'admin', 'nav-dashboard': 'YES', 'nav-student-profile': 'YES', 'nav-teacher-profile': 'YES', 'nav-special-lecturers': 'YES', 'nav-alumni': 'YES', 'nav-new-registration': 'YES', 'nav-teacher-registration': 'YES', 'nav-courses': 'YES', 'nav-study-plan': 'YES', 'nav-grades': 'YES', 'nav-schedule': 'YES', 'nav-eval-course': 'YES', 'nav-eval-instructor': 'YES', 'nav-transcript': 'YES', 'nav-exams': 'YES', 'nav-graduation': 'YES', 'nav-thesis-advisor': 'YES', 'nav-thesis-topic': 'YES', 'nav-academic-advisor': 'YES', 'nav-exam-committee': 'YES', 'nav-payments': 'YES', 'nav-petitions-student': 'YES', 'nav-documents-status': 'YES', 'nav-documents-admin': 'YES', 'nav-manage-evals': 'YES', 'nav-eval-reports': 'YES', 'nav-calendar': 'YES', 'nav-announcements': 'YES', 'nav-settings': 'YES', 'nav-user-management': 'YES', 'nav-menu-permissions': 'YES', 'nav-admission': 'YES' },
-        { Role: 'staff', 'nav-dashboard': 'YES', 'nav-student-profile': 'YES', 'nav-teacher-profile': 'YES', 'nav-special-lecturers': 'YES', 'nav-alumni': 'YES', 'nav-new-registration': 'YES', 'nav-teacher-registration': 'YES', 'nav-courses': 'YES', 'nav-study-plan': 'YES', 'nav-grades': 'YES', 'nav-schedule': 'YES', 'nav-eval-course': 'YES', 'nav-eval-instructor': 'YES', 'nav-transcript': 'YES', 'nav-exams': 'YES', 'nav-graduation': 'YES', 'nav-thesis-advisor': 'YES', 'nav-thesis-topic': 'YES', 'nav-academic-advisor': 'YES', 'nav-exam-committee': 'YES', 'nav-payments': 'YES', 'nav-petitions-student': 'YES', 'nav-documents-status': 'YES', 'nav-documents-admin': 'YES', 'nav-manage-evals': 'YES', 'nav-eval-reports': 'YES', 'nav-calendar': 'YES', 'nav-announcements': 'YES', 'nav-settings': 'YES', 'nav-user-management': 'NO', 'nav-menu-permissions': 'NO', 'nav-admission': 'NO' },
-        { Role: 'student', 'nav-dashboard': 'NO', 'nav-student-profile': 'YES', 'nav-teacher-profile': 'NO', 'nav-special-lecturers': 'NO', 'nav-alumni': 'NO', 'nav-new-registration': 'NO', 'nav-teacher-registration': 'NO', 'nav-courses': 'NO', 'nav-study-plan': 'YES', 'nav-grades': 'YES', 'nav-schedule': 'YES', 'nav-eval-course': 'YES', 'nav-eval-instructor': 'YES', 'nav-transcript': 'YES', 'nav-exams': 'YES', 'nav-graduation': 'YES', 'nav-thesis-advisor': 'YES', 'nav-thesis-topic': 'YES', 'nav-academic-advisor': 'YES', 'nav-exam-committee': 'YES', 'nav-payments': 'YES', 'nav-petitions-student': 'YES', 'nav-documents-status': 'YES', 'nav-documents-admin': 'NO', 'nav-manage-evals': 'NO', 'nav-eval-reports': 'NO', 'nav-calendar': 'YES', 'nav-announcements': 'YES', 'nav-settings': 'YES', 'nav-user-management': 'NO', 'nav-menu-permissions': 'NO', 'nav-admission': 'NO' }
+        { Role: 'admin', 'nav-dashboard': 'YES', 'nav-student-profile': 'YES', 'nav-teacher-profile': 'YES', 'nav-special-lecturers': 'YES', 'nav-alumni': 'YES', 'nav-new-registration': 'YES', 'nav-teacher-registration': 'YES', 'nav-courses': 'YES', 'nav-study-plan': 'YES', 'nav-grades': 'YES', 'nav-schedule': 'YES', 'nav-eval-course': 'YES', 'nav-eval-instructor': 'YES', 'nav-transcript': 'YES', 'nav-exams': 'YES', 'nav-graduation': 'YES', 'nav-thesis-advisor': 'YES', 'nav-thesis-topic': 'YES', 'nav-academic-advisor': 'YES', 'nav-exam-committee': 'YES', 'nav-payments': 'YES', 'nav-petitions-student': 'YES', 'nav-documents-status': 'YES', 'nav-documents-admin': 'YES', 'nav-manage-evals': 'YES', 'nav-eval-reports': 'YES', 'nav-calendar': 'YES', 'nav-announcements': 'YES', 'nav-settings': 'YES', 'nav-user-management': 'YES', 'nav-menu-permissions': 'YES', 'nav-admission': 'YES', 'nav-teaching-fees': 'YES' },
+        { Role: 'staff', 'nav-dashboard': 'YES', 'nav-student-profile': 'YES', 'nav-teacher-profile': 'YES', 'nav-special-lecturers': 'YES', 'nav-alumni': 'YES', 'nav-new-registration': 'YES', 'nav-teacher-registration': 'YES', 'nav-courses': 'YES', 'nav-study-plan': 'YES', 'nav-grades': 'YES', 'nav-schedule': 'YES', 'nav-eval-course': 'YES', 'nav-eval-instructor': 'YES', 'nav-transcript': 'YES', 'nav-exams': 'YES', 'nav-graduation': 'YES', 'nav-thesis-advisor': 'YES', 'nav-thesis-topic': 'YES', 'nav-academic-advisor': 'YES', 'nav-exam-committee': 'YES', 'nav-payments': 'YES', 'nav-petitions-student': 'YES', 'nav-documents-status': 'YES', 'nav-documents-admin': 'YES', 'nav-manage-evals': 'YES', 'nav-eval-reports': 'YES', 'nav-calendar': 'YES', 'nav-announcements': 'YES', 'nav-settings': 'YES', 'nav-user-management': 'NO', 'nav-menu-permissions': 'NO', 'nav-admission': 'NO', 'nav-teaching-fees': 'YES' },
+        { Role: 'student', 'nav-dashboard': 'NO', 'nav-student-profile': 'YES', 'nav-teacher-profile': 'NO', 'nav-special-lecturers': 'NO', 'nav-alumni': 'NO', 'nav-new-registration': 'NO', 'nav-teacher-registration': 'NO', 'nav-courses': 'NO', 'nav-study-plan': 'YES', 'nav-grades': 'YES', 'nav-schedule': 'YES', 'nav-eval-course': 'YES', 'nav-eval-instructor': 'YES', 'nav-transcript': 'YES', 'nav-exams': 'YES', 'nav-graduation': 'YES', 'nav-thesis-advisor': 'YES', 'nav-thesis-topic': 'YES', 'nav-academic-advisor': 'YES', 'nav-exam-committee': 'YES', 'nav-payments': 'YES', 'nav-petitions-student': 'YES', 'nav-documents-status': 'YES', 'nav-documents-admin': 'NO', 'nav-manage-evals': 'NO', 'nav-eval-reports': 'NO', 'nav-calendar': 'YES', 'nav-announcements': 'YES', 'nav-settings': 'YES', 'nav-user-management': 'NO', 'nav-menu-permissions': 'NO', 'nav-admission': 'NO', 'nav-teaching-fees': 'NO' }
     ],
     
     applicants: [
@@ -81,8 +81,20 @@ const MOCK = {
     schedule: {
         timeSlots: ['08:00-09:00', '09:00-10:00', '10:00-11:00', '11:00-12:00', '12:00-13:00', '13:00-14:00', '14:00-15:00', '15:00-16:00'],
         days: ['จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์'],
-        items: []
+        items: [
+            { day: 0, startSlot: 0, endSlot: 2, code: 'NSG601', name: 'Advanced Nursing Science', room: 'R401', color: 'blue', instructorId: 'teacher-01', instructorName: 'ผศ.ดร.พนา รัตน์' },
+            { day: 1, startSlot: 4, endSlot: 7, code: 'NSG602', name: 'Nursing Research', room: 'R402', color: 'green', instructorId: 'teacher-02', instructorName: 'รศ.ดร.สมศรี ใจสว่าง' },
+            { day: 2, startSlot: 0, endSlot: 3, code: 'NSG603', name: 'Clinical Pharmacology', room: 'R405', color: 'purple', instructorId: 'teacher-01', instructorName: 'ผศ.ดร.พนา รัตน์' },
+            { day: 3, startSlot: 1, endSlot: 3, code: 'NSG604', name: 'Community Health', room: 'R101', color: 'orange', instructorId: 'teacher-03', instructorName: 'ดร.มานะ อดทน' }
+        ]
     },
+
+    // อัตราค่าสอนเริ่มต้น (ต่อชั่วโมง)
+    teachingRateDefaults: [
+        { type: 'internal_phd', label: 'อาจารย์ภายใน (ปริญญาเอก)', rate: 600 },
+        { type: 'internal_master', label: 'อาจารย์ภายใน (ปริญญาโท)', rate: 450 },
+        { type: 'external_specialist', label: 'อาจารย์พิเศษ/ผู้เชี่ยวชาญ', rate: 1000 },
+    ],
 
     // ค่าธรรมเนียม (จาก API)
     payments: [],
