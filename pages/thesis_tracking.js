@@ -1,122 +1,166 @@
 // ============================
-// Thesis Tracking Dashboard
+// Thesis Tracking — Dashboard + Update (Separated)
 // ============================
 
 const THESIS_MILESTONES = [
-    { id: 'M1', label: 'แต่งตั้งอาจารย์ที่ปรึกษา', icon: '👤', fields: [] },
-    { id: 'M2', label: 'เสนอหัวข้อวิทยานิพนธ์', icon: '📝', fields: [] },
-    { id: 'M3', label: 'สอบโครงร่างวิทยานิพนธ์', icon: '🎯', fields: [] },
-    { id: 'M4', label: 'พิจารณาจริยธรรมการวิจัย (EC)', icon: '⚖️', fields: [{ id: 'EthicsNo', label: 'เลขรับรอง/อนุมัติ EC', type: 'text' }] },
-    { id: 'M5', label: 'เก็บข้อมูล / วิจัย', icon: '🔍', fields: [] },
-    { id: 'M6', label: 'วิเคราะห์ / เขียนรายงาน', icon: '📊', fields: [] },
-    { id: 'M7', label: 'ตรวจสอบ Plagiarism', icon: '✅', fields: [{ id: 'PlagPercent', label: 'ค่าความออริจินัล (%)', type: 'number' }] },
-    { id: 'M8', label: 'สอบป้องกันวิทยานิพนธ์', icon: '🛡️', fields: [{ id: 'Score', label: 'ผลประเมิน/คะแนนสอบ', type: 'text' }] },
-    { id: 'M9', label: 'แก้ไขตามกรรมการสอบ', icon: '✍️', fields: [] },
-    { id: 'M10', label: 'ส่งเล่มฉบับสมบูรณ์', icon: '📚', fields: [] },
-    { id: 'M11', label: 'เผยแพร่ผลงาน (บทความ)', icon: '🌐', fields: [{ id: 'Journal', label: 'ชื่อวารสาร/สถานที่ตีพิมพ์', type: 'text' }] }
+    { id: 'M1',  label: 'แต่งตั้งอาจารย์ที่ปรึกษา',       icon: '👤', fields: [] },
+    { id: 'M2',  label: 'เสนอหัวข้อวิทยานิพนธ์',            icon: '📝', fields: [] },
+    { id: 'M3',  label: 'สอบโครงร่างวิทยานิพนธ์',           icon: '🎯', fields: [] },
+    { id: 'M4',  label: 'พิจารณาจริยธรรมการวิจัย (EC)',     icon: '⚖️', fields: [{ id: 'EthicsNo',    label: 'เลขรับรอง/อนุมัติ EC',       type: 'text'   }] },
+    { id: 'M5',  label: 'เก็บข้อมูล / ดำเนินการวิจัย',     icon: '🔬', fields: [] },
+    { id: 'M6',  label: 'วิเคราะห์ข้อมูล / เขียนรายงาน',   icon: '📊', fields: [] },
+    { id: 'M7',  label: 'ตรวจสอบ Plagiarism',               icon: '✅', fields: [{ id: 'PlagPercent', label: 'ค่าความออริจินัล (%)',          type: 'number' }] },
+    { id: 'M8',  label: 'สอบป้องกันวิทยานิพนธ์',            icon: '🛡️', fields: [{ id: 'Score',       label: 'ผลประเมิน/คะแนนสอบ',          type: 'text'   }] },
+    { id: 'M9',  label: 'แก้ไขตามมติกรรมการ',               icon: '✍️', fields: [] },
+    { id: 'M10', label: 'ส่งเล่มฉบับสมบูรณ์',               icon: '📚', fields: [] },
+    { id: 'M11', label: 'เผยแพร่ผลงาน (บทความวิชาการ)',      icon: '🌐', fields: [{ id: 'Journal',     label: 'ชื่อวารสาร/สถานที่ตีพิมพ์',   type: 'text'   }] }
 ];
 
-pages['thesis-tracking'] = function() {
-    const role = window.currentUserRole;
-    if (role === 'student') return renderStudentThesisTracking();
-    if (role === 'admin' || role === 'teacher' || window.isSuperAdmin) return renderAdminThesisTracking();
-    return `<div class="card"><div class="card-body" style="text-align:center; padding:40px;">ไม่มีสิทธิ์เข้าถึง</div></div>`;
-};
-
-function calculateProgress(progressObj) {
-    if (!progressObj) return 0;
-    const completed = THESIS_MILESTONES.filter(m => progressObj[`${m.id}_Status`] === 'Complete').length;
-    return Math.round((completed / THESIS_MILESTONES.length) * 100);
+function calcThesisProgress(track) {
+    if (!track) return 0;
+    const done = THESIS_MILESTONES.filter(m => track[`${m.id}_Status`] === 'Complete').length;
+    return Math.round((done / THESIS_MILESTONES.length) * 100);
 }
 
-function renderAdminThesisTracking() {
+function formatDateTh(dateStr) {
+    if (!dateStr || dateStr === '-') return '-';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear() + 543}`;
+}
+
+function getStudentDisplayName(s) {
+    return s.name || `${s.prefix || ''}${s.firstName || ''} ${s.lastName || ''}`.trim() || s.studentId;
+}
+
+// ============================================================
+// PAGE 1: รายงานความก้าวหน้า (Read-only Dashboard)
+// ============================================================
+pages['thesis-dashboard'] = function() {
+    const role = window.currentUserRole;
+    if (role === 'student') return renderStudentTimeline();
+    return renderAdminDashboard();
+};
+
+function renderAdminDashboard() {
     const trackingData = MOCK.thesisProgress || [];
-    // Only show students who are actually in the master's program (or in ThesisProgress sheet)
-    // To be comprehensive, we list students from the students table, but if trackingData has records, we use those.
-    const studentList = MOCK.students || [];
+    const studentList  = MOCK.students || [];
 
-    // Combine tracking data with student master data (All students)
-    const combinedData = studentList
-        .map(student => {
-            const track = trackingData.find(t => t.StudentID === student.studentId) || {};
-            return {
-                studentId: student.studentId,
-                name: student.name || `${student.prefix||''}${student.firstName||''} ${student.lastName||''}`,
-                major: student.major || track.Major || '-',
-                cohort: student.cohort || track.Cohort || '-',
-                advisor: track.AdvisorName || '-',
-                progress: calculateProgress(track),
-                lastUpdated: track.LastUpdated || '-',
-                trackData: track
-            };
-        });
+    const combined = studentList.map(s => {
+        const track = trackingData.find(t => String(t.StudentID) === String(s.studentId)) || {};
+        const prog   = calcThesisProgress(track);
+        const done   = THESIS_MILESTONES.filter(m => track[`${m.id}_Status`] === 'Complete').length;
+        const curM   = THESIS_MILESTONES.find(m => track[`${m.id}_Status`] !== 'Complete');
+        return {
+            studentId:   s.studentId,
+            name:        getStudentDisplayName(s),
+            major:       s.major || track.Major || '-',
+            cohort:      s.cohort || track.Cohort || '-',
+            progress:    prog,
+            doneCount:   done,
+            currentStep: curM ? `ขั้นที่ ${THESIS_MILESTONES.indexOf(curM)+1}: ${curM.label}` : '✅ ครบทั้ง 11 ขั้นตอน',
+            lastUpdate:  track.LastUpdated || '-',
+        };
+    });
 
-    const completionCount = combinedData.filter(d => d.progress === 100).length;
-    const inProgressCount = combinedData.filter(d => d.progress > 0 && d.progress < 100).length;
+    const totalCount    = combined.length;
+    const completeCount = combined.filter(d => d.progress === 100).length;
+    const activeCount   = combined.filter(d => d.progress > 0 && d.progress < 100).length;
+    const pendingCount  = combined.filter(d => d.progress === 0).length;
 
-    let rowsHTML = combinedData.length === 0 ? 
-        '<tr><td colspan="5" style="text-align:center;">ไม่พบข้อมูลนักศึกษาในระบบ</td></tr>' :
-        combinedData.map(d => `
-        <tr class="student-row">
-            <td>
-                <div style="font-weight:600;">${d.name}</div>
-                <div style="font-size:0.85rem; color:var(--text-secondary);">${d.studentId} • รุ่น ${d.cohort}</div>
-            </td>
-            <td><div style="font-size:0.9rem;">${d.major}</div></td>
-            <td>
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div style="flex:1; height:8px; background:#e2e8f0; border-radius:4px; overflow:hidden;">
-                        <div style="height:100%; width:${d.progress}%; background:var(--accent-primary); border-radius:4px;"></div>
+    const rows = combined.length === 0
+        ? `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-secondary);">ยังไม่มีข้อมูลนักศึกษาในระบบ</td></tr>`
+        : combined.map(d => {
+            let barColor = '#6366f1';
+            if (d.progress === 100) barColor = '#10b981';
+            else if (d.progress > 50) barColor = '#3b82f6';
+            else if (d.progress === 0) barColor = '#cbd5e1';
+
+            return `
+            <tr class="thesis-row" data-search="${d.name} ${d.studentId} ${d.major} ${d.cohort}">
+                <td>
+                    <div style="font-weight:600;">${d.name}</div>
+                    <div style="font-size:0.82rem;color:var(--text-secondary);">${d.studentId}${d.cohort !== '-' ? ' • รุ่น ' + d.cohort : ''}</div>
+                </td>
+                <td style="font-size:0.88rem;">${d.major}</td>
+                <td>
+                    <div style="margin-bottom:5px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <div style="flex:1;height:8px;background:#e2e8f0;border-radius:4px;overflow:hidden;">
+                                <div style="height:100%;width:${d.progress}%;background:${barColor};border-radius:4px;transition:width 0.6s;"></div>
+                            </div>
+                            <span style="font-size:0.82rem;font-weight:700;width:36px;text-align:right;color:${barColor};">${d.progress}%</span>
+                        </div>
                     </div>
-                    <span style="font-size:0.85rem; font-weight:600; width:40px; text-align:right;">${d.progress}%</span>
-                </div>
-            </td>
-            <td><div style="font-size:0.85rem; color:var(--text-secondary);">${d.lastUpdated === '-' ? '-' : formatThaiDateShort(d.lastUpdated)}</div></td>
-            <td>
-                <button class="btn btn-sm" onclick='window.openThesisTrackingModal(${JSON.stringify(d).replace(/'/g, "&#39;")})' style="background:var(--accent-primary-light); color:var(--accent-primary); font-weight:600;">
-                    อัปเดต / เรียกดู
-                </button>
-            </td>
-        </tr>
-    `).join('');
+                    <div style="font-size:0.78rem;color:var(--text-secondary);">${d.currentStep}</div>
+                </td>
+                <td style="font-size:0.82rem;color:var(--text-secondary);">${formatDateTh(d.lastUpdate)}</td>
+                <td>
+                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:0.78rem;font-weight:600;padding:4px 10px;border-radius:20px;
+                        background:${d.progress===100?'#d1fae5':d.progress>0?'#dbeafe':'#f1f5f9'};
+                        color:${d.progress===100?'#059669':d.progress>0?'#2563eb':'#94a3b8'};">
+                        ${d.progress===100?'✅ สำเร็จ':d.progress>0?'🔵 กำลังดำเนินการ':'⬜ ยังไม่เริ่ม'}
+                    </span>
+                </td>
+            </tr>`;
+        }).join('');
 
     return `
     <div class="animate-in">
         <div class="page-header" style="margin-bottom:24px;">
-            <h1 class="page-title">ติดตามความก้าวหน้าวิทยานิพนธ์ Dashboard</h1>
-            <p class="page-subtitle">แสดงภาพรวมและสถานะการทำวิทยานิพนธ์ของนักศึกษาระดับปริญญาโท</p>
-        </div>
-
-        <div class="grid-3" style="margin-bottom:24px;">
-            <div class="card stat-card-glass" style="background:linear-gradient(45deg, #1e293b, #334155); color:white;">
-                <div class="card-body">
-                    <h3 style="font-size:1rem; font-weight:500; opacity:0.9; margin:0 0 10px;">นักศึกษาทั้งหมดในระบบ</h3>
-                    <div style="font-size:2.5rem; font-weight:700;">${combinedData.length}</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <h1 class="page-title">รายงานความก้าวหน้าวิทยานิพนธ์</h1>
+                    <p class="page-subtitle">ภาพรวมสถานะการทำวิทยานิพนธ์ของนักศึกษาทุกคน (อ่านอย่างเดียว)</p>
                 </div>
-            </div>
-            <div class="card stat-card-glass" style="background:linear-gradient(45deg, #3b82f6, #06b6d4); color:white;">
-                <div class="card-body">
-                    <h3 style="font-size:1rem; font-weight:500; opacity:0.9; margin:0 0 10px;">กำลังดำเนินการ</h3>
-                    <div style="font-size:2.5rem; font-weight:700;">${inProgressCount}</div>
-                </div>
-            </div>
-            <div class="card stat-card-glass" style="background:linear-gradient(45deg, #10b981, #059669); color:white;">
-                <div class="card-body">
-                    <h3 style="font-size:1rem; font-weight:500; opacity:0.9; margin:0 0 10px;">ผ่านครบ 11 ขั้นตอน</h3>
-                    <div style="font-size:2.5rem; font-weight:700;">${completionCount}</div>
-                </div>
+                <button class="btn btn-primary" onclick="window.loadPage('thesis-update')" style="height:42px;gap:8px;display:flex;align-items:center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    ไปหน้าอัปเดตสถานะ
+                </button>
             </div>
         </div>
 
+        <!-- Summary Cards -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
+            <div class="card" style="border:none;background:linear-gradient(135deg,#1e293b,#334155);color:white;">
+                <div class="card-body" style="padding:20px;">
+                    <div style="font-size:0.8rem;opacity:0.8;margin-bottom:6px;">นักศึกษาทั้งหมด</div>
+                    <div style="font-size:2.2rem;font-weight:800;">${totalCount}</div>
+                </div>
+            </div>
+            <div class="card" style="border:none;background:linear-gradient(135deg,#3b82f6,#06b6d4);color:white;">
+                <div class="card-body" style="padding:20px;">
+                    <div style="font-size:0.8rem;opacity:0.8;margin-bottom:6px;">กำลังดำเนินการ</div>
+                    <div style="font-size:2.2rem;font-weight:800;">${activeCount}</div>
+                </div>
+            </div>
+            <div class="card" style="border:none;background:linear-gradient(135deg,#10b981,#059669);color:white;">
+                <div class="card-body" style="padding:20px;">
+                    <div style="font-size:0.8rem;opacity:0.8;margin-bottom:6px;">ผ่านครบ 11 ขั้นตอน</div>
+                    <div style="font-size:2.2rem;font-weight:800;">${completeCount}</div>
+                </div>
+            </div>
+            <div class="card" style="border:none;background:linear-gradient(135deg,#f59e0b,#d97706);color:white;">
+                <div class="card-body" style="padding:20px;">
+                    <div style="font-size:0.8rem;opacity:0.8;margin-bottom:6px;">ยังไม่เริ่ม</div>
+                    <div style="font-size:2.2rem;font-weight:800;">${pendingCount}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table -->
         <div class="card">
-            <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                <h3 class="card-title">รายชื่อนักศึกษาและสถานะความก้าวหน้า</h3>
-            </div>
             <div class="card-body" style="padding:0;">
-                <div style="padding:16px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+                <div style="padding:14px 20px;border-bottom:1px solid #e2e8f0;background:#f8fafc;border-radius:16px 16px 0 0;">
                     <div style="position:relative;">
-                        <input type="text" id="thesisSearchBtn" placeholder="🔍 ค้นหา ชื่อ, นามสกุล, รหัสนักศึกษา, สาขาวิชา..." style="width:100%; border-radius:8px; border:1px solid #ccc; padding:10px 15px 10px 35px; font-size:0.95rem; outline:none; transition:border-color 0.3s;" onkeyup="window.filterThesisTable(this.value)">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" placeholder="🔍 ค้นหา ชื่อ, รหัสนักศึกษา, สาขาวิชา..."
+                            style="width:100%;border-radius:8px;border:1px solid #e2e8f0;padding:9px 14px 9px 36px;font-size:0.9rem;outline:none;"
+                            onkeyup="window.filterThesisRows(this.value)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"
+                            style="position:absolute;left:11px;top:50%;transform:translateY(-50%);">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
                     </div>
                 </div>
                 <div class="table-container">
@@ -125,301 +169,352 @@ function renderAdminThesisTracking() {
                             <tr>
                                 <th>ชื่อ-นามสกุล / รหัส</th>
                                 <th>สาขาวิชา</th>
-                                <th style="width:250px;">ความก้าวหน้ารวม</th>
+                                <th style="min-width:260px;">ความก้าวหน้า (${THESIS_MILESTONES.length} ขั้นตอน)</th>
                                 <th>อัปเดตล่าสุด</th>
-                                <th>จัดการ</th>
+                                <th>สถานะ</th>
                             </tr>
                         </thead>
-                        <tbody id="thesisTableBody">${rowsHTML}</tbody>
+                        <tbody id="thesisDashTableBody">${rows}</tbody>
                     </table>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Modal อัปเดต Milestone -->
-    <div id="thesisTrackingModal" class="modal" style="display:none;">
-        <div class="modal-content" style="max-width:800px; max-height:90vh; overflow-y:auto;">
-            <div class="modal-header">
-                <h2>อัปเดตสถานะวิทยานิพนธ์</h2>
-                <button class="btn btn-icon" onclick="document.getElementById('thesisTrackingModal').style.display='none'">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            </div>
-            <div class="modal-body" id="thesisTrackingModalBody">
-                <!-- Content injected via JS -->
-            </div>
-        </div>
-    </div>
-    `;
+    </div>`;
 }
 
-window.filterThesisTable = function(query) {
-    const q = query.toLowerCase();
-    const rows = document.querySelectorAll('#thesisTableBody .student-row');
-    rows.forEach(row => {
-        const text = row.innerText.toLowerCase();
-        if (text.includes(q)) {
-            row.style.display = '';
-        } else {
-            row.style.display = 'none';
-        }
+window.filterThesisRows = function(q) {
+    const keyword = q.toLowerCase();
+    document.querySelectorAll('#thesisDashTableBody .thesis-row').forEach(row => {
+        row.style.display = row.dataset.search.toLowerCase().includes(keyword) ? '' : 'none';
     });
 };
 
-function renderStudentThesisTracking() {
+// Student personal timeline view
+function renderStudentTimeline() {
     const student = MOCK.student || {};
-    const trackingData = MOCK.thesisProgress || [];
-    const track = trackingData.find(t => t.StudentID === student.studentId) || {};
-    const progress = calculateProgress(track);
+    const track   = (MOCK.thesisProgress || []).find(t => String(t.StudentID) === String(student.studentId)) || {};
+    const prog    = calcThesisProgress(track);
+    const doneCount = THESIS_MILESTONES.filter(m => track[`${m.id}_Status`] === 'Complete').length;
+    const nextMs  = THESIS_MILESTONES.find(m => track[`${m.id}_Status`] !== 'Complete');
 
-    let milestonesHTML = THESIS_MILESTONES.map((m, index) => {
-        const mStatus = track[`${m.id}_Status`] || 'Pending';
-        const mDate = track[`${m.id}_Date`] || '-';
-        const mNote = track[`${m.id}_Note`] || '';
-        
-        let statusColor = '#cbd5e1'; // gray - pending
-        let statusIcon = '<circle cx="12" cy="12" r="10" fill="white" stroke="#cbd5e1" stroke-width="2"/>';
-        let statusText = 'ยังไม่ดำเนินการ';
-        let statusClass = '';
+    const timelineHTML = THESIS_MILESTONES.map((m, i) => {
+        const status = track[`${m.id}_Status`] || 'Pending';
+        const date   = track[`${m.id}_Date`]   || '';
+        const note   = track[`${m.id}_Note`]   || '';
 
-        if (mStatus === 'Complete') {
-            statusColor = '#10b981'; // green
-            statusIcon = '<circle cx="12" cy="12" r="10" fill="#10b981"/><path d="M8 12.5l3 3 5-6" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-            statusText = 'ผ่านเรียบร้อย';
-            statusClass = 'completed';
-        } else if (mStatus === 'InProgress') {
-            statusColor = '#3b82f6'; // blue
-            statusIcon = '<circle cx="12" cy="12" r="10" fill="white" stroke="#3b82f6" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="#3b82f6"/>';
-            statusText = 'อยู่ระหว่างดำเนินการ';
-            statusClass = 'active';
+        let dotColor = '#cbd5e1', dotBg = 'white', check = '', statusLabel = 'ยังไม่ดำเนินการ', labelColor = '#94a3b8';
+        if (status === 'Complete') {
+            dotColor = '#10b981'; dotBg = '#10b981'; check = '<path d="M8 12.5l3 3 5-6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'; statusLabel = 'ผ่านแล้ว'; labelColor = '#10b981';
+        } else if (status === 'InProgress') {
+            dotColor = '#3b82f6'; check = '<circle cx="12" cy="12" r="5" fill="#3b82f6"/>'; statusLabel = 'กำลังดำเนินการ'; labelColor = '#3b82f6';
         }
 
-        // Additional field rendering
-        let extraFieldsHtml = '';
-        if (m.fields && m.fields.length > 0) {
-            extraFieldsHtml = m.fields.map(f => {
-                const val = track[`${m.id}_${f.id}`];
-                if (val) {
-                    return `<div style="font-size:0.8rem; background:rgba(0,0,0,0.03); padding:4px 8px; border-radius:4px; display:inline-block; margin-right:8px; margin-top:6px;"><b>${f.label}:</b> ${val}</div>`;
-                }
-                return '';
-            }).join('');
-        }
+        const lineColor = status === 'Complete' ? '#10b981' : '#e2e8f0';
+
+        const extraHtml = (m.fields || []).map(f => {
+            const val = track[`${m.id}_${f.id}`];
+            return val ? `<span style="display:inline-block;background:#f1f5f9;border-radius:6px;padding:2px 10px;font-size:0.78rem;font-weight:600;margin-top:6px;margin-right:6px;"><span style="color:#94a3b8;">${f.label}: </span>${val}</span>` : '';
+        }).join('');
 
         return `
-        <div style="display:flex; position:relative; margin-bottom:0;" class="timeline-item ${statusClass}">
-            <!-- Line connecting dots -->
-            ${index < THESIS_MILESTONES.length - 1 ? `<div style="position:absolute; left:21px; top:36px; bottom:-16px; width:2px; background:${mStatus === 'Complete' ? '#10b981' : '#e2e8f0'}; z-index:1;"></div>` : ''}
-            
-            <div style="display:flex; flex-direction:column; align-items:center; width:44px; margin-right:16px; position:relative; z-index:2; padding-top:10px;">
-                <svg width="24" height="24" viewBox="0 0 24 24">${statusIcon}</svg>
+        <div style="display:flex;position:relative;">
+            ${i < THESIS_MILESTONES.length - 1 ? `<div style="position:absolute;left:20px;top:34px;bottom:-12px;width:2px;background:${lineColor};z-index:0;"></div>` : ''}
+            <div style="width:42px;flex-shrink:0;padding-top:8px;z-index:1;">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="${dotBg}" stroke="${dotColor}" stroke-width="2.5"/>
+                    ${check}
+                </svg>
             </div>
-            
-            <div style="flex:1; padding:12px 16px; background:white; border:1px solid ${mStatus === 'InProgress' ? '#bfdbfe' : '#e2e8f0'}; border-radius:12px; margin-bottom:16px; box-shadow: ${mStatus === 'InProgress' ? '0 4px 12px rgba(59,130,246,0.1)' : 'none'}; opacity: ${mStatus === 'Pending' ? 0.7 : 1};">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div style="flex:1;padding:12px 16px;background:white;border:1px solid ${status==='InProgress'?'#93c5fd':'#e2e8f0'};border-radius:12px;margin-bottom:12px;${status==='InProgress'?'box-shadow:0 4px 14px rgba(59,130,246,0.12);':''}opacity:${status==='Pending'?'0.65':'1'};">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;">
                     <div>
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                        <div style="font-size:0.75rem;font-weight:700;color:#94a3b8;margin-bottom:2px;">ขั้นตอนที่ ${i+1}/${THESIS_MILESTONES.length}</div>
+                        <div style="display:flex;align-items:center;gap:6px;">
                             <span style="font-size:1.1rem;">${m.icon}</span>
-                            <h4 style="margin:0; font-size:1rem; color:${mStatus === 'InProgress' ? '#1d4ed8' : '#334155'}; font-weight:600;">ขั้นตอนที่ ${index + 1}: ${m.label}</h4>
+                            <h4 style="margin:0;font-size:0.97rem;font-weight:700;color:${status==='InProgress'?'#1d4ed8':'#1e293b'};">${m.label}</h4>
                         </div>
-                        <span style="font-size:0.75rem; font-weight:600; padding:3px 8px; border-radius:10px; background:${statusColor}20; color:${statusColor === '#cbd5e1' ? '#64748b' : statusColor};">${statusText}</span>
+                        <span style="display:inline-block;margin-top:6px;font-size:0.73rem;font-weight:700;padding:3px 10px;border-radius:20px;background:${labelColor}15;color:${labelColor};">${statusLabel}</span>
                     </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:0.8rem; font-weight:500; color:var(--text-secondary);">วันที่ดำเนินการ/ผ่าน</div>
-                        <div style="font-size:0.9rem; font-weight:600;">${mDate === '-' ? '-' : formatThaiDateShort(mDate)}</div>
-                    </div>
+                    ${date ? `<div style="text-align:right;"><div style="font-size:0.73rem;color:#94a3b8;">วันที่</div><div style="font-size:0.88rem;font-weight:700;">${formatDateTh(date)}</div></div>` : ''}
                 </div>
-                ${extraFieldsHtml}
-                ${mNote ? `<div style="margin-top:10px; padding:10px; background:#f8fafc; border-radius:8px; border-left:3px solid #cbd5e1; font-size:0.85rem; color:#475569;">${mNote}</div>` : ''}
+                ${extraHtml}
+                ${note ? `<div style="margin-top:10px;padding:8px 12px;background:#f8fafc;border-left:3px solid #e2e8f0;border-radius:0 6px 6px 0;font-size:0.83rem;color:#475569;">${note}</div>` : ''}
             </div>
-        </div>
-        `;
+        </div>`;
     }).join('');
 
     return `
     <div class="animate-in">
-        <div class="page-header" style="margin-bottom:24px;">
+        <div class="page-header" style="margin-bottom:20px;">
             <h1 class="page-title">ติดตามความก้าวหน้าวิทยานิพนธ์</h1>
-            <p class="page-subtitle">แสดงขั้นตอนความก้าวหน้า (Milestones) ของการทำวิทยานิพนธ์</p>
+            <p class="page-subtitle">ไทม์ไลน์ส่วนตัว — แสดงสถานะขั้นตอนการทำวิทยานิพนธ์ของคุณ</p>
         </div>
 
-        <div class="card" style="margin-bottom:24px; border:none; background:linear-gradient(135deg, white 0%, #f8fafc 100%);">
-            <div class="card-body" style="display:flex; align-items:center; gap:20px; padding:24px;">
-                <div style="width:100px; height:100px;">
-                    <svg viewBox="0 0 36 36" style="width:100%; height:100%; transform:rotate(-90deg);">
-                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e2e8f0" stroke-width="4"/>
-                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--accent-primary)" stroke-width="4" stroke-dasharray="${progress}, 100" style="transition: stroke-dasharray 1s ease-out;"/>
+        <div class="card" style="margin-bottom:20px;border:2px solid var(--accent-primary-light);border-radius:16px;">
+            <div class="card-body" style="display:flex;align-items:center;gap:20px;padding:20px 24px;flex-wrap:wrap;">
+                <div style="position:relative;width:90px;height:90px;flex-shrink:0;">
+                    <svg viewBox="0 0 36 36" style="width:90px;height:90px;transform:rotate(-90deg);">
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e2e8f0" stroke-width="3.5"/>
+                        <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--accent-primary)" stroke-width="3.5" stroke-dasharray="${prog}, 100"/>
                     </svg>
-                    <div style="position:absolute; margin-top:-65px; margin-left:32px; font-size:1.2rem; font-weight:700; color:var(--accent-primary);">${progress}%</div>
+                    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:var(--accent-primary);">${prog}%</div>
                 </div>
                 <div>
-                    <h3 style="margin:0 0 8px; font-size:1.2rem; color:#1e293b;">ภาพรวมความก้าวหน้า</h3>
-                    <p style="margin:0; font-size:0.9rem; color:#64748b; line-height:1.5;">ปัจจุบันคุณผ่านการประเมินแล้ว ${calculateProgress(track) === 100 ? 11 : THESIS_MILESTONES.filter(m => track[`${m.id}_Status`] === 'Complete').length} จาก 11 ขั้นตอน<br>ขั้นตอนถัดไปที่คุณต้องโฟกัสคือ: <b>${THESIS_MILESTONES.find(m => track[`${m.id}_Status`] !== 'Complete')?.label || 'สำเร็จการศึกษา'}</b></p>
+                    <div style="font-size:1.1rem;font-weight:700;color:#1e293b;margin-bottom:4px;">ภาพรวมความก้าวหน้า</div>
+                    <div style="font-size:0.88rem;color:#64748b;line-height:1.6;">ผ่านแล้ว <b>${doneCount} จาก ${THESIS_MILESTONES.length}</b> ขั้นตอน</div>
+                    <div style="font-size:0.85rem;color:#64748b;">ขั้นตอนถัดไป: <b style="color:var(--accent-primary);">${nextMs ? nextMs.label : 'สำเร็จครบทุกขั้นตอนแล้ว! 🎉'}</b></div>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header"><h3 class="card-title">ไทม์ไลน์วิทยานิพนธ์ 11 ขั้นตอน</h3></div>
+            <div class="card-header"><h3 class="card-title">ไทม์ไลน์ ${THESIS_MILESTONES.length} ขั้นตอน</h3></div>
             <div class="card-body" style="padding:24px;">
-                <div style="max-width:800px; margin:0 auto; padding-left:10px;">
-                    ${milestonesHTML}
-                </div>
+                <div style="max-width:750px;padding-left:4px;">${timelineHTML}</div>
             </div>
         </div>
-    </div>
-    `;
+    </div>`;
 }
 
-// FORMATTING HELPER
-function formatThaiDateShort(dateStr) {
-    if (!dateStr || dateStr === '-') return '-';
-    // If it's just a regular string that doesn't parse to real date easily, return as is
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return dateStr; 
 
-    const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
-    return `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear() + 543}`;
-}
-
-// ADMIN MODAL LOGIC
-window.openThesisTrackingModal = function(studentData) {
-    // Only Admin allowed to edit
+// ============================================================
+// PAGE 2: อัปเดตสถานะวิทยานิพนธ์ (Admin Only)
+// ============================================================
+pages['thesis-update'] = function() {
     if (window.currentUserRole !== 'admin' && !window.isSuperAdmin) {
-        alert('สิทธิ์การเข้าถึงถูกจำกัด (เฉพาะผู้ดูแลระบบที่มีสิทธิ์อัปเดตความก้าวหน้าได้)');
-        return;
+        return `<div class="card"><div class="card-body" style="text-align:center;padding:48px;">
+            <div style="font-size:3rem;margin-bottom:12px;">🔒</div>
+            <h3>สิทธิ์ไม่เพียงพอ</h3>
+            <p style="color:var(--text-secondary);">เฉพาะผู้ดูแลระบบ (Admin) เท่านั้นที่สามารถอัปเดตสถานะวิทยานิพนธ์ได้</p>
+        </div></div>`;
     }
-
-    const track = studentData.trackData || {};
-
-    let html = `
-    <div style="margin-bottom:20px; padding-bottom:15px; border-bottom:1px solid #e2e8f0;">
-        <h3 style="margin:0 0 5px; color:#1e293b; font-size:1.1rem;">นักศึกษา: ${studentData.name}</h3>
-        <p style="margin:0; font-size:0.9rem; color:#64748b;">รหัสนักศึกษา: ${studentData.studentId} | สาขา: ${studentData.major}</p>
-    </div>
-    <form id="thesisMilestoneForm">
-        <input type="hidden" id="tm_studentId" value="${studentData.studentId}">
-        <input type="hidden" id="tm_studentName" value="${studentData.name}">
-        <input type="hidden" id="tm_major" value="${studentData.major}">
-        <input type="hidden" id="tm_cohort" value="${studentData.cohort}">
-        
-        <div style="display:flex; flex-direction:column; gap:16px;">
-    `;
-
-    THESIS_MILESTONES.forEach((m, idx) => {
-        const cStatus = track[`${m.id}_Status`] || 'Pending';
-        const cDate = track[`${m.id}_Date`] || '';
-        const cNote = track[`${m.id}_Note`] || '';
-
-        html += `
-        <div style="border:1px solid #e2e8f0; border-radius:10px; padding:16px; background:${cStatus==='Complete'?'#f0fdf4':'#ffffff'};">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:1.2rem;">${m.icon}</span>
-                    <h4 style="margin:0; font-size:1rem; color:#334155;">${idx+1}. ${m.label}</h4>
-                </div>
-                <div style="display:flex; gap:12px; align-items:center;">
-                    <select id="${m.id}_Status" class="form-select" style="width:160px; height:36px; padding:0 10px;">
-                        <option value="Pending" ${cStatus==='Pending'?'selected':''}>- ยังไม่เริ่ม -</option>
-                        <option value="InProgress" ${cStatus==='InProgress'?'selected':''}>กำลังดำเนินการ</option>
-                        <option value="Complete" ${cStatus==='Complete'?'selected':''}>✅ ผ่าน / เสร็จสิ้น</option>
-                    </select>
-                    <input type="date" id="${m.id}_Date" class="form-input" style="width:140px; height:36px;" value="${cDate.includes('T') ? cDate.split('T')[0] : cDate}">
-                </div>
-            </div>
-            
-            <div style="display:flex; flex-wrap:wrap; gap:16px;">
-                <div style="flex:1; min-width:200px;">
-                    <input type="text" id="${m.id}_Note" class="form-input" placeholder="หมายเหตุ / รายละเอียดเพิ่มเติม" value="${cNote}" style="height:36px; font-size:0.85rem;">
-                </div>
-                ${m.fields ? m.fields.map(f => {
-                    const cFieldVal = track[`${m.id}_${f.id}`] || '';
-                    return `
-                    <div style="width:180px;">
-                        <input type="${f.type}" id="${m.id}_${f.id}" class="form-input" placeholder="${f.label}" value="${cFieldVal}" style="height:36px; font-size:0.85rem; border-color:#94a3b8; background:#f8fafc;">
-                    </div>
-                    `;
-                }).join('') : ''}
-            </div>
-        </div>
-        `;
-    });
-
-    html += `
-        </div>
-        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid #e2e8f0;">
-            <button type="button" class="btn btn-secondary" onclick="document.getElementById('thesisTrackingModal').style.display='none'">ยกเลิก</button>
-            <button type="button" class="btn btn-primary" onclick="window.saveThesisMilestones()">บันทึกความก้าวหน้า</button>
-        </div>
-    </form>
-    `;
-
-    document.getElementById('thesisTrackingModalBody').innerHTML = html;
-    document.getElementById('thesisTrackingModal').style.display = 'flex';
+    return renderUpdatePage();
 };
 
-window.saveThesisMilestones = async function() {
-    const studentId = document.getElementById('tm_studentId').value;
-    const studentName = document.getElementById('tm_studentName').value;
-    const major = document.getElementById('tm_major').value;
-    const cohort = document.getElementById('tm_cohort').value;
+function renderUpdatePage() {
+    const students = MOCK.students || [];
+
+    const studentOptions = students.map(s => {
+        const name = getStudentDisplayName(s);
+        return `<option value="${s.studentId}" data-name="${name}" data-major="${s.major||''}" data-cohort="${s.cohort||''}">${name} (${s.studentId})</option>`;
+    }).join('');
+
+    return `
+    <div class="animate-in">
+        <div class="page-header" style="margin-bottom:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <h1 class="page-title">อัปเดตสถานะวิทยานิพนธ์</h1>
+                    <p class="page-subtitle">ค้นหานักศึกษา แล้วอัปเดตความก้าวหน้า 11 ขั้นตอน</p>
+                </div>
+                <button class="btn btn-secondary" onclick="window.loadPage('thesis-dashboard')" style="height:42px;display:flex;align-items:center;gap:8px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+                    กลับหน้ารายงาน
+                </button>
+            </div>
+        </div>
+
+        <!-- Student Selector -->
+        <div class="card" style="margin-bottom:20px;">
+            <div class="card-body" style="padding:24px;">
+                <h3 style="margin:0 0 16px;font-size:1rem;color:#1e293b;">เลือกนักศึกษาที่ต้องการอัปเดต</h3>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
+                    <div style="flex:1;min-width:280px;">
+                        <label style="display:block;font-size:0.8rem;font-weight:600;color:#64748b;margin-bottom:6px;">ค้นหาจากชื่อหรือรหัสนักศึกษา</label>
+                        <div style="position:relative;">
+                            <input type="text" id="thesisStudentSearch" placeholder="พิมพ์ชื่อหรือรหัสนักศึกษา..."
+                                style="width:100%;border-radius:10px;border:2px solid #e2e8f0;padding:10px 14px 10px 36px;font-size:0.92rem;outline:none;"
+                                oninput="window.filterStudentSelect(this.value)">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);">
+                                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div style="flex:2;min-width:280px;">
+                        <label style="display:block;font-size:0.8rem;font-weight:600;color:#64748b;margin-bottom:6px;">เลือกจากรายชื่อ</label>
+                        <select id="thesisStudentSelect" class="form-select"
+                            style="width:100%;height:44px;border-radius:10px;border:2px solid #e2e8f0;font-size:0.92rem;"
+                            onchange="window.loadStudentMilestoneForm(this.value)">
+                            <option value="">— เลือกนักศึกษา —</option>
+                            ${studentOptions}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Milestone Form (injected here) -->
+        <div id="milestoneFormArea"></div>
+    </div>`;
+}
+
+window.filterStudentSelect = function(query) {
+    const sel  = document.getElementById('thesisStudentSelect');
+    if (!sel) return;
+    const q    = query.toLowerCase();
+    const opts = sel.querySelectorAll('option');
+    opts.forEach(opt => {
+        if (!opt.value) return;
+        opt.style.display = (opt.text.toLowerCase().includes(q) || (opt.dataset.major || '').toLowerCase().includes(q)) ? '' : 'none';
+    });
+    // Auto-select if only 1 visible
+    const visible = [...opts].filter(o => o.value && o.style.display !== 'none');
+    if (visible.length === 1) { sel.value = visible[0].value; window.loadStudentMilestoneForm(visible[0].value); }
+};
+
+window.loadStudentMilestoneForm = function(studentId) {
+    if (!studentId) { document.getElementById('milestoneFormArea').innerHTML = ''; return; }
+    const student  = (MOCK.students || []).find(s => String(s.studentId) === String(studentId));
+    const track    = (MOCK.thesisProgress || []).find(t => String(t.StudentID) === String(studentId)) || {};
+    if (!student)  { document.getElementById('milestoneFormArea').innerHTML = '<div class="card"><div class="card-body">ไม่พบข้อมูลนักศึกษา</div></div>'; return; }
+
+    const name   = getStudentDisplayName(student);
+    const major  = student.major  || track.Major  || '-';
+    const cohort = student.cohort || track.Cohort || '-';
+    const prog   = calcThesisProgress(track);
+
+    let milestonesHtml = THESIS_MILESTONES.map((m, idx) => {
+        const cStatus = track[`${m.id}_Status`] || 'Pending';
+        const cDate   = track[`${m.id}_Date`]   || '';
+        const cNote   = track[`${m.id}_Note`]   || '';
+        const dateVal = cDate.includes('T') ? cDate.split('T')[0] : cDate;
+
+        let headerBg = '';
+        if (cStatus === 'Complete')    headerBg = 'background:#f0fdf4;border-color:#6ee7b7;';
+        else if (cStatus === 'InProgress') headerBg = 'background:#eff6ff;border-color:#93c5fd;';
+
+        return `
+        <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;${headerBg}">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;gap:10px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span style="font-size:1.3rem;">${m.icon}</span>
+                    <div>
+                        <div style="font-size:0.75rem;color:#94a3b8;font-weight:600;">ขั้นตอนที่ ${idx+1}</div>
+                        <div style="font-size:0.95rem;font-weight:700;color:#1e293b;">${m.label}</div>
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <select id="${m.id}_Status" class="form-select" style="height:36px;padding:0 10px;border-radius:8px;font-size:0.85rem;min-width:155px;">
+                        <option value="Pending"    ${cStatus==='Pending'   ?'selected':''}>⬜ ยังไม่เริ่ม</option>
+                        <option value="InProgress" ${cStatus==='InProgress'?'selected':''}>🔵 กำลังดำเนินการ</option>
+                        <option value="Complete"   ${cStatus==='Complete'  ?'selected':''}>✅ ผ่าน / เสร็จสิ้น</option>
+                    </select>
+                    <input type="date" id="${m.id}_Date" class="form-input" value="${dateVal}"
+                        style="height:36px;border-radius:8px;font-size:0.85rem;width:145px;">
+                </div>
+            </div>
+            <div style="padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;background:white;">
+                <input type="text" id="${m.id}_Note" class="form-input" placeholder="หมายเหตุ / รายละเอียด" value="${cNote}"
+                    style="flex:2;min-width:200px;height:36px;font-size:0.83rem;border-radius:8px;">
+                ${(m.fields || []).map(f => {
+                    const fVal = track[`${m.id}_${f.id}`] || '';
+                    return `<input type="${f.type}" id="${m.id}_${f.id}" class="form-input" placeholder="${f.label}" value="${fVal}"
+                        style="flex:1;min-width:160px;height:36px;font-size:0.83rem;border-radius:8px;background:#fafafa;border-color:#94a3b8;">`;
+                }).join('')}
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('milestoneFormArea').innerHTML = `
+    <div class="card">
+        <div class="card-body" style="padding:0;">
+            <!-- Student info header -->
+            <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;background:linear-gradient(135deg,#f8fafc,#eef2ff);border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <div style="font-size:1.1rem;font-weight:700;color:#1e293b;">${name}</div>
+                    <div style="font-size:0.85rem;color:#64748b;margin-top:2px;">รหัส: ${studentId}${major !== '-' ? ' | สาขา: ' + major : ''}${cohort !== '-' ? ' | รุ่น ' + cohort : ''}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <div style="text-align:right;">
+                        <div style="font-size:0.75rem;color:#94a3b8;">ความก้าวหน้าปัจจุบัน</div>
+                        <div style="font-size:1.5rem;font-weight:800;color:var(--accent-primary);">${prog}%</div>
+                    </div>
+                    <div style="width:50px;height:50px;position:relative;">
+                        <svg viewBox="0 0 36 36" style="width:50px;height:50px;transform:rotate(-90deg);">
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="#e2e8f0" stroke-width="4"/>
+                            <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="var(--accent-primary)" stroke-width="4" stroke-dasharray="${prog}, 100"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Milestones -->
+            <div style="padding:20px 24px;display:flex;flex-direction:column;gap:12px;">
+                <input type="hidden" id="tu_studentId"   value="${studentId}">
+                <input type="hidden" id="tu_studentName" value="${name}">
+                <input type="hidden" id="tu_major"       value="${major}">
+                <input type="hidden" id="tu_cohort"      value="${cohort}">
+                ${milestonesHtml}
+            </div>
+
+            <!-- Save Button -->
+            <div style="padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:12px;background:#f8fafc;border-radius:0 0 16px 16px;">
+                <button class="btn btn-secondary" onclick="document.getElementById('milestoneFormArea').innerHTML=''">ยกเลิก</button>
+                <button class="btn btn-primary" onclick="window.saveThesisMilestonesInline()" style="gap:8px;display:flex;align-items:center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    บันทึกความก้าวหน้า
+                </button>
+            </div>
+        </div>
+    </div>`;
+};
+
+window.saveThesisMilestonesInline = async function() {
+    const studentId   = document.getElementById('tu_studentId').value;
+    const studentName = document.getElementById('tu_studentName').value;
+    const major       = document.getElementById('tu_major').value;
+    const cohort      = document.getElementById('tu_cohort').value;
 
     const milestones = {};
     THESIS_MILESTONES.forEach(m => {
         milestones[`${m.id}_Status`] = document.getElementById(`${m.id}_Status`).value;
-        milestones[`${m.id}_Date`] = document.getElementById(`${m.id}_Date`).value;
-        milestones[`${m.id}_Note`] = document.getElementById(`${m.id}_Note`).value;
-        if(m.fields){
-            m.fields.forEach(f => {
-                milestones[`${m.id}_${f.id}`] = document.getElementById(`${m.id}_${f.id}`).value;
-            });
-        }
+        milestones[`${m.id}_Date`]   = document.getElementById(`${m.id}_Date`).value;
+        milestones[`${m.id}_Note`]   = document.getElementById(`${m.id}_Note`).value;
+        (m.fields || []).forEach(f => {
+            milestones[`${m.id}_${f.id}`] = document.getElementById(`${m.id}_${f.id}`).value;
+        });
     });
 
     const payload = {
-        studentId,
-        studentName,
-        major,
-        cohort,
+        studentId, studentName, major, cohort,
         updatedBy: window.currentUserData?.name || 'Admin',
         milestones
     };
 
-    window.showLoading();
+    window.showLoading && window.showLoading();
     try {
-        const response = await fetch(CONFIG.API_URL, {
+        const resp = await fetch(CONFIG.API_URL, {
             method: 'POST',
-            body: JSON.stringify({ action: 'updateThesisMilestone', payload: payload })
+            body: JSON.stringify({ action: 'updateThesisMilestone', payload })
         });
-        
-        const result = await response.json();
-        window.hideLoading();
-        
+        const result = await resp.json();
+        window.hideLoading && window.hideLoading();
+
         if (result.status === 'success') {
-            alert('อัปเดตความก้าวหน้าเรียบร้อยแล้ว');
-            document.getElementById('thesisTrackingModal').style.display = 'none';
-            // Update MOCK locally to reflect change instantly
-            let trackOpt = MOCK.thesisProgress.find(t => t.StudentID === studentId);
-            if(trackOpt) {
-                Object.assign(trackOpt, milestones);
-                trackOpt.LastUpdated = new Date().toISOString();
+            // Update local MOCK immediately
+            let existing = MOCK.thesisProgress.find(t => String(t.StudentID) === String(studentId));
+            if (existing) {
+                Object.assign(existing, milestones, { LastUpdated: new Date().toISOString() });
             } else {
-                MOCK.thesisProgress.push({
-                    StudentID: studentId,
-                    StudentName: studentName,
-                    Major: major,
-                    Cohort: cohort,
-                    LastUpdated: new Date().toISOString(),
-                    ...milestones
-                });
+                MOCK.thesisProgress.push({ StudentID: studentId, StudentName: studentName, Major: major, Cohort: cohort, LastUpdated: new Date().toISOString(), ...milestones });
             }
-            window.loadPage('thesis-tracking');
+
+            // Show success in-page (no alert popup)
+            document.getElementById('milestoneFormArea').innerHTML = `
+                <div style="text-align:center;padding:40px;background:#f0fdf4;border-radius:16px;border:2px solid #6ee7b7;">
+                    <div style="font-size:3rem;margin-bottom:12px;">✅</div>
+                    <h3 style="color:#059669;margin:0 0 8px;">บันทึกเรียบร้อยแล้ว!</h3>
+                    <p style="color:#64748b;margin:0 0 16px;">อัปเดตความก้าวหน้าของ <b>${studentName}</b> สำเร็จแล้ว</p>
+                    <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+                        <button class="btn btn-primary" onclick="window.loadStudentMilestoneForm('${studentId}')">อัปเดตต่อ</button>
+                        <button class="btn btn-secondary" onclick="window.loadPage('thesis-dashboard')">ดูรายงานรวม</button>
+                    </div>
+                </div>`;
         } else {
             alert('เกิดข้อผิดพลาด: ' + result.message);
         }
-    } catch (error) {
-        window.hideLoading();
-        alert('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้: ' + error.message);
+    } catch (err) {
+        window.hideLoading && window.hideLoading();
+        alert('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้: ' + err.message);
     }
 };

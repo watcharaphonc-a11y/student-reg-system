@@ -47,7 +47,8 @@ pages['menu-permissions'] = function() {
         { id: 'nav-manage-schedule', label: 'จัดการตารางเรียน', section: 'ตั้งค่าระบบ' },
         { id: 'nav-manage-forms', label: 'จัดการแบบฟอร์ม', section: 'ตั้งค่าระบบ' },
         { id: 'nav-admission', label: 'จัดการการรับสมัคร', section: 'ตั้งค่าระบบ' },
-        { id: 'nav-thesis-tracking', label: 'ติดตามวิทยานิพนธ์', section: 'วิทยานิพนธ์' }
+        { id: 'nav-thesis-dashboard', label: 'รายงานความก้าวหน้า', section: 'วิทยานิพนธ์' },
+        { id: 'nav-thesis-update', label: 'อัปเดตสถานะวิทยานิพนธ์', section: 'วิทยานิพนธ์' }
     ];
 
     const roles = [
