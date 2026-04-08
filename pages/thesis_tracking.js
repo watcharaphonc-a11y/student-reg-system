@@ -483,7 +483,7 @@ window.saveThesisMilestonesInline = async function() {
 
     window.showLoading && window.showLoading();
     try {
-        const resp = await fetch(CONFIG.API_URL, {
+        const resp = await fetch(SCRIPT_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'updateThesisMilestone', payload })
         });
