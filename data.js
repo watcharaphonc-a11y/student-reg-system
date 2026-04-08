@@ -214,5 +214,8 @@ const MOCK = {
     examCommittees: [],
 
     // ประวัติการแจ้งหัวข้อวิทยานิพนธ์
-    thesisTopicHistory: []
+    thesisTopicHistory: [],
+
+    // ติดตามความก้าวหน้าวิทยานิพนธ์ (จาก API — ThesisProgress sheet)
+    thesisProgress: []
 };

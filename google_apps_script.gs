@@ -31,7 +31,8 @@ const SHEETS = {
   EVAL_INSTRUCTOR_QUESTIONS: 'EvalInstructorQuestions',
   APPLICANTS: 'Applicants',
   SCHEDULE: 'Schedule',
-  DOCUMENT_TEMPLATES: 'DocumentTemplates'
+  DOCUMENT_TEMPLATES: 'DocumentTemplates',
+  THESIS_PROGRESS: 'ThesisProgress'
 };
 
 const DRIVE_FOLDER_ID = '1zOq4BkaxMqZFyUvBz1eaYEzXjWd3lXrJ'; // Updated folder ID
@@ -103,7 +104,8 @@ function doGet(e) {
           examCommittees: getSheetData(SHEETS.EXAM_COMMITTEES),
           applicants: getSheetData(SHEETS.APPLICANTS),
           schedules: getSheetData(SHEETS.SCHEDULE),
-          documentTemplates: getSheetData(SHEETS.DOCUMENT_TEMPLATES)
+          documentTemplates: getSheetData(SHEETS.DOCUMENT_TEMPLATES),
+          thesisProgress: getSheetData(SHEETS.THESIS_PROGRESS)
         };
         break;
       case 'getPermissions':
@@ -244,6 +246,9 @@ function doPost(e) {
         break;
       case 'updateStudentDetail':
         response = updateStudentDetail(payload);
+        break;
+      case 'updateThesisMilestone':
+        response = updateThesisMilestone(payload);
         break;
       case 'enrollApplicant':
         response = enrollApplicantToStudent(payload);
@@ -930,7 +935,7 @@ function setupInitialSheets() {
                             'nav-dashboard', 'nav-student-profile', 'nav-teacher-profile', 'nav-special-lecturers', 'nav-alumni', 'nav-new-registration', 'nav-teacher-registration', 'nav-courses', 'nav-study-plan', 
                             'nav-grades', 'nav-schedule', 'nav-eval-course', 'nav-eval-instructor', 'nav-transcript', 'nav-exams', 'nav-graduation', 
                             'nav-thesis-advisor', 'nav-thesis-topic', 'nav-academic-advisor', 'nav-exam-committee', 
-                            'nav-payments', 'nav-petitions-student', 'nav-documents-status', 'nav-documents-admin', 'nav-manage-evals', 'nav-eval-reports', 'nav-teaching-fees', 'nav-calendar', 'nav-announcements', 'nav-settings', 'nav-user-management', 'nav-admission', 'nav-manage-schedule', 'nav-manage-forms'],
+                            'nav-payments', 'nav-petitions-student', 'nav-documents-status', 'nav-documents-admin', 'nav-manage-evals', 'nav-eval-reports', 'nav-teaching-fees', 'nav-calendar', 'nav-announcements', 'nav-settings', 'nav-user-management', 'nav-admission', 'nav-manage-schedule', 'nav-manage-forms', 'nav-thesis-tracking'],
     [SHEETS.EXAMS]: ['id', 'student_id', 'exam_type', 'status', 'score', 'date', 'note'],
     [SHEETS.EXAM_COMMITTEES]: ['ExamID', 'StudentID', 'ExamType', 'ExamDate', 'ExamTime', 'ExamRoom', 'Advisor', 'ThesisTitle', 'Role', 'Prefix', 'FirstName', 'LastName', 'Position', 'Affiliation'],
     [SHEETS.EVAL_QUESTIONS]: ['course_code', 'section', 'category', 'question_id', 'question_text'],
@@ -938,13 +943,28 @@ function setupInitialSheets() {
     [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text'],
     [SHEETS.APPLICANTS]: ['ApplicationID', 'Status', 'Date', 'Prefix', 'FirstName', 'LastName', 'FirstNameEn', 'LastNameEn', 'IdCard', 'Dob', 'Age', 'Religion', 'Nationality', 'Email', 'Phone', 'PhoneHome', 'PhoneWork', 'Program', 'Major', 'Address', 'EducationHistory', 'TrainingHistory', 'WorkStatus', 'WorkHistory', 'CurrentWorkplace', 'ResearchTopic', 'DocumentsLink', 'Notes'],
     [SHEETS.SCHEDULE]: ['CourseCode', 'CourseName', 'Day', 'StartSlot', 'EndSlot', 'Room', 'InstructorID', 'InstructorName', 'Color', 'Semester', 'AcademicYear', 'Section'],
-    [SHEETS.DOCUMENT_TEMPLATES]: ['id', 'name', 'type']
+    [SHEETS.DOCUMENT_TEMPLATES]: ['id', 'name', 'type'],
+    [SHEETS.THESIS_PROGRESS]: [
+      'StudentID','StudentName','Major','Cohort','AdvisorName',
+      'M1_Status','M1_Date','M1_Note',
+      'M2_Status','M2_Date','M2_Note',
+      'M3_Status','M3_Date','M3_Note',
+      'M4_Status','M4_Date','M4_Note','M4_EthicsNo',
+      'M5_Status','M5_Date','M5_Note',
+      'M6_Status','M6_Date','M6_Note',
+      'M7_Status','M7_Date','M7_Note','M7_PlagPercent',
+      'M8_Status','M8_Date','M8_Note','M8_Score',
+      'M9_Status','M9_Date','M9_Note',
+      'M10_Status','M10_Date','M10_Note',
+      'M11_Status','M11_Date','M11_Note','M11_Journal',
+      'LastUpdated','UpdatedBy'
+    ]
   };
 
   const defaultPermissions = [
-    ['admin', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES'],
-    ['teacher', 'NO', 'YES', 'NO', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'YES', 'YES', 'YES', 'YES', 'NO', 'NO'],
-    ['student', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'YES', 'NO', 'NO', 'NO', 'NO', 'NO', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'YES', 'NO', 'NO', 'NO', 'YES', 'YES', 'YES', 'NO', 'NO']
+    ['admin',   'YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES'],
+    ['teacher', 'NO', 'YES','NO', 'YES','NO', 'YES','YES','YES','YES','YES','YES','NO', 'YES','YES','YES','YES','YES','YES','YES','YES','NO', 'YES','YES','YES','YES','YES','YES','YES','YES','NO', 'YES','YES','YES','YES','NO', 'NO', 'YES'],
+    ['student', 'NO', 'NO', 'NO', 'NO', 'NO', 'NO', 'YES','NO', 'NO', 'NO', 'NO', 'NO', 'YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','YES','NO', 'NO', 'NO', 'YES','YES','YES','NO', 'NO', 'YES']
   ];
 
   Object.keys(defaultHeaders).forEach(sheetName => {
@@ -1508,6 +1528,64 @@ function updateStudentDetail(payload) {
     return createResponse({ status: 'success' });
   } catch (err) {
     console.error('updateStudentDetail Error:', err);
+    return createResponse({ status: 'error', message: 'SERVER ERROR: ' + err.toString() });
+  }
+}
+
+/**
+ * Update or create a Thesis Progress record for a student
+ */
+function updateThesisMilestone(payload) {
+  try {
+    const sheet = SS.getSheetByName(SHEETS.THESIS_PROGRESS);
+    if (!sheet) return createResponse({ status: 'error', message: 'ThesisProgress sheet not found' });
+
+    const studentId = String(payload.studentId || '').trim();
+    if (!studentId) return createResponse({ status: 'error', message: 'StudentID is required' });
+
+    const data = sheet.getDataRange().getValues();
+    const headers = data[0].map(h => String(h).trim());
+
+    // Find existing row
+    let rowIndex = -1;
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]).trim() === studentId) {
+        rowIndex = i + 1; // 1-indexed for Sheets API
+        break;
+      }
+    }
+
+    // Build merged update object
+    const updateObj = {
+      StudentID: studentId,
+      StudentName: payload.studentName || '',
+      Major: payload.major || '',
+      Cohort: payload.cohort || '',
+      AdvisorName: payload.advisorName || '',
+      LastUpdated: new Date().toISOString(),
+      UpdatedBy: payload.updatedBy || 'Admin'
+    };
+
+    // Merge milestone data
+    const milestones = payload.milestones || {};
+    Object.keys(milestones).forEach(k => { updateObj[k] = milestones[k]; });
+
+    if (rowIndex === -1) {
+      // Create new row
+      const newRow = headers.map(h => updateObj[h] !== undefined ? updateObj[h] : '');
+      sheet.appendRow(newRow);
+    } else {
+      // Update existing row — only write fields that are present in payload
+      headers.forEach((h, colIdx) => {
+        if (updateObj[h] !== undefined) {
+          sheet.getRange(rowIndex, colIdx + 1).setValue(updateObj[h]);
+        }
+      });
+    }
+
+    return createResponse({ status: 'success', studentId: studentId });
+  } catch (err) {
+    console.error('updateThesisMilestone Error:', err);
     return createResponse({ status: 'error', message: 'SERVER ERROR: ' + err.toString() });
   }
 }
