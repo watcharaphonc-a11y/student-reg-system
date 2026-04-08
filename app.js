@@ -115,9 +115,6 @@ mobileMenuBtn.addEventListener('click', () => sidebar.classList.toggle('mobile-o
 window.initThaiDatePickers = function() {
     if (typeof flatpickr === 'undefined') return;
     
-    // Register custom BE year format token 'bb'
-    flatpickr.formats.bb = function(date) { return date.getFullYear() + 543; };
-
     // Find all uninitialized date inputs
     document.querySelectorAll('input[type="date"]').forEach(input => {
         if (input.classList.contains('flatpickr-input') || input.dataset.fpInitialized) return;
@@ -130,7 +127,15 @@ window.initThaiDatePickers = function() {
              locale: window.flatpickr?.l10ns?.th || 'th',
              dateFormat: "Y-m-d",
              altInput: true,
-             altFormat: "d M bb",
+             altFormat: "d M Y_BE", // Placeholder to replace
+             formatDate: (date, formatStr, locale) => {
+                 // Intercept our custom string to push Buddhist Year
+                 if (formatStr === 'd M Y_BE') {
+                     const adStr = flatpickr.formatDate(date, "d M ", locale);
+                     return adStr + (date.getFullYear() + 543);
+                 }
+                 return flatpickr.formatDate(date, formatStr, locale);
+             },
              onReady: function(sl, st, instance) {
                  if (instance.currentYearElement) {
                      instance.currentYearElement.value = instance.currentYear + 543;
