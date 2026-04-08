@@ -77,6 +77,8 @@ function renderPage() {
         
         const initFn = window['init_' + currentPage.replace(/-/g, '_')];
         if (initFn) initFn();
+
+        if (window.initThaiDatePickers) window.initThaiDatePickers();
     } catch (err) {
         console.error(`Error rendering page ${currentPage}:`, err);
         contentArea.innerHTML = `
@@ -108,6 +110,49 @@ if (notifBtn) {
 // ====== Sidebar Toggle ======
 sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
 mobileMenuBtn.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
+
+// ====== Global DatePicker Init ======
+window.initThaiDatePickers = function() {
+    if (typeof flatpickr === 'undefined') return;
+    
+    // Register custom BE year format token 'bb'
+    flatpickr.formats.bb = function(date) { return date.getFullYear() + 543; };
+
+    // Find all uninitialized date inputs
+    document.querySelectorAll('input[type="date"]').forEach(input => {
+        if (input.classList.contains('flatpickr-input') || input.dataset.fpInitialized) return;
+        input.dataset.fpInitialized = 'true';
+        
+        // Convert to text to disable browser's native picker which blocks BE year
+        input.type = 'text';
+
+        flatpickr(input, {
+             locale: window.flatpickr?.l10ns?.th || 'th',
+             dateFormat: "Y-m-d",
+             altInput: true,
+             altFormat: "d M bb",
+             onReady: function(sl, st, instance) {
+                 if (instance.currentYearElement) {
+                     instance.currentYearElement.value = instance.currentYear + 543;
+                     // Prevent user typing direct AD years and confusing the calendar
+                     instance.currentYearElement.addEventListener('input', function(e) {
+                         const v = parseInt(e.target.value);
+                         if (v > 2400) { 
+                             instance.changeYear(v - 543, false); 
+                             e.target.value = v; 
+                         }
+                     });
+                 }
+             },
+             onYearChange: function(sl, st, instance) {
+                 setTimeout(() => { if (instance.currentYearElement) instance.currentYearElement.value = instance.currentYear + 543; }, 0);
+             },
+             onMonthChange: function(sl, st, instance) {
+                 setTimeout(() => { if (instance.currentYearElement) instance.currentYearElement.value = instance.currentYear + 543; }, 0);
+             }
+         });
+    });
+};
 
 // ====== Modal close button ======
 modalCloseBtn.addEventListener('click', closeModal);

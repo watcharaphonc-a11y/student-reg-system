@@ -457,6 +457,8 @@ window.loadStudentMilestoneForm = function(studentId) {
             </div>
         </div>
     </div>`;
+
+    if (window.initThaiDatePickers) window.initThaiDatePickers();
 };
 
 window.saveThesisMilestonesInline = async function() {

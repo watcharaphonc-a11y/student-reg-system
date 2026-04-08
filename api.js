@@ -2,7 +2,7 @@
 // Google Sheets API Integration
 // ============================
 
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwm75IYxL515HWZUAcr5puGKPSpWevpgYgM4_GC_MeTZumHRM2Jpl8Utwu4NoelXU1A/exec'.trim();
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNS8vpxtpnvqmKu7YKVFI39J0eVbtADVOeQwUqcHljOQXg9FW-hkFCf1aGMnJ7Derm/exec'.trim();
 
 // Ensure api namespace exists
 window.api = window.api || {};
