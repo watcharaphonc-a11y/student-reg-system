@@ -35,9 +35,8 @@ function renderAdminThesisTracking() {
     // To be comprehensive, we list students from the students table, but if trackingData has records, we use those.
     const studentList = MOCK.students || [];
 
-    // Combine tracking data with student master data
+    // Combine tracking data with student master data (All students)
     const combinedData = studentList
-        .filter(s => (s.program || '').includes('โท') || (s.program || '').includes('Master'))
         .map(student => {
             const track = trackingData.find(t => t.StudentID === student.studentId) || {};
             return {
@@ -56,9 +55,9 @@ function renderAdminThesisTracking() {
     const inProgressCount = combinedData.filter(d => d.progress > 0 && d.progress < 100).length;
 
     let rowsHTML = combinedData.length === 0 ? 
-        '<tr><td colspan="5" style="text-align:center;">ไม่พบข้อมูลนักศึกษาปริญญาโท</td></tr>' :
+        '<tr><td colspan="5" style="text-align:center;">ไม่พบข้อมูลนักศึกษาในระบบ</td></tr>' :
         combinedData.map(d => `
-        <tr>
+        <tr class="student-row">
             <td>
                 <div style="font-weight:600;">${d.name}</div>
                 <div style="font-size:0.85rem; color:var(--text-secondary);">${d.studentId} • รุ่น ${d.cohort}</div>
@@ -114,6 +113,12 @@ function renderAdminThesisTracking() {
                 <h3 class="card-title">รายชื่อนักศึกษาและสถานะความก้าวหน้า</h3>
             </div>
             <div class="card-body" style="padding:0;">
+                <div style="padding:16px 20px; border-bottom:1px solid #e2e8f0; background:#f8fafc;">
+                    <div style="position:relative;">
+                        <input type="text" id="thesisSearchBtn" placeholder="🔍 ค้นหา ชื่อ, นามสกุล, รหัสนักศึกษา, สาขาวิชา..." style="width:100%; border-radius:8px; border:1px solid #ccc; padding:10px 15px 10px 35px; font-size:0.95rem; outline:none; transition:border-color 0.3s;" onkeyup="window.filterThesisTable(this.value)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="position:absolute; left:10px; top:50%; transform:translateY(-50%);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </div>
+                </div>
                 <div class="table-container">
                     <table class="data-table">
                         <thead>
@@ -125,7 +130,7 @@ function renderAdminThesisTracking() {
                                 <th>จัดการ</th>
                             </tr>
                         </thead>
-                        <tbody>${rowsHTML}</tbody>
+                        <tbody id="thesisTableBody">${rowsHTML}</tbody>
                     </table>
                 </div>
             </div>
@@ -148,6 +153,19 @@ function renderAdminThesisTracking() {
     </div>
     `;
 }
+
+window.filterThesisTable = function(query) {
+    const q = query.toLowerCase();
+    const rows = document.querySelectorAll('#thesisTableBody .student-row');
+    rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+        if (text.includes(q)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+};
 
 function renderStudentThesisTracking() {
     const student = MOCK.student || {};
