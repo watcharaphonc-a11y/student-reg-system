@@ -281,7 +281,11 @@ function getSheetData(sheetName) {
   return rows.map(row => {
     const obj = {};
     headers.forEach((header, index) => {
-      obj[header] = row[index];
+      let val = row[index];
+      if (val instanceof Date) {
+          val = Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm:ss");
+      }
+      obj[header] = val;
     });
     return obj;
   });
