@@ -3,6 +3,13 @@
 // ============================
 
 const MOCK = {
+    // ===== Global Active Semester =====
+    activeYear: localStorage.getItem('activeYear') || '2568',
+    activeSemester: localStorage.getItem('activeSemester') || 'ภาคฤดูร้อน',
+    // Teaching Fees filter state (defaults to active semester on page load)
+    selectedFeeYear: null,
+    selectedFeeSemester: null,
+
     // ข้อมูลนักศึกษา (จาก API)
     student: null,
     students: [],

@@ -199,7 +199,12 @@ async function bootApp() {
             academicYear: s.AcademicYear || '',
             section: s.Section || ''
         }));
-// Global for admin view
+
+        // Sync header semester badge with global state
+        const headerSemEl = document.getElementById('headerSemester');
+        if (headerSemEl) {
+            headerSemEl.textContent = `${MOCK.activeSemester}/${MOCK.activeYear}`;
+        }
 
         // Map Students and attach Grades from Enrollments
         if (studentsData && studentsData.length > 0) {

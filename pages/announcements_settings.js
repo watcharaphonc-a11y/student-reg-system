@@ -150,20 +150,76 @@ window.submitAnnouncement = async function() {
 // Settings Page
 // ============================
 pages.settings = function() {
+    const isAdmin = (window.currentUserRole === 'admin' || window.currentUserRole === 'staff' || window.isSuperAdmin);
+    const userEmail = MOCK.student ? MOCK.student.email : (window.currentUserData?.email || '-');
+    const userPhone = MOCK.student ? MOCK.student.phone : (window.currentUserData?.phone || '-');
+
+    // Build year options for admin semester setting
+    const yearOpts = [];
+    for (let y = 2565; y <= 2575; y++) {
+        yearOpts.push(`<option value="${y}" ${String(y) === String(MOCK.activeYear) ? 'selected' : ''}>${y}</option>`);
+    }
+
+    const semOpts = [
+        { val: 'ภาคเรียนที่ 1', label: 'ภาคเรียนที่ 1' },
+        { val: 'ภาคเรียนที่ 2', label: 'ภาคเรียนที่ 2' },
+        { val: 'ภาคฤดูร้อน', label: 'ภาคฤดูร้อน (Summer)' },
+    ].map(s => `<option value="${s.val}" ${s.val === MOCK.activeSemester ? 'selected' : ''}>${s.label}</option>`).join('');
+
     return `
     <div class="animate-in">
         <div class="page-header">
             <h1 class="page-title">ตั้งค่า</h1>
             <p class="page-subtitle">จัดการการตั้งค่าบัญชีและระบบ</p>
         </div>
+
+        ${isAdmin ? `
+        <!-- ===== Admin: Active Semester Setting ===== -->
+        <div class="card animate-in" style="margin-bottom:24px; border:2px solid #6366f1; border-radius:16px; background:linear-gradient(135deg, #eef2ff 0%, #faf5ff 100%); box-shadow:0 4px 6px -1px rgba(99,102,241,0.1);">
+            <div class="card-body" style="padding:24px;">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px;">
+                    <div style="width:42px; height:42px; border-radius:12px; background:#6366f1; color:white; display:flex; align-items:center; justify-content:center;">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    </div>
+                    <div>
+                        <h3 style="margin:0; font-size:1.15rem; font-weight:700; color:#312e81;">ตั้งค่าภาคเรียนปัจจุบัน</h3>
+                        <p style="margin:2px 0 0; font-size:0.85rem; color:#6366f1;">กำหนดภาคเรียนและปีการศึกษาที่ใช้งานอยู่ในระบบทั้งหมด</p>
+                    </div>
+                </div>
+                <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;">
+                    <div style="flex:1; min-width:180px;">
+                        <label style="font-size:0.8rem; font-weight:600; color:#4338ca; display:block; margin-bottom:6px;">ปีการศึกษา</label>
+                        <select id="settingActiveYear" class="form-select" style="height:46px; border-radius:12px; border:2px solid #c7d2fe; font-size:1rem; font-weight:600; background:white; padding:0 14px; width:100%;">
+                            ${yearOpts.join('')}
+                        </select>
+                    </div>
+                    <div style="flex:1; min-width:220px;">
+                        <label style="font-size:0.8rem; font-weight:600; color:#4338ca; display:block; margin-bottom:6px;">ภาคเรียน</label>
+                        <select id="settingActiveSemester" class="form-select" style="height:46px; border-radius:12px; border:2px solid #c7d2fe; font-size:1rem; font-weight:600; background:white; padding:0 14px; width:100%;">
+                            ${semOpts}
+                        </select>
+                    </div>
+                    <button class="btn" style="height:46px; padding:0 28px; border-radius:12px; font-size:0.95rem; font-weight:700; background:#6366f1; color:white; border:none; cursor:pointer; white-space:nowrap; display:flex; align-items:center; gap:8px;" onclick="window.saveActiveSemester()">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                        บันทึกการตั้งค่า
+                    </button>
+                </div>
+                <div style="margin-top:14px; padding:10px 16px; background:rgba(99,102,241,0.08); border-radius:10px; display:flex; align-items:center; gap:10px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                    <span style="font-size:0.8rem; color:#4338ca;">ค่านี้จะแสดงที่ส่วนหัวของระบบ และใช้เป็นค่าเริ่มต้นสำหรับหน้าค่าตอบแทนการสอน</span>
+                </div>
+            </div>
+        </div>
+        ` : ''}
+
         <div class="grid-2">
             <div>
                 <div class="card animate-in animate-delay-1" style="margin-bottom:18px">
                     <div class="card-body">
                         <div class="settings-section">
                             <h3 class="settings-title">ข้อมูลบัญชี</h3>
-                            <div class="form-group"><label class="form-label">อีเมล</label><input class="form-input" value="${MOCK.student.email}" /></div>
-                            <div class="form-group"><label class="form-label">เบอร์โทรศัพท์</label><input class="form-input" value="${MOCK.student.phone}" /></div>
+                            <div class="form-group"><label class="form-label">อีเมล</label><input class="form-input" value="${userEmail}" /></div>
+                            <div class="form-group"><label class="form-label">เบอร์โทรศัพท์</label><input class="form-input" value="${userPhone}" /></div>
                             <button class="btn btn-primary">บันทึกการเปลี่ยนแปลง</button>
                         </div>
                     </div>
@@ -222,4 +278,33 @@ pages.settings = function() {
             </div>
         </div>
     </div>`;
+};
+
+window.saveActiveSemester = function() {
+    const yearEl = document.getElementById('settingActiveYear');
+    const semEl = document.getElementById('settingActiveSemester');
+    if (!yearEl || !semEl) return;
+
+    const newYear = yearEl.value;
+    const newSem = semEl.value;
+
+    // Update global state
+    MOCK.activeYear = newYear;
+    MOCK.activeSemester = newSem;
+
+    // Persist to localStorage
+    localStorage.setItem('activeYear', newYear);
+    localStorage.setItem('activeSemester', newSem);
+
+    // Update header badge immediately
+    const headerSemEl = document.getElementById('headerSemester');
+    if (headerSemEl) {
+        headerSemEl.textContent = `${newSem}/${newYear}`;
+    }
+
+    // Reset teaching fees filter to follow the new active semester
+    MOCK.selectedFeeYear = null;
+    MOCK.selectedFeeSemester = null;
+
+    alert(`✅ บันทึกการตั้งค่าเรียบร้อย!\n\nภาคเรียนปัจจุบัน: ${newSem}/${newYear}\n\nค่านี้จะถูกใช้เป็นค่าเริ่มต้นในทุกหน้าที่เกี่ยวข้อง`);
 };
