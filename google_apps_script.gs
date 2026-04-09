@@ -32,7 +32,8 @@ const SHEETS = {
   APPLICANTS: 'Applicants',
   SCHEDULE: 'Schedule',
   DOCUMENT_TEMPLATES: 'DocumentTemplates',
-  THESIS_PROGRESS: 'ThesisProgress'
+  THESIS_PROGRESS: 'ThesisProgress',
+  GRADUATION_REQUESTS: 'GraduationRequests'
 };
 
 const DRIVE_FOLDER_ID = '1zOq4BkaxMqZFyUvBz1eaYEzXjWd3lXrJ'; // Updated folder ID
@@ -105,7 +106,8 @@ function doGet(e) {
           applicants: getSheetData(SHEETS.APPLICANTS),
           schedules: getSheetData(SHEETS.SCHEDULE),
           documentTemplates: getSheetData(SHEETS.DOCUMENT_TEMPLATES),
-          thesisProgress: getSheetData(SHEETS.THESIS_PROGRESS)
+          thesisProgress: getSheetData(SHEETS.THESIS_PROGRESS),
+          graduationRequests: getSheetData(SHEETS.GRADUATION_REQUESTS)
         };
         break;
       case 'getPermissions':
@@ -249,6 +251,12 @@ function doPost(e) {
         break;
       case 'updateThesisMilestone':
         response = updateThesisMilestone(payload);
+        break;
+      case 'submitGraduationRequest':
+        response = submitGraduationRequest(payload);
+        break;
+      case 'approveGraduationRequest':
+        response = approveGraduationRequest(payload);
         break;
       case 'enrollApplicant':
         response = enrollApplicantToStudent(payload);
@@ -962,7 +970,8 @@ function setupInitialSheets() {
       'M10_Status','M10_Date','M10_Note',
       'M11_Status','M11_Date','M11_Note','M11_Journal',
       'LastUpdated','UpdatedBy'
-    ]
+    ],
+    [SHEETS.GRADUATION_REQUESTS]: ['id', 'studentId', 'studentName', 'requestDate', 'status', 'note']
   };
 
   const defaultPermissions = [
@@ -1591,5 +1600,88 @@ function updateThesisMilestone(payload) {
   } catch (err) {
     console.error('updateThesisMilestone Error:', err);
     return createResponse({ status: 'error', message: 'SERVER ERROR: ' + err.toString() });
+  }
+}
+
+/**
+ * Submit a graduation request
+ */
+function submitGraduationRequest(payload) {
+  try {
+    const sheet = SS.getSheetByName(SHEETS.GRADUATION_REQUESTS);
+    if (!sheet) return createResponse({ status: 'error', message: 'GraduationRequests sheet not found' });
+    
+    // Check if pending request exists
+    const data = sheet.getDataRange().getValues();
+    if (data.length > 1) {
+      for (let i = 1; i < data.length; i++) {
+        if (String(data[i][1]) === String(payload.studentId) && String(data[i][4]) !== 'Approved') {
+          return createResponse({ status: 'error', message: 'คุณมีคำร้องที่กำลังรอตรวจสอบอยู่แล้ว' });
+        }
+      }
+    }
+
+    const newRequest = [
+      payload.id,
+      payload.studentId,
+      payload.studentName,
+      payload.requestDate,
+      payload.status,
+      payload.note || ''
+    ];
+    sheet.appendRow(newRequest);
+    return createResponse({ status: 'success', data: payload });
+  } catch (err) {
+    return createResponse({ status: 'error', message: err.toString() });
+  }
+}
+
+/**
+ * Approve a graduation request
+ */
+function approveGraduationRequest(payload) {
+  try {
+    const sheet = SS.getSheetByName(SHEETS.GRADUATION_REQUESTS);
+    if (!sheet) return createResponse({ status: 'error', message: 'GraduationRequests sheet not found' });
+    
+    let rowIndex = -1;
+    let studentId = "";
+    const data = sheet.getDataRange().getValues();
+    
+    for (let i = 1; i < data.length; i++) {
+      if (String(data[i][0]) === String(payload.id)) {
+        rowIndex = i + 1;
+        studentId = String(data[i][1]);
+        break;
+      }
+    }
+    
+    if (rowIndex === -1) return createResponse({ status: 'error', message: 'Request not found' });
+    
+    // Update request status to Approved (column 5)
+    sheet.getRange(rowIndex, 5).setValue('Approved');
+    
+    // Auto-update student profile
+    const studentSheet = SS.getSheetByName(SHEETS.STUDENTS);
+    if (studentSheet && studentId) {
+       const studentsData = studentSheet.getDataRange().getValues();
+       const sHeaders = studentsData[0].map(h => String(h).trim());
+       const idCol = sHeaders.indexOf('รหัสนักศึกษา');
+       const statusCol = sHeaders.indexOf('สถานะ');
+       
+       if(idCol > -1 && statusCol > -1) {
+         for(let i=1; i < studentsData.length; i++){
+            if(String(studentsData[i][idCol]) === studentId) {
+               studentSheet.getRange(i+1, statusCol+1).setValue('สำเร็จการศึกษา');
+               // Optionally update workplace/year if headers exist, but normally handled in separate sheet or custom fields.
+               break;
+            }
+         }
+       }
+    }
+    
+    return createResponse({ status: 'success' });
+  } catch (err) {
+    return createResponse({ status: 'error', message: err.toString() });
   }
 }

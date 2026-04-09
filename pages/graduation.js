@@ -196,7 +196,7 @@ function renderAdminGraduation() {
     </div>`;
 }
 
-window.submitGraduationRequest = function() {
+window.submitGraduationRequest = async function() {
     const st = MOCK.student;
     if (!st) return;
 
@@ -205,14 +205,33 @@ window.submitGraduationRequest = function() {
             id: 'REQ-' + Date.now(),
             studentId: st.studentId || st.id,
             studentName: `${st.prefix || ''}${st.firstName} ${st.lastName}`,
-            requestDate: new Date().toLocaleDateString('th-TH'),
+            requestDate: window.formatDateTh ? window.formatDateTh(new Date().toISOString().split('T')[0]) : new Date().toLocaleDateString('th-TH'),
             status: 'Pending',
             note: ''
         };
         
-        MOCK.graduationRequests.push(newReq);
-        showToast('ส่งคำร้องสำเร็จแล้ว', 'success');
-        renderPage();
+        try {
+            showApiLoading('กำลังส่งคำร้อง...');
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'submitGraduationRequest',
+                    payload: newReq
+                })
+            }).then(r => r.json());
+
+            hideApiLoading();
+            if (res.status === 'success') {
+                MOCK.graduationRequests.push(newReq);
+                showToast('ส่งคำร้องสำเร็จแล้ว', 'success');
+                renderPage();
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + res.message);
+            }
+        } catch (err) {
+            hideApiLoading();
+            alert('การเชื่อมต่อขัดข้อง: ' + err.message);
+        }
     }
 };
 
@@ -250,7 +269,7 @@ window.reviewGraduationRequest = function(reqId) {
     openModal('ตรวจสอบคำร้องขอสำเร็จการศึกษา', modalHtml);
 };
 
-window.finalizeGraduationApproval = function(reqId) {
+window.finalizeGraduationApproval = async function(reqId) {
     const req = MOCK.graduationRequests.find(r => r.id === reqId);
     if (!req) return;
 
@@ -259,19 +278,38 @@ window.finalizeGraduationApproval = function(reqId) {
     const pos = document.getElementById('revPosition').value;
 
     if (confirm('ยืนยันการอนุมัติจบการศึกษา? นักศึกษาคนนี้จะถูกเปลี่ยนสถานะเป็น "สำเร็จการศึกษา" และย้ายไปยังฐานข้อมูลศิษย์เก่า')) {
-        req.status = 'Approved';
-        
-        // Find student and update
-        const st = MOCK.students.find(s => String(s.studentId || s.id) === String(req.studentId));
-        if (st) {
-            st.status = 'สำเร็จการศึกษา';
-            st.graduationYear = year;
-            st.workplace = workplace;
-            st.position = pos;
-        }
+        try {
+            showApiLoading('กำลังอนุมัติ...');
+            const res = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({
+                    action: 'approveGraduationRequest',
+                    payload: { id: reqId, workplace: workplace, year: year, pos: pos }
+                })
+            }).then(r => r.json());
 
-        closeModal();
-        showToast('อนุมัติจบการศึกษาเรียบร้อยแล้ว', 'success');
-        renderPage();
+            hideApiLoading();
+            if (res.status === 'success') {
+                req.status = 'Approved';
+                
+                // Find student and update local MOCK
+                const st = MOCK.students.find(s => String(s.studentId || s.id) === String(req.studentId));
+                if (st) {
+                    st.status = 'สำเร็จการศึกษา';
+                    st.graduationYear = year;
+                    st.workplace = workplace;
+                    st.position = pos;
+                }
+
+                closeModal();
+                showToast('อนุมัติจบการศึกษาเรียบร้อยแล้ว', 'success');
+                renderPage();
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + res.message);
+            }
+        } catch (err) {
+            hideApiLoading();
+            alert('การเชื่อมต่อขัดข้อง: ' + err.message);
+        }
     }
 };

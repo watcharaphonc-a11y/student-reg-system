@@ -229,12 +229,14 @@ async function bootApp() {
             applicants: applicantsData,
             schedules: schedulesData,
             documentTemplates: documentTemplatesData,
-            thesisProgress: thesisProgressData
+            thesisProgress: thesisProgressData,
+            graduationRequests: graduationRequestsData
         } = allData;
 
         MOCK.applicants = applicantsData || [];
         MOCK.documentTemplates = documentTemplatesData || [];
         MOCK.thesisProgress = thesisProgressData || [];
+        MOCK.graduationRequests = graduationRequestsData || [];
         MOCK.allExams = examsData || []; 
 
         MOCK.schedule.items = (schedulesData || []).map(s => ({
