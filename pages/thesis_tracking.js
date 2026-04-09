@@ -75,9 +75,11 @@ function renderAdminDashboard() {
             else if (d.progress === 0) barColor = '#cbd5e1';
 
             return `
-            <tr class="thesis-row" data-search="${d.name} ${d.studentId} ${d.major} ${d.cohort}">
+            <tr class="thesis-row" data-search="${d.name} ${d.studentId} ${d.major} ${d.cohort}" 
+                onclick="window.showThesisDetail('${d.studentId}')" 
+                style="cursor:pointer;" title="คลิกเพื่อดูรายละเอียด">
                 <td>
-                    <div style="font-weight:600;">${d.name}</div>
+                    <div style="font-weight:600;color:var(--accent-primary);">${d.name}</div>
                     <div style="font-size:0.82rem;color:var(--text-secondary);">${d.studentId}${d.cohort !== '-' ? ' • รุ่น ' + d.cohort : ''}</div>
                 </td>
                 <td style="font-size:0.88rem;">${d.major}</td>
