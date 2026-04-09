@@ -275,6 +275,99 @@ function renderStudentTimeline() {
     </div>`;
 }
 
+// Show detailed timeline in a modal for Admin
+window.showThesisDetail = function(studentId) {
+    const student = (MOCK.students || []).find(s => String(s.studentId) === String(studentId));
+    const track   = (MOCK.thesisProgress || []).find(t => String(t.StudentID) === String(studentId)) || {};
+    if (!student) return;
+
+    const prog   = calcThesisProgress(track);
+    const name   = getStudentDisplayName(student);
+    
+    const timelineHTML = THESIS_MILESTONES.map((m, i) => {
+        const status = track[`${m.id}_Status`] || 'Pending';
+        const date   = track[`${m.id}_Date`]   || '';
+        const note   = track[`${m.id}_Note`]   || '';
+
+        let dotColor = '#cbd5e1', dotBg = 'white', check = '', statusLabel = 'ยังไม่เริ่ม', labelColor = '#94a3b8';
+        if (status === 'Complete') {
+            dotColor = '#10b981'; dotBg = '#10b981'; check = '<path d="M8 12.5l3 3 5-6" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>'; statusLabel = 'เสร็จสิ้น'; labelColor = '#10b981';
+        } else if (status === 'InProgress') {
+            dotColor = '#3b82f6'; check = '<circle cx="12" cy="12" r="5" fill="#3b82f6"/>'; statusLabel = 'กำลังดำเนินการ'; labelColor = '#3b82f6';
+        }
+
+        const extraHtml = (m.fields || []).map(f => {
+            const val = track[`${m.id}_${f.id}`];
+            return val ? `<div style="font-size:0.8rem;margin-top:4px;"><span style="color:#64748b;">${f.label}:</span> <b>${val}</b></div>` : '';
+        }).join('');
+
+        return `
+        <div style="display:flex;position:relative;margin-bottom:16px;">
+            ${i < THESIS_MILESTONES.length - 1 ? `<div style="position:absolute;left:13px;top:28px;bottom:-20px;width:2px;background:#e2e8f0;z-index:0;"></div>` : ''}
+            <div style="width:28px;flex-shrink:0;z-index:1;padding-top:4px;">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" fill="${dotBg}" stroke="${dotColor}" stroke-width="2.5"/>
+                    ${check}
+                </svg>
+            </div>
+            <div style="flex:1;padding-left:16px;">
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <div style="font-size:0.7rem;font-weight:700;color:#94a3b8;">ขั้นที่ ${i+1}/${THESIS_MILESTONES.length}</div>
+                        <div style="font-size:0.95rem;font-weight:700;color:#1e293b;">${m.label}</div>
+                        <div style="display:flex;align-items:center;gap:6px;margin-top:4px;">
+                            <span style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:10px;background:${labelColor}15;color:${labelColor};">${statusLabel}</span>
+                            ${date ? `<span style="font-size:0.75rem;color:#64748b;">• ${formatDateTh(date)}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                ${extraHtml}
+                ${note ? `<div style="font-size:0.8rem;color:#64748b;margin-top:4px;font-style:italic;">"${note}"</div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+
+    const modalHtml = `
+    <div style="padding:10px 0;">
+        <div style="background:linear-gradient(135deg,#f8fafc,#eff6ff);padding:20px;border-radius:16px;margin-bottom:24px;display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <div style="font-size:1.1rem;font-weight:800;color:#1e293b;">${name}</div>
+                <div style="font-size:0.85rem;color:#64748b;">รหัส: ${studentId} | สาขา: ${student.major || '-'}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.75rem;color:#94a3b8;">ความก้าวหน้า</div>
+                <div style="font-size:1.6rem;font-weight:800;color:var(--accent-primary);">${prog}%</div>
+            </div>
+        </div>
+        <div style="max-height:60vh;overflow-y:auto;padding-right:10px;">
+            ${timelineHTML}
+        </div>
+        <div style="margin-top:24px;display:flex;justify-content:flex-end;gap:12px;">
+            <button class="btn btn-primary" onclick="window.loadUpdateFormAndGo('${studentId}')" style="gap:8px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                ไปหน้าแก้ไขสถานะ
+            </button>
+            <button class="btn btn-secondary" onclick="closeModal()">ปิดหน้าต่าง</button>
+        </div>
+    </div>`;
+
+    openModal('รายละเอียดความก้าวหน้าวิทยานิพนธ์', modalHtml);
+};
+
+window.loadUpdateFormAndGo = function(studentId) {
+    if (typeof closeModal === 'function') closeModal();
+    navigateTo('thesis-update');
+    setTimeout(() => {
+        const sel = document.getElementById('thesisStudentSelect');
+        const search = document.getElementById('thesisStudentSearch');
+        if (sel) {
+            sel.value = studentId;
+            if (search) search.value = ''; // clear search search
+            window.loadStudentMilestoneForm(studentId);
+        }
+    }, 150);
+};
+
 
 // ============================================================
 // PAGE 2: อัปเดตสถานะวิทยานิพนธ์ (Admin Only)
