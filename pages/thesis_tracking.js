@@ -110,10 +110,9 @@ function renderAdminDashboard() {
                 <div>
                     <h1 class="page-title">รายงานความก้าวหน้าวิทยานิพนธ์</h1>
                     <p class="page-subtitle">ภาพรวมสถานะการทำวิทยานิพนธ์ของนักศึกษาทุกคน (อ่านอย่างเดียว)</p>
-                </div>
-                <button class="btn btn-primary" onclick="window.loadPage('thesis-update')" style="height:42px;gap:8px;display:flex;align-items:center;">
+                <button class="btn btn-primary" onclick="navigateTo('thesis-update')" style="height:42px;gap:8px;display:flex;align-items:center;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-                    ไปหน้าอัปเดตสถานะ
+                    อัปเดตสถานะ
                 </button>
             </div>
         </div>
