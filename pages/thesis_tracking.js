@@ -56,7 +56,7 @@ function renderAdminDashboard() {
             cohort:      s.cohort || track.Cohort || '-',
             progress:    prog,
             doneCount:   done,
-            currentStep: curM ? `ขั้นที่ ${THESIS_MILESTONES.indexOf(curM)+1}: ${curM.label}` : '✅ ครบทั้ง 11 ขั้นตอน',
+            currentStep: curM ? `ขั้นที่ ${THESIS_MILESTONES.indexOf(curM)+1}: ${curM.label}` : `✅ ครบทั้ง ${THESIS_MILESTONES.length} ขั้นตอน`,
             lastUpdate:  track.LastUpdated || '-',
         };
     });
@@ -134,7 +134,7 @@ function renderAdminDashboard() {
             </div>
             <div class="card" style="border:none;background:linear-gradient(135deg,#10b981,#059669);color:white;">
                 <div class="card-body" style="padding:20px;">
-                    <div style="font-size:0.8rem;opacity:0.8;margin-bottom:6px;">ผ่านครบ 11 ขั้นตอน</div>
+                    <div style="font-size:0.8rem;opacity:0.8;margin-bottom:6px;">ผ่านครบ ${THESIS_MILESTONES.length} ขั้นตอน</div>
                     <div style="font-size:2.2rem;font-weight:800;">${completeCount}</div>
                 </div>
             </div>
