@@ -3,8 +3,8 @@
 // ============================
 
 const THESIS_MILESTONES = [
-    { id: 'M1',  label: 'แต่งตั้งอาจารย์ที่ปรึกษา',       icon: '👤', fields: [] },
     { id: 'M2',  label: 'เสนอหัวข้อวิทยานิพนธ์',            icon: '📝', fields: [] },
+    { id: 'M1',  label: 'แต่งตั้งอาจารย์ที่ปรึกษา',       icon: '👤', fields: [] },
     { id: 'M3',  label: 'สอบโครงร่างวิทยานิพนธ์',           icon: '🎯', fields: [] },
     { id: 'M4',  label: 'พิจารณาจริยธรรมการวิจัย (EC)',     icon: '⚖️', fields: [{ id: 'EthicsNo',    label: 'เลขรับรอง/อนุมัติ EC',       type: 'text'   }] },
     { id: 'M8',  label: 'สอบป้องกันวิทยานิพนธ์',            icon: '🛡️', fields: [{ id: 'Score',       label: 'ผลประเมิน/คะแนนสอบ',          type: 'text'   }] },
@@ -110,6 +110,7 @@ function renderAdminDashboard() {
                 <div>
                     <h1 class="page-title">รายงานความก้าวหน้าวิทยานิพนธ์</h1>
                     <p class="page-subtitle">ภาพรวมสถานะการทำวิทยานิพนธ์ของนักศึกษาทุกคน (อ่านอย่างเดียว)</p>
+                </div>
                 <button class="btn btn-primary" onclick="navigateTo('thesis-update')" style="height:42px;gap:8px;display:flex;align-items:center;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                     อัปเดตสถานะ
@@ -301,9 +302,9 @@ function renderUpdatePage() {
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
                 <div>
                     <h1 class="page-title">อัปเดตสถานะวิทยานิพนธ์</h1>
-                    <p class="page-subtitle">ค้นหานักศึกษา แล้วอัปเดตความก้าวหน้า 11 ขั้นตอน</p>
+                    <p class="page-subtitle">ค้นหานักศึกษา แล้วอัปเดตความก้าวหน้า 8 ขั้นตอน</p>
                 </div>
-                <button class="btn btn-secondary" onclick="window.loadPage('thesis-dashboard')" style="height:42px;display:flex;align-items:center;gap:8px;">
+                <button class="btn btn-secondary" onclick="navigateTo('thesis-dashboard')" style="height:42px;display:flex;align-items:center;gap:8px;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
                     กลับหน้ารายงาน
                 </button>
