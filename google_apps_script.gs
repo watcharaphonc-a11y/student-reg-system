@@ -962,10 +962,10 @@ function setupInitialSheets() {
       'M2_Status','M2_Date','M2_Note',
       'M3_Status','M3_Date','M3_Note',
       'M4_Status','M4_Date','M4_Note','M4_EthicsNo',
-      'M8_Status','M8_Date','M8_Note','M8_Score',
-      'M9_Status','M9_Date','M9_Note',
-      'M10_Status','M10_Date','M10_Note',
-      'M11_Status','M11_Date','M11_Note','M11_Journal',
+      'M5_Status','M5_Date','M5_Note','M5_Score',
+      'M6_Status','M6_Date','M6_Note','M6_Journal',
+      'M7_Status','M7_Date','M7_Note',
+      'M8_Status','M8_Date','M8_Note',
       'LastUpdated','UpdatedBy'
     ],
     [SHEETS.GRADUATION_REQUESTS]: ['id', 'studentId', 'studentName', 'requestDate', 'status', 'note']

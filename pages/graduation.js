@@ -28,7 +28,7 @@ function renderStudentGraduation() {
     const creditsStatus = currentCredits >= requiredCredits;
     
     const thesisTrack = (MOCK.thesisProgress || []).find(t => String(t.StudentID) === String(me.studentId || me.id));
-    const thesisValid = thesisTrack && thesisTrack.M9_Status === 'Complete';
+    const thesisValid = thesisTrack && thesisTrack.M7_Status === 'Complete';
 
     const isEligible = gpaStatus && creditsStatus && thesisValid;
     
@@ -163,7 +163,7 @@ function renderAdminGraduation() {
                             ${requests.length > 0 ? requests.map(r => {
                                 const st = (MOCK.students || []).find(s => String(s.studentId || s.id) === String(r.studentId));
                                 const thesisTrack = (MOCK.thesisProgress || []).find(t => String(t.StudentID) === String(r.studentId));
-                                const thesisValid = thesisTrack && thesisTrack.M9_Status === 'Complete';
+                                const thesisValid = thesisTrack && thesisTrack.M7_Status === 'Complete';
                                 return `
                                 <tr>
                                     <td>${r.requestDate}</td>
