@@ -505,8 +505,8 @@ window.saveThesisMilestonesInline = async function() {
                     <h3 style="color:#059669;margin:0 0 8px;">บันทึกเรียบร้อยแล้ว!</h3>
                     <p style="color:#64748b;margin:0 0 16px;">อัปเดตความก้าวหน้าของ <b>${studentName}</b> สำเร็จแล้ว</p>
                     <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
-                        <button class="btn btn-primary" onclick="window.loadStudentMilestoneForm('${studentId}')">อัปเดตต่อ</button>
-                        <button class="btn btn-secondary" onclick="window.loadPage('thesis-dashboard')">ดูรายงานรวม</button>
+                        <button class="btn btn-primary" onclick="window.loadStudentMilestoneForm('${studentId}')" style="background:var(--danger);border:none;">อัปเดตต่อ</button>
+                        <button class="btn btn-secondary" onclick="navigateTo('thesis-dashboard')">ดูรายงานรวม</button>
                     </div>
                 </div>`;
         } else {
