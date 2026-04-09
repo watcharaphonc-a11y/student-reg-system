@@ -27,12 +27,10 @@ function renderStudentGraduation() {
     const currentCredits = parseInt(me.totalCredits || 0);
     const creditsStatus = currentCredits >= requiredCredits;
     
-    const exams = me.exams || [];
-    const passedExams = exams.filter(ex => ex.status === 'ผ่าน' || ex.status === 'Pass');
-    const uniquePassedTypes = new Set(passedExams.map(ex => ex.exam_type));
-    const examsStatus = uniquePassedTypes.size >= 5;
+    const thesisTrack = (MOCK.thesisProgress || []).find(t => String(t.StudentID) === String(me.studentId || me.id));
+    const thesisValid = thesisTrack && thesisTrack.M9_Status === 'Complete';
 
-    const isEligible = gpaStatus && creditsStatus && examsStatus;
+    const isEligible = gpaStatus && creditsStatus && thesisValid;
     
     // Existing Request?
     const existingRequest = (MOCK.graduationRequests || []).find(r => String(r.studentId) === String(me.studentId || me.id));
@@ -70,13 +68,13 @@ function renderStudentGraduation() {
                         </div>
                     </div>
 
-                    <div class="eligibility-item ${examsStatus ? 'success' : 'danger'}">
+                    <div class="eligibility-item ${thesisValid ? 'success' : 'danger'}">
                         <div class="eligibility-icon">
-                            ${examsStatus ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
+                            ${thesisValid ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>' : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'}
                         </div>
                         <div class="eligibility-content">
-                            <div class="eligibility-label">ต้องสอบผ่านขั้นตอนสำคัญทั้ง 5 ขั้นตอน</div>
-                            <div class="eligibility-value">ปัจจุบัน: ผ่าน ${uniquePassedTypes.size} / 5 ขั้นตอน</div>
+                            <div class="eligibility-label">ผ่านขั้นตอนวิทยานิพนธ์: แก้ไขตามมติกรรมการ</div>
+                            <div class="eligibility-value">ปัจจุบัน: ${thesisValid ? 'เสร็จสิ้นแล้ว' : 'ยังไม่เสร็จสิ้น'}</div>
                         </div>
                     </div>
 
@@ -99,21 +97,18 @@ function renderStudentGraduation() {
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title">สรุปสถานะการสอบ 5 ขั้นตอน</h3>
+                    <h3 class="card-title">ความก้าวหน้าวิทยานิพนธ์ (เงื่อนไขจบการศึกษา)</h3>
                 </div>
                 <div class="card-body" style="padding:0;">
                     <table class="data-table">
                         <thead>
-                            <tr><th>ขั้นตอนการสอบ</th><th>สถานะ</th></tr>
+                            <tr><th>ขั้นตอน</th><th>สถานะ</th></tr>
                         </thead>
                         <tbody>
-                            ${['ความรู้ภาษาอังกฤษ', 'หัวข้อวิทยานิพนธ์', 'ประมวลความรู้', 'โครงร่างวิทยานิพนธ์', 'ป้องกันวิทยานิพนธ์'].map(type => {
-                                const pass = exams.some(ex => ex.exam_type === type && (ex.status === 'ผ่าน' || ex.status === 'Pass'));
-                                return `<tr>
-                                    <td>${type}</td>
-                                    <td><span class="badge ${pass ? 'success' : 'neutral'}">${pass ? 'ผ่าน' : 'ยังไม่ผ่าน'}</span></td>
-                                </tr>`;
-                            }).join('')}
+                            <tr>
+                                <td>แก้ไขตามมติกรรมการ</td>
+                                <td><span class="badge ${thesisValid ? 'success' : 'neutral'}">${thesisValid ? 'เสร็จสิ้น' : 'ยังไม่เสร็จสิ้น'}</span></td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -167,7 +162,8 @@ function renderAdminGraduation() {
                         <tbody>
                             ${requests.length > 0 ? requests.map(r => {
                                 const st = (MOCK.students || []).find(s => String(s.studentId || s.id) === String(r.studentId));
-                                const passCount = st ? (st.exams || []).filter(ex => ex.status === 'ผ่าน' || ex.status === 'Pass').length : 0;
+                                const thesisTrack = (MOCK.thesisProgress || []).find(t => String(t.StudentID) === String(r.studentId));
+                                const thesisValid = thesisTrack && thesisTrack.M9_Status === 'Complete';
                                 return `
                                 <tr>
                                     <td>${r.requestDate}</td>
@@ -175,7 +171,7 @@ function renderAdminGraduation() {
                                     <td>${r.studentName}</td>
                                     <td>
                                         <div style="font-size:0.75rem;">GPA: <span style="color:${parseFloat(st?.gpa||0)>=3?'var(--success)':'var(--danger)'}">${parseFloat(st?.gpa||0).toFixed(2)}</span></div>
-                                        <div style="font-size:0.75rem;">สอบผ่าน: ${passCount}/5</div>
+                                        <div style="font-size:0.75rem;">วิทยานิพนธ์ (M9): <span style="color:${thesisValid?'var(--success)':'var(--warning)'}">${thesisValid ? 'เสร็จสิ้น' : 'รอดำเนินการ'}</span></div>
                                     </td>
                                     <td><span class="badge ${r.status === 'Approved' ? 'success' : 'warning'}">${r.status === 'Approved' ? 'อนุมัติแล้ว' : 'รอตรวจสอบ'}</span></td>
                                     <td>

@@ -7,13 +7,10 @@ const THESIS_MILESTONES = [
     { id: 'M2',  label: 'เสนอหัวข้อวิทยานิพนธ์',            icon: '📝', fields: [] },
     { id: 'M3',  label: 'สอบโครงร่างวิทยานิพนธ์',           icon: '🎯', fields: [] },
     { id: 'M4',  label: 'พิจารณาจริยธรรมการวิจัย (EC)',     icon: '⚖️', fields: [{ id: 'EthicsNo',    label: 'เลขรับรอง/อนุมัติ EC',       type: 'text'   }] },
-    { id: 'M5',  label: 'เก็บข้อมูล / ดำเนินการวิจัย',     icon: '🔬', fields: [] },
-    { id: 'M6',  label: 'วิเคราะห์ข้อมูล / เขียนรายงาน',   icon: '📊', fields: [] },
-    { id: 'M7',  label: 'ตรวจสอบ Plagiarism',               icon: '✅', fields: [{ id: 'PlagPercent', label: 'ค่าความออริจินัล (%)',          type: 'number' }] },
     { id: 'M8',  label: 'สอบป้องกันวิทยานิพนธ์',            icon: '🛡️', fields: [{ id: 'Score',       label: 'ผลประเมิน/คะแนนสอบ',          type: 'text'   }] },
+    { id: 'M11', label: 'เผยแพร่ผลงาน (บทความวิชาการ)',      icon: '🌐', fields: [{ id: 'Journal',     label: 'ชื่อวารสาร/สถานที่ตีพิมพ์',   type: 'text'   }] },
     { id: 'M9',  label: 'แก้ไขตามมติกรรมการ',               icon: '✍️', fields: [] },
-    { id: 'M10', label: 'ส่งเล่มฉบับสมบูรณ์',               icon: '📚', fields: [] },
-    { id: 'M11', label: 'เผยแพร่ผลงาน (บทความวิชาการ)',      icon: '🌐', fields: [{ id: 'Journal',     label: 'ชื่อวารสาร/สถานที่ตีพิมพ์',   type: 'text'   }] }
+    { id: 'M10', label: 'ส่งเล่มฉบับสมบูรณ์',               icon: '📚', fields: [] }
 ];
 
 function calcThesisProgress(track) {
