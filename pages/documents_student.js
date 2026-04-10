@@ -97,7 +97,7 @@ pages['petitions-student'] = function () {
                                 <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></path>
                             </svg>
                             <p style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);" id="fileNameDisplay">คลิกเพื่อเลือกไฟล์ <span style="color: var(--text-muted); font-weight: normal;"> หรือลากไฟล์มาวาง</span></p>
-                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 8px;">รองรับ PDF, DOC, DOCX, JPG, PNG - สูงสุด 5 ไฟล์</p>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 8px;">รองรับ PDF, DOC, DOCX, JPG, PNG - <b style="color: var(--accent-primary); font-weight: 800;">สูงสุด 10 ไฟล์</b></p>
                             <input type="file" id="docFile" style="display: none;" onchange="updateDocFileName(this)" multiple>
                         </div>
                     </div>
@@ -545,6 +545,14 @@ window.selectDocType = function (type) {
 window.updateDocFileName = function (input) {
     const display = document.getElementById('fileNameDisplay');
     if (input.files && input.files.length > 0) {
+        if (input.files.length > 10) {
+            alert('คุณสามารถแนบไฟล์ได้สูงสุด 10 ไฟล์ต่อครั้ง');
+            input.value = '';
+            display.textContent = 'คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง';
+            display.style.color = 'var(--text-muted)';
+            display.style.fontWeight = 'normal';
+            return;
+        }
         if (input.files.length === 1) {
             display.textContent = input.files[0].name;
         } else {
@@ -588,6 +596,10 @@ window.submitStudentDocument = function () {
 
     if (!fileInput.files || fileInput.files.length === 0) {
         alert('กรุณาแนบไฟล์เอกสาร');
+        return;
+    }
+    if (fileInput.files.length > 10) {
+        alert('กรุณาแนบไฟล์ไม่เกิน 10 ไฟล์');
         return;
     }
 
