@@ -92,14 +92,15 @@ pages['petitions-student'] = function () {
                     <!-- Row 5 -->
                     <div class="form-group" style="grid-column: 1 / -1;">
                         <label class="form-label">แนบไฟล์เอกสาร <span style="color:var(--danger-color)">*</span> <span style="font-size:0.85rem;font-weight:normal;color:var(--text-muted);">(PDF, Word, รูปภาพ)</span></label>
-                        <div style="border: 2px dashed var(--border-color); padding: 40px; text-align: center; border-radius: var(--radius-md); background: var(--bg-tertiary); cursor: pointer; transition: all 0.2s;" onclick="document.getElementById('docFile').click()" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-color)'">
-                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom: 15px;">
-                                <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></path>
-                            </svg>
-                            <p style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);" id="fileNameDisplay">คลิกเพื่อเลือกไฟล์ <span style="color: var(--text-muted); font-weight: normal;"> หรือลากไฟล์มาวาง</span></p>
-                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-top: 8px;">รองรับ PDF, DOC, DOCX, JPG, PNG - <b style="color: var(--accent-primary); font-weight: 800;">สูงสุด 10 ไฟล์</b></p>
-                            <input type="file" id="docFile" style="display: none;" onchange="updateDocFileName(this)" multiple>
+                             <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 12px;">รองรับ PDF, DOC, DOCX, JPG, PNG - <b style="color: var(--accent-primary); font-weight: 800;">สูงสุด 10 ไฟล์</b></p>
+                             <div style="border: 2px dashed var(--border-color); padding: 40px; text-align: center; border-radius: var(--radius-md); background: var(--bg-tertiary); cursor: pointer; transition: all 0.2s;" onclick="document.getElementById('docFile').click()" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="1.5" style="margin-bottom: 15px;">
+                                     <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></path>
+                                 </svg>
+                                 <p style="font-size: 1.1rem; font-weight: 600; color: var(--accent-primary);" id="fileNameDisplay">คลิกเพื่อเลือกไฟล์ <span style="color: var(--text-muted); font-weight: normal;"> หรือลากไฟล์มาวาง</span></p>
+                             <input type="file" id="docFile" style="display: none;" onchange="updateDocFileName(this)" multiple>
                         </div>
+                        <div id="fileListNames" style="margin-top: 16px; display: none; flex-direction: column; gap: 8px; max-height: 300px; overflow-y: auto; padding: 4px;"></div>
                     </div>
 
                 </div>
@@ -544,6 +545,8 @@ window.selectDocType = function (type) {
 
 window.updateDocFileName = function (input) {
     const display = document.getElementById('fileNameDisplay');
+    const listContainer = document.getElementById('fileListNames');
+    
     if (input.files && input.files.length > 0) {
         if (input.files.length > 10) {
             alert('คุณสามารถแนบไฟล์ได้สูงสุด 10 ไฟล์ต่อครั้ง');
@@ -551,8 +554,13 @@ window.updateDocFileName = function (input) {
             display.textContent = 'คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง';
             display.style.color = 'var(--text-muted)';
             display.style.fontWeight = 'normal';
+            if (listContainer) {
+                listContainer.style.display = 'none';
+                listContainer.innerHTML = '';
+            }
             return;
         }
+
         if (input.files.length === 1) {
             display.textContent = input.files[0].name;
         } else {
@@ -560,10 +568,32 @@ window.updateDocFileName = function (input) {
         }
         display.style.color = 'var(--text-primary)';
         display.style.fontWeight = '600';
+
+        // Update individual file names list (Vertical list for better readability)
+        if (listContainer) {
+            listContainer.style.display = 'flex';
+            listContainer.innerHTML = Array.from(input.files).map((file, idx) => `
+                <div style="background: white; border: 1px solid var(--border-color); border-radius: 10px; padding: 10px 16px; font-size: 0.9rem; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-sm); animation: fadeIn 0.3s ease-out; animation-delay: ${idx * 0.05}s; border-left: 4px solid var(--accent-primary);">
+                    <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
+                        <div style="width: 32px; height: 32px; border-radius: 8px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2.5"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>
+                        </div>
+                        <div style="overflow: hidden;">
+                            <div style="color: var(--text-primary); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${file.name}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">${(file.size / 1024).toFixed(1)} KB</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
     } else {
         display.textContent = 'คลิกเพื่อเลือกไฟล์ หรือลากไฟล์มาวาง';
         display.style.color = 'var(--text-muted)';
         display.style.fontWeight = 'normal';
+        if (listContainer) {
+            listContainer.style.display = 'none';
+            listContainer.innerHTML = '';
+        }
     }
 };
 
