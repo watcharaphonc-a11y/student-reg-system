@@ -5,6 +5,12 @@
 // Store current calendar state globally
 window._calMonth = new Date().getMonth(); // current month (0-indexed)
 window._calYear = new Date().getFullYear();
+window._calViewMode = 'grid'; // 'grid' or 'table'
+
+window.toggleCalView = function(mode) {
+    window._calViewMode = mode;
+    renderPage();
+};
 
 window.buildCalendarHTML = function(year, month) {
     const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -29,12 +35,6 @@ window.buildCalendarHTML = function(year, month) {
     for (let i = 1; i <= remaining; i++) {
         days.push({ day: i, otherMonth: true });
     }
-
-    // Filter events for the "กำหนดการสำคัญ" list (only current month)
-    const monthEvents = (MOCK.calendarEvents || []).filter(e => {
-        const d = new Date(e.date);
-        return d.getFullYear() === year && d.getMonth() === month;
-    });
 
     // Build month options
     const monthOptions = monthNames.map((m, i) =>
@@ -64,6 +64,7 @@ window.buildCalendarHTML = function(year, month) {
             </div>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <span class="badge" style="background:rgba(239,68,68,0.15);color:#f87171">สอบ</span>
+                <span class="badge" style="background:rgba(185,28,28,0.15);color:var(--accent-primary)">วิทยานิพนธ์</span>
                 <span class="badge" style="background:rgba(99,102,241,0.15);color:#818cf8">ทะเบียน</span>
                 <span class="badge" style="background:rgba(34,197,94,0.15);color:#4ade80">วันหยุด</span>
                 <span class="badge" style="background:rgba(245,158,11,0.15);color:#fbbf24">กิจกรรม</span>
@@ -75,7 +76,12 @@ window.buildCalendarHTML = function(year, month) {
                 ${days.map(d => `
                     <div class="calendar-day ${d.otherMonth ? 'other-month' : ''} ${d.today ? 'today' : ''}">
                         <div class="calendar-day-number">${d.day}</div>
-                        ${(d.events || []).map(e => `<div class="calendar-event event-${e.type}">${e.title}</div>`).join('')}
+                        ${(d.events || []).map(e => `
+                            <div class="calendar-event event-${e.type}" title="${e.title} ${e.cohort !== 'all' ? '('+e.cohort+')' : ''}">
+                                ${e.cohort !== 'all' ? `<small style="font-weight:800; opacity:0.8; margin-right:2px;">[${e.cohort}]</small>` : ''}
+                                ${e.title}
+                            </div>
+                        `).join('')}
                     </div>
                 `).join('')}
             </div>
@@ -95,13 +101,70 @@ window.buildEventListHTML = function(year, month) {
     return `<div class="activity-list">
         ${monthEvents.map(e => `
             <div class="activity-item">
-                <div class="activity-dot ${e.type === 'exam' ? 'orange' : e.type === 'holiday' ? 'green' : e.type === 'register' ? 'purple' : 'blue'}"></div>
+                <div class="activity-dot ${e.type === 'exam' ? 'orange' : e.type === 'holiday' ? 'green' : e.type === 'register' ? 'purple' : e.type === 'thesis' ? 'red' : 'blue'}"></div>
                 <div>
-                    <div class="activity-text">${e.title}</div>
-                    <div class="activity-time">${e.date}</div>
+                    <div class="activity-text">
+                        ${e.cohort !== 'all' ? `<span class="badge" style="padding:1px 6px; font-size:0.75rem; margin-right:5px; background:var(--bg-tertiary); color:var(--text-secondary);">รหัส ${e.cohort}</span>` : ''}
+                        ${e.title}
+                    </div>
+                    <div class="activity-time">${new Date(e.date).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' })}</div>
                 </div>
             </div>
         `).join('')}
+    </div>`;
+};
+
+window.renderCalendarTable = function() {
+    // Activities and their cohort specific dates
+    // In a real app, this would be derived from calendarEvents
+    const rows = [
+        { label: 'ชำระค่าลงทะเบียน ภาค 1/2568', dates: { 65: '2 - 15 มิ.ย. 68', 66: '2 - 15 มิ.ย. 68', 67: '2 - 15 มิ.ย. 68', 68: '1-12 ก.พ. (รอบ 1) / 5-17 พ.ค. (รอบ 2)' } },
+        { label: 'Research Camp', dates: { 65: '26 - 28 พ.ค. 68', 66: '26 - 28 พ.ค. 68', 67: '26 - 28 พ.ค. 68', 68: '-' } },
+        { label: 'สอบประมวลความรู้ รอบที่ 1', dates: { 65: '-', 66: '-', 67: '31 พ.ค. - 1 มิ.ย. 68', 68: '-' } },
+        { label: 'ปฐมนิเทศ/เตรียมความพร้อมนักศึกษาใหม่', dates: { 65: '-', 66: '-', 67: '7 - 8 มิ.ย. 68', 68: '7 - 8 มิ.ย. 68' } },
+        { label: 'เปิดภาคการศึกษาที่ 1/2568', dates: { 65: '20 มิ.ย. 68', 66: '20 มิ.ย. 68', 67: '20 มิ.ย. 68', 68: '20 มิ.ย. 68' }, highlight: true },
+        { label: 'นำเสนอความก้าวหน้า Draft (1/68)', dates: { 65: '21 - 22 มิ.ย. 68', 66: '27 - 28 มิ.ย. 68', 67: '29 - 30 มิ.ย. 68', 68: '-' } },
+        { label: 'พิธีไหว้ครู', dates: { 65: '24 ก.ค. 68', 66: '24 ก.ค. 68', 67: '24 ก.ค. 68', 68: '24 ก.ค. 68' } },
+        { label: 'สอบภาษาอังกฤษ ครั้งที่ 1', dates: { 65: '9 ส.ค. 68', 66: '9 ส.ค. 68', 67: '9 ส.ค. 68', 68: '9 ส.ค. 68' } },
+        { label: 'นำเสนอความก้าวหน้า Final (1/68)', dates: { 65: '26 - 28 ก.ย. 68', 66: '1 - 5 ต.ค. 68', 67: '10 - 12 ต.ค. 68', 68: '-' } },
+        { label: 'วันสุดท้ายภาคการศึกษาที่ 1/2568', dates: { 65: '12 ต.ค. 68', 66: '12 ต.ค. 68', 67: '12 ต.ค. 68', 68: '12 ต.ค. 68' } },
+        { label: 'ชำระค่าลงทะเบียน ภาค 2/2568', dates: { 65: '13 - 30 ต.ค. 68', 66: '13 - 30 ต.ค. 68', 67: '13 - 30 ต.ค. 68', 68: '13 - 30 ต.ค. 68' } },
+        { label: 'เปิดภาคการศึกษาที่ 2/2568', dates: { 65: '31 ต.ค. 68', 66: '31 ต.ค. 68', 67: '31 ต.ค. 68', 68: '31 ต.ค. 68' }, highlight: true },
+        { label: 'นำเสนอความก้าวหน้า Draft (2/68)', dates: { 65: '1 - 2 พ.ย. 68', 66: '8 - 9 พ.ย. 68', 67: '15 - 16 พ.ย. 68', 68: '-' } },
+        { label: 'สอบประมวลความรู้ ครั้งที่ 2', dates: { 65: '24 พ.ย. 68', 66: '24 พ.ย. 68', 67: '24 พ.ย. 68', 68: '24 พ.ย. 68' } },
+        { label: 'สอบภาษาอังกฤษ ครั้งที่ 2', dates: { 65: '27 ธ.ค. 68', 66: '27 ธ.ค. 68', 67: '27 ธ.ค. 68', 68: '27 ธ.ค. 68' } },
+        { label: 'นำเสนอความก้าวหน้า Final (2/68)', dates: { 65: '6 - 8 ก.พ. 69', 66: '6 - 8 ก.พ. 69', 67: '13 - 15 ก.พ. 69', 68: '-' } },
+    ];
+
+    return `
+    <div class="card animate-in">
+        <div class="card-header">
+            <h3 class="card-title">สรุปปฏิทินการศึกษาแยกตามรุ่น ปีการศึกษา 2568</h3>
+        </div>
+        <div class="card-body" style="padding:0; overflow-x:auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="min-width:250px;">กิจกรรม</th>
+                        <th style="text-align:center;">รหัส 2565 (รุ่น 1)</th>
+                        <th style="text-align:center;">รหัส 2566 (รุ่น 2)</th>
+                        <th style="text-align:center;">รหัส 2567 (รุ่น 3)</th>
+                        <th style="text-align:center;">รหัส 2568 (รุ่น 4)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rows.map(row => `
+                        <tr ${row.highlight ? 'style="background:rgba(239,68,68,0.05);"' : ''}>
+                            <td style="font-weight:600; ${row.highlight ? 'color:var(--accent-primary);' : ''}">${row.label}</td>
+                            <td style="text-align:center; font-size:0.9rem;">${row.dates[65]}</td>
+                            <td style="text-align:center; font-size:0.9rem;">${row.dates[66]}</td>
+                            <td style="text-align:center; font-size:0.9rem;">${row.dates[67]}</td>
+                            <td style="text-align:center; font-size:0.9rem;">${row.dates[68]}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
     </div>`;
 };
 
@@ -109,28 +172,42 @@ pages.calendar = function() {
     const year = window._calYear;
     const month = window._calMonth;
     const monthNames = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+    const viewMode = window._calViewMode;
 
     return `
     <div class="animate-in">
-        <div class="page-header">
-            <h1 class="page-title">ปฏิทินการศึกษา</h1>
-            <p class="page-subtitle">ปฏิทินกิจกรรมและกำหนดการสำคัญ</p>
-        </div>
-        <div class="calendar-layout-container">
-            <div class="card animate-in animate-delay-1" id="calendarCard">
-                ${buildCalendarHTML(year, month)}
+        <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+            <div>
+                <h1 class="page-title">ปฏิทินการศึกษา</h1>
+                <p class="page-subtitle">ปฏิทินกิจกรรมและกำหนดการสำคัญปีการศึกษา 2568</p>
             </div>
-            <div class="card animate-in animate-delay-2" id="calendarEventList">
-                <div class="card-header"><h3 class="card-title">กำหนดการสำคัญ — ${monthNames[month]} ${year + 543}</h3></div>
-                <div class="card-body">
-                    ${buildEventListHTML(year, month)}
+            <div class="view-toggles" style="display:flex; background:var(--bg-tertiary); padding:4px; border-radius:var(--radius-md);">
+                <button class="btn ${viewMode === 'grid' ? 'active' : ''}" style="padding:6px 16px; font-size:0.85rem; border-radius:6px; ${viewMode === 'grid' ? 'background:white; box-shadow:var(--shadow-sm); color:var(--accent-primary);' : 'color:var(--text-muted);'}" onclick="toggleCalView('grid')">
+                    ปฏิทินรายเดือน
+                </button>
+                <button class="btn ${viewMode === 'table' ? 'active' : ''}" style="padding:6px 16px; font-size:0.85rem; border-radius:6px; ${viewMode === 'table' ? 'background:white; box-shadow:var(--shadow-sm); color:var(--accent-primary);' : 'color:var(--text-muted);'}" onclick="toggleCalView('table')">
+                    ตารางสรุปตามรุ่น
+                </button>
+            </div>
+        </div>
+
+        ${viewMode === 'table' ? renderCalendarTable() : `
+            <div class="calendar-layout-container">
+                <div class="card animate-in animate-delay-1" id="calendarCard">
+                    ${buildCalendarHTML(year, month)}
+                </div>
+                <div class="card animate-in animate-delay-2" id="calendarEventList">
+                    <div class="card-header"><h3 class="card-title">กำหนดการสำคัญ — ${monthNames[month]} ${year + 543}</h3></div>
+                    <div class="card-body">
+                        ${buildEventListHTML(year, month)}
+                    </div>
                 </div>
             </div>
-        </div>
+        `}
     </div>`;
 };
 
-// Navigation helpers — update only the calendar card & event list, not full page
+// Navigation helpers
 window.calNavigate = function(dir) {
     window._calMonth += dir;
     if (window._calMonth > 11) { window._calMonth = 0; window._calYear++; }
@@ -166,3 +243,4 @@ window.calRefresh = function() {
             </div>`;
     }
 };
+

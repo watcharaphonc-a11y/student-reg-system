@@ -107,7 +107,83 @@ const MOCK = {
     payments: [],
 
     // ปฏิทินการศึกษา
-    calendarEvents: [],
+    // ปฏิทินการศึกษา 2568
+    calendarEvents: [
+        // Semester 1/2568
+        { date: '2025-06-02', title: 'ชำระค่าลงทะเบียน (65-67)', type: 'register', cohort: '65,66,67' },
+        { date: '2025-06-15', title: 'วันสุดท้ายชำระค่าลงทะเบียน (65-67)', type: 'register', cohort: '65,66,67' },
+        { date: '2025-02-01', title: 'ชำระค่าลงทะเบียน (68) รอบ 1', type: 'register', cohort: '68' },
+        { date: '2025-02-12', title: 'วันสุดท้ายชำระค่าลงทะเบียน (68) รอบ 1', type: 'register', cohort: '68' },
+        { date: '2025-05-05', title: 'ชำระค่าลงทะเบียน (68) รอบ 2', type: 'register', cohort: '68' },
+        { date: '2025-05-17', title: 'วันสุดท้ายชำระค่าลงทะเบียน (68) รอบ 2', type: 'register', cohort: '68' },
+        
+        { date: '2025-05-26', title: 'Research Camp', type: 'activity', cohort: '65,66,67' },
+        { date: '2025-05-28', title: 'Research Camp (จบ)', type: 'activity', cohort: '65,66,67' },
+        
+        { date: '2025-05-31', title: 'สอบประมวลความรู้ รอบ 1', type: 'exam', cohort: '67' },
+        { date: '2025-06-01', title: 'สอบประมวลความรู้ (จบ)', type: 'exam', cohort: '67' },
+        
+        { date: '2025-06-07', title: 'ปฐมนิเทศ/เตรียมความพร้อม (68)', type: 'activity', cohort: '67,68' },
+        { date: '2025-06-08', title: 'ปฐมนิเทศ (68) จบ', type: 'activity', cohort: '67,68' },
+        
+        { date: '2025-06-20', title: 'เปิดภาคการศึกษาที่ 1/2568', type: 'activity', cohort: 'all' },
+        
+        { date: '2025-06-21', title: 'นำเสนอความก้าวหน้า Draft (65)', type: 'thesis', cohort: '65' },
+        { date: '2025-06-22', title: 'นำเสนอความก้าวหน้า Draft (65) จบ', type: 'thesis', cohort: '65' },
+        { date: '2025-06-27', title: 'นำเสนอความก้าวหน้า Draft (66)', type: 'thesis', cohort: '66' },
+        { date: '2025-06-28', title: 'นำเสนอความก้าวหน้า Draft (66) จบ', type: 'thesis', cohort: '66' },
+        { date: '2025-06-29', title: 'นำเสนอความก้าวหน้า Draft (67)', type: 'thesis', cohort: '67' },
+        { date: '2025-06-30', title: 'นำเสนอความก้าวหน้า Draft (67) จบ', type: 'thesis', cohort: '67' },
+        
+        { date: '2025-07-24', title: 'พิธีไหว้ครู', type: 'activity', cohort: 'all' },
+        { date: '2025-08-09', title: 'สอบภาษาอังกฤษสถาบัน ครั้งที่ 1', type: 'exam', cohort: 'all' },
+        
+        { date: '2025-09-26', title: 'นำเสนอความก้าวหน้า Final (65)', type: 'thesis', cohort: '65' },
+        { date: '2025-09-28', title: 'นำเสนอความก้าวหน้า Final (65) จบ', type: 'thesis', cohort: '65' },
+        { date: '2025-10-01', title: 'นำเสนอความก้าวหน้า Final (66)', type: 'thesis', cohort: '66' },
+        { date: '2025-10-05', title: 'นำเสนอความก้าวหน้า Final (66) จบ', type: 'thesis', cohort: '66' },
+        { date: '2025-10-10', title: 'นำเสนอความก้าวหน้า Final (67)', type: 'thesis', cohort: '67' },
+        { date: '2025-10-12', title: 'นำเสนอความก้าวหน้า Final (67) จบ', type: 'thesis', cohort: '67' },
+        
+        { date: '2025-10-12', title: 'ปิดภาคการศึกษาที่ 1/2568', type: 'activity', cohort: 'all' },
+        
+        // Semester 2/2568
+        { date: '2025-10-13', title: 'ชำระค่าลงทะเบียน/รักษาสภาพ ภาค 2', type: 'register', cohort: 'all' },
+        { date: '2025-10-30', title: 'วันสุดท้ายชำระค่าลงทะเบียน ภาค 2', type: 'register', cohort: 'all' },
+        { date: '2025-10-31', title: 'เปิดภาคการศึกษาที่ 2/2568', type: 'activity', cohort: 'all' },
+        
+        { date: '2025-11-01', title: 'นำเสนอความก้าวหน้า Draft (65) (2/68)', type: 'thesis', cohort: '65' },
+        { date: '2025-11-02', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '65' },
+        { date: '2025-11-08', title: 'นำเสนอความก้าวหน้า Draft (66) (2/68)', type: 'thesis', cohort: '66' },
+        { date: '2025-11-09', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '66' },
+        { date: '2025-11-15', title: 'นำเสนอความก้าวหน้า Draft (67) (2/68)', type: 'thesis', cohort: '67' },
+        { date: '2025-11-16', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '67' },
+        
+        { date: '2025-11-24', title: 'สอบประมวลความรู้ ครั้งที่ 2', type: 'exam', cohort: 'all' },
+        { date: '2025-12-27', title: 'สอบภาษาอังกฤษสถาบัน (ผู้จะสำเร็จ 68)', type: 'exam', cohort: 'all' },
+        
+        { date: '2026-02-06', title: 'นำเสนอความก้าวหน้า Final (65-66) (2/68)', type: 'thesis', cohort: '65,66' },
+        { date: '2026-02-08', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '65,66' },
+        { date: '2026-02-13', title: 'นำเสนอความก้าวหน้า Final (67) (2/68)', type: 'thesis', cohort: '67' },
+        { date: '2026-02-15', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '67' },
+        
+        { date: '2026-02-22', title: 'ปิดภาคการศึกษาที่ 2/2568', type: 'activity', cohort: 'all' },
+        
+        // Summer/2568
+        { date: '2026-02-23', title: 'ชำระค่าลงทะเบียน/รักษาสภาพ (ฤดูร้อน)', type: 'register', cohort: 'all' },
+        { date: '2026-03-12', title: 'วันสุดท้ายชำระค่าลงทะเบียน (ฤดูร้อน)', type: 'register', cohort: 'all' },
+        { date: '2026-03-13', title: 'เปิดภาคการศึกษาฤดูร้อน/2568', type: 'activity', cohort: 'all' },
+        { date: '2026-05-17', title: 'ปิดภาคการศึกษาฤดูร้อน/2568', type: 'activity', cohort: 'all' },
+        
+        // Vacation & Next Year
+        { date: '2026-05-18', title: 'ปิดหลักสูตร/ปิดภาคเรียน (Vacation)', type: 'holiday', cohort: 'all' },
+        { date: '2026-06-18', title: 'ปิดภาคเรียน (วันสุดท้าย)', type: 'holiday', cohort: 'all' },
+        { date: '2026-05-22', title: 'Research Camp (2568)', type: 'activity', cohort: 'all' },
+        { date: '2026-05-24', title: 'Research Camp (จบ)', type: 'activity', cohort: 'all' },
+        { date: '2026-05-30', title: 'สอบประมวลความรู้', type: 'exam', cohort: 'all' },
+        { date: '2026-05-31', title: 'สอบประมวลความรู้ (จบ)', type: 'exam', cohort: 'all' },
+        { date: '2026-06-19', title: 'เปิดภาคการศึกษาที่ 1/2569', type: 'activity', cohort: 'all' },
+    ],
 
     // ประกาศ
     announcements: [],
