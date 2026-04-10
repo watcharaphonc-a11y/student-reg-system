@@ -180,9 +180,68 @@ const MOCK = {
         { date: '2026-06-18', title: 'ปิดภาคเรียน (วันสุดท้าย)', type: 'holiday', cohort: 'all' },
         { date: '2026-05-22', title: 'Research Camp (2568)', type: 'activity', cohort: 'all' },
         { date: '2026-05-24', title: 'Research Camp (จบ)', type: 'activity', cohort: 'all' },
-        { date: '2026-05-30', title: 'สอบประมวลความรู้', type: 'exam', cohort: 'all' },
         { date: '2026-05-31', title: 'สอบประมวลความรู้ (จบ)', type: 'exam', cohort: 'all' },
         { date: '2026-06-19', title: 'เปิดภาคการศึกษาที่ 1/2569', type: 'activity', cohort: 'all' },
+
+        // Semester 1/2569 (2026 CE)
+        { date: '2026-06-01', title: 'ชำระค่าลงทะเบียน (65-68)', type: 'register', cohort: '65,66,67,68' },
+        { date: '2026-06-18', title: 'วันสุดท้ายชำระค่าลงทะเบียน (65-68)', type: 'register', cohort: '65,66,67,68' },
+        
+        { date: '2026-05-22', title: 'Research Camp (Online)', type: 'activity', cohort: '65,66,67,68' },
+        { date: '2026-05-24', title: 'Research Camp (จบ)', type: 'activity', cohort: '65,66,67,68' },
+        
+        { date: '2026-05-30', title: 'สอบประมวลความรู้', type: 'exam', cohort: 'all' },
+        { date: '2026-05-31', title: 'สอบประมวลความรู้ (จบ)', type: 'exam', cohort: 'all' },
+        
+        { date: '2026-06-13', title: 'รายงานตัว/ปฐมนิเทศ (69)', type: 'activity', cohort: '69' },
+        { date: '2026-06-14', title: 'รายงานตัว/ปฐมนิเทศ (69) จบ', type: 'activity', cohort: '69' },
+        
+        { date: '2026-06-19', title: 'เปิดภาคการศึกษาที่ 1/2569', type: 'activity', cohort: 'all' },
+        
+        { date: '2026-06-20', title: 'นำเสนอความก้าวหน้า Draft (65,68)', type: 'thesis', cohort: '65,68' },
+        { date: '2026-06-21', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '65,68' },
+        { date: '2026-06-27', title: 'นำเสนอความก้าวหน้า Draft (66)', type: 'thesis', cohort: '66' },
+        { date: '2026-06-28', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '66' },
+        { date: '2026-07-04', title: 'นำเสนอความก้าวหน้า Draft (67)', type: 'thesis', cohort: '67' },
+        { date: '2026-07-05', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '67' },
+        
+        { date: '2026-07-11', title: 'สอบหัวข้อวิทยานิพนธ์ (68)', type: 'thesis', cohort: '68' },
+        { date: '2026-07-12', title: 'สอบหัวข้อวิทยานิพนธ์ (68) จบ', type: 'thesis', cohort: '68' },
+        
+        { date: '2026-07-23', title: 'พิธีไหว้ครู (2569)', type: 'activity', cohort: 'all' },
+        { date: '2026-08-15', title: 'สอบภาษาอังกฤษสถาบัน ครั้งที่ 1', type: 'exam', cohort: 'all' },
+        { date: '2026-08-16', title: 'สอบภาษาอังกฤษสถาบัน (จบ)', type: 'exam', cohort: 'all' },
+        
+        { date: '2026-09-02', title: 'นำเสนอความก้าวหน้า Final (65,68)', type: 'thesis', cohort: '65,68' },
+        { date: '2026-09-03', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '65,68' },
+        { date: '2026-10-10', title: 'นำเสนอความก้าวหน้า Final (66)', type: 'thesis', cohort: '66' },
+        { date: '2026-10-11', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '66' },
+        { date: '2026-10-17', title: 'นำเสนอความก้าวหน้า Final (67)', type: 'thesis', cohort: '67' },
+        { date: '2026-10-18', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '67' },
+        
+        { date: '2026-10-18', title: 'ปิดภาคการศึกษาที่ 1/2569', type: 'activity', cohort: 'all' },
+        
+        // Semester 2/2569
+        { date: '2026-10-19', title: 'ชำระค่าลงทะเบียน/รักษาสภาพ ภาค 2', type: 'register', cohort: 'all' },
+        { date: '2026-10-30', title: 'วันสุดท้ายชำระค่าลงทะเบียน ภาค 2', type: 'register', cohort: 'all' },
+        { date: '2026-10-31', title: 'เปิดภาคการศึกษาที่ 2/2569', type: 'activity', cohort: 'all' },
+        
+        { date: '2026-11-01', title: 'นำเสนอความก้าวหน้า Draft (65,68) (2/69)', type: 'thesis', cohort: '65,68' },
+        { date: '2026-11-02', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '65,68' },
+        { date: '2026-11-08', title: 'นำเสนอความก้าวหน้า Draft (66) (2/69)', type: 'thesis', cohort: '66' },
+        { date: '2026-11-09', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '66' },
+        { date: '2026-11-22', title: 'นำเสนอความก้าวหน้า Draft (67) (2/69)', type: 'thesis', cohort: '67' },
+        { date: '2026-11-23', title: 'นำเสนอความก้าวหน้า (จบ)', type: 'thesis', cohort: '67' },
+        
+        { date: '2026-12-26', title: 'สอบภาษาอังกฤษสถาบัน ครั้งที่ 2', type: 'exam', cohort: 'all' },
+        
+        { date: '2027-02-21', title: 'ปิดภาคการศึกษาที่ 2/2569', type: 'activity', cohort: 'all' },
+        
+        // Summer/2569 (2027 CE)
+        { date: '2027-02-22', title: 'ชำระค่าลงทะเบียน/รักษาสภาพ (ฤดูร้อน)', type: 'register', cohort: 'all' },
+        { date: '2027-03-14', title: 'วันสุดท้ายชำระค่าลงทะเบียน (ฤดูร้อน)', type: 'register', cohort: 'all' },
+        { date: '2027-03-15', title: 'เปิดภาคการศึกษาฤดูร้อน/2569', type: 'activity', cohort: 'all' },
+        { date: '2027-05-16', title: 'ปิดภาคการศึกษาฤดูร้อน/2569', type: 'activity', cohort: 'all' },
     ],
 
     // ประกาศ

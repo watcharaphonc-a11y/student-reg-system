@@ -114,52 +114,60 @@ window.buildEventListHTML = function(year, month) {
     </div>`;
 };
 
-window.renderCalendarTable = function() {
-    // Activities and their cohort specific dates
-    // In a real app, this would be derived from calendarEvents
-    const rows = [
-        { label: 'ชำระค่าลงทะเบียน ภาค 1/2568', dates: { 65: '2 - 15 มิ.ย. 68', 66: '2 - 15 มิ.ย. 68', 67: '2 - 15 มิ.ย. 68', 68: '1-12 ก.พ. (รอบ 1) / 5-17 พ.ค. (รอบ 2)' } },
+window.renderCalendarTable = function(selectedYear) {
+    const is2569 = selectedYear >= 2026;
+    const yearBE = is2569 ? 2569 : 2568;
+    
+    // Header based on cohorts active in that year
+    const cohorts = is2569 ? [66, 67, 68, 69] : [65, 66, 67, 68];
+    const cohortLabels = cohorts.map(c => `รหัส 25${c} (รุ่น ${c-64})`);
+
+    const data2568 = [
+        { label: 'ชำระค่าลงทะเบียน ภาค 1/2568', dates: { 65: '2 - 15 มิ.ย. 68', 66: '2 - 15 มิ.ย. 68', 67: '2 - 15 มิ.ย. 68', 68: '1-12 ก.พ. / 5-17 พ.ค.' } },
         { label: 'Research Camp', dates: { 65: '26 - 28 พ.ค. 68', 66: '26 - 28 พ.ค. 68', 67: '26 - 28 พ.ค. 68', 68: '-' } },
         { label: 'สอบประมวลความรู้ รอบที่ 1', dates: { 65: '-', 66: '-', 67: '31 พ.ค. - 1 มิ.ย. 68', 68: '-' } },
-        { label: 'ปฐมนิเทศ/เตรียมความพร้อมนักศึกษาใหม่', dates: { 65: '-', 66: '-', 67: '7 - 8 มิ.ย. 68', 68: '7 - 8 มิ.ย. 68' } },
+        { label: 'ปฐมนิเทศ/เตรียมความพร้อม', dates: { 65: '-', 66: '-', 67: '7 - 8 มิ.ย. 68', 68: '7 - 8 มิ.ย. 68' } },
         { label: 'เปิดภาคการศึกษาที่ 1/2568', dates: { 65: '20 มิ.ย. 68', 66: '20 มิ.ย. 68', 67: '20 มิ.ย. 68', 68: '20 มิ.ย. 68' }, highlight: true },
         { label: 'นำเสนอความก้าวหน้า Draft (1/68)', dates: { 65: '21 - 22 มิ.ย. 68', 66: '27 - 28 มิ.ย. 68', 67: '29 - 30 มิ.ย. 68', 68: '-' } },
-        { label: 'พิธีไหว้ครู', dates: { 65: '24 ก.ค. 68', 66: '24 ก.ค. 68', 67: '24 ก.ค. 68', 68: '24 ก.ค. 68' } },
         { label: 'สอบภาษาอังกฤษ ครั้งที่ 1', dates: { 65: '9 ส.ค. 68', 66: '9 ส.ค. 68', 67: '9 ส.ค. 68', 68: '9 ส.ค. 68' } },
         { label: 'นำเสนอความก้าวหน้า Final (1/68)', dates: { 65: '26 - 28 ก.ย. 68', 66: '1 - 5 ต.ค. 68', 67: '10 - 12 ต.ค. 68', 68: '-' } },
-        { label: 'วันสุดท้ายภาคการศึกษาที่ 1/2568', dates: { 65: '12 ต.ค. 68', 66: '12 ต.ค. 68', 67: '12 ต.ค. 68', 68: '12 ต.ค. 68' } },
-        { label: 'ชำระค่าลงทะเบียน ภาค 2/2568', dates: { 65: '13 - 30 ต.ค. 68', 66: '13 - 30 ต.ค. 68', 67: '13 - 30 ต.ค. 68', 68: '13 - 30 ต.ค. 68' } },
         { label: 'เปิดภาคการศึกษาที่ 2/2568', dates: { 65: '31 ต.ค. 68', 66: '31 ต.ค. 68', 67: '31 ต.ค. 68', 68: '31 ต.ค. 68' }, highlight: true },
-        { label: 'นำเสนอความก้าวหน้า Draft (2/68)', dates: { 65: '1 - 2 พ.ย. 68', 66: '8 - 9 พ.ย. 68', 67: '15 - 16 พ.ย. 68', 68: '-' } },
-        { label: 'สอบประมวลความรู้ ครั้งที่ 2', dates: { 65: '24 พ.ย. 68', 66: '24 พ.ย. 68', 67: '24 พ.ย. 68', 68: '24 พ.ย. 68' } },
-        { label: 'สอบภาษาอังกฤษ ครั้งที่ 2', dates: { 65: '27 ธ.ค. 68', 66: '27 ธ.ค. 68', 67: '27 ธ.ค. 68', 68: '27 ธ.ค. 68' } },
         { label: 'นำเสนอความก้าวหน้า Final (2/68)', dates: { 65: '6 - 8 ก.พ. 69', 66: '6 - 8 ก.พ. 69', 67: '13 - 15 ก.พ. 69', 68: '-' } },
     ];
+
+    const data2569 = [
+        { label: 'ชำระค่าลงทะเบียน ภาค 1/2569', dates: { 66: '1 - 18 มิ.ย. 69', 67: '1 - 18 มิ.ย. 69', 68: '1 - 18 มิ.ย. 69', 69: 'ตามประกาศ' } },
+        { label: 'Research Camp (Online)', dates: { 66: '22 - 24 พ.ค. 69', 67: '22 - 24 พ.ค. 69', 68: '22 - 24 พ.ค. 69', 69: '-' } },
+        { label: 'สอบประมวลความรู้', dates: { 66: '-', 67: '-', 68: '-', 69: '30 - 31 พ.ค. 69' } },
+        { label: 'ปฐมนิเทศ/รายงานตัว (69)', dates: { 66: '-', 67: '-', 68: '-', 69: '13 - 14 มิ.ย. 69' } },
+        { label: 'เปิดภาคการศึกษาที่ 1/2569', dates: { 66: '19 มิ.ย. 69', 67: '19 มิ.ย. 69', 68: '19 มิ.ย. 69', 69: '19 มิ.ย. 69' }, highlight: true },
+        { label: 'นำเสนอความก้าวหน้า Draft (1/69)', dates: { 66: '27 - 28 มิ.ย. 69', 67: '4 - 5 ก.ค. 69', 68: '20 - 21 มิ.ย. 69', 69: '-' } },
+        { label: 'สอบหัวข้อวิทยานิพนธ์ (Topic)', dates: { 66: '-', 67: '-', 68: '11 - 12 ก.ค. 69', 69: '-' } },
+        { label: 'สอบภาษาอังกฤษ ครั้งที่ 1', dates: { 66: '15 - 16 ส.ค. 69', 67: '15 - 16 ส.ค. 69', 68: '15 - 16 ส.ค. 69', 69: '15 - 16 ส.ค. 69' } },
+        { label: 'นำเสนอความก้าวหน้า Final (1/69)', dates: { 66: '10 - 11 ต.ค. 69', 67: '17 - 18 ต.ค. 69', 68: '2 - 3 ก.ย. 69', 69: '-' } },
+        { label: 'เปิดภาคการศึกษาที่ 2/2569', dates: { 66: '31 ต.ค. 69', 67: '31 ต.ค. 69', 68: '31 ต.ค. 69', 69: '31 ต.ค. 69' }, highlight: true },
+    ];
+
+    const rows = is2569 ? data2569 : data2568;
 
     return `
     <div class="card animate-in">
         <div class="card-header">
-            <h3 class="card-title">สรุปปฏิทินการศึกษาแยกตามรุ่น ปีการศึกษา 2568</h3>
+            <h3 class="card-title">สรุปปฏิทินการศึกษาแยกตามรุ่น ปีการศึกษา ${yearBE}</h3>
         </div>
         <div class="card-body" style="padding:0; overflow-x:auto;">
             <table class="data-table">
                 <thead>
                     <tr>
                         <th style="min-width:250px;">กิจกรรม</th>
-                        <th style="text-align:center;">รหัส 2565 (รุ่น 1)</th>
-                        <th style="text-align:center;">รหัส 2566 (รุ่น 2)</th>
-                        <th style="text-align:center;">รหัส 2567 (รุ่น 3)</th>
-                        <th style="text-align:center;">รหัส 2568 (รุ่น 4)</th>
+                        ${cohortLabels.map(label => `<th style="text-align:center;">${label}</th>`).join('')}
                     </tr>
                 </thead>
                 <tbody>
                     ${rows.map(row => `
                         <tr ${row.highlight ? 'style="background:rgba(239,68,68,0.05);"' : ''}>
                             <td style="font-weight:600; ${row.highlight ? 'color:var(--accent-primary);' : ''}">${row.label}</td>
-                            <td style="text-align:center; font-size:0.9rem;">${row.dates[65]}</td>
-                            <td style="text-align:center; font-size:0.9rem;">${row.dates[66]}</td>
-                            <td style="text-align:center; font-size:0.9rem;">${row.dates[67]}</td>
-                            <td style="text-align:center; font-size:0.9rem;">${row.dates[68]}</td>
+                            ${cohorts.map(c => `<td style="text-align:center; font-size:0.9rem;">${row.dates[c] || '-'}</td>`).join('')}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -179,7 +187,7 @@ pages.calendar = function() {
         <div class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
             <div>
                 <h1 class="page-title">ปฏิทินการศึกษา</h1>
-                <p class="page-subtitle">ปฏิทินกิจกรรมและกำหนดการสำคัญปีการศึกษา 2568</p>
+                <p class="page-subtitle">ปฏิทินกิจกรรมและกำหนดการสำคัญปีการศึกษา ${year + 543}</p>
             </div>
             <div class="view-toggles" style="display:flex; background:var(--bg-tertiary); padding:4px; border-radius:var(--radius-md);">
                 <button class="btn ${viewMode === 'grid' ? 'active' : ''}" style="padding:6px 16px; font-size:0.85rem; border-radius:6px; ${viewMode === 'grid' ? 'background:white; box-shadow:var(--shadow-sm); color:var(--accent-primary);' : 'color:var(--text-muted);'}" onclick="toggleCalView('grid')">
@@ -191,7 +199,7 @@ pages.calendar = function() {
             </div>
         </div>
 
-        ${viewMode === 'table' ? renderCalendarTable() : `
+        ${viewMode === 'table' ? renderCalendarTable(year) : `
             <div class="calendar-layout-container">
                 <div class="card animate-in animate-delay-1" id="calendarCard">
                     ${buildCalendarHTML(year, month)}
