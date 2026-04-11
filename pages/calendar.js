@@ -27,8 +27,12 @@ window.buildCalendarHTML = function(year, month) {
         days.push({ day: daysInPrevMonth - i, otherMonth: true });
     }
     for (let d = 1; d <= daysInMonth; d++) {
-        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const events = (MOCK.calendarEvents || []).filter(e => e.date === dateStr);
+        const dObj = new Date(year, month, d);
+        const events = (MOCK.calendarEvents || []).filter(e => {
+            const start = new Date(e.startDate);
+            const end = new Date(e.endDate);
+            return dObj >= start && dObj <= end;
+        });
         days.push({ day: d, today: d === todayDay, events });
     }
     const remaining = 42 - days.length;
@@ -89,17 +93,36 @@ window.buildCalendarHTML = function(year, month) {
 };
 
 window.buildEventListHTML = function(year, month) {
+    const firstOfMonth = new Date(year, month, 1);
+    const lastOfMonth = new Date(year, month + 1, 0);
+
     const monthEvents = (MOCK.calendarEvents || []).filter(e => {
-        const d = new Date(e.date);
-        return d.getFullYear() === year && d.getMonth() === month;
-    });
+        const start = new Date(e.startDate);
+        const end = new Date(e.endDate);
+        // Overlaps with current month
+        return start <= lastOfMonth && end >= firstOfMonth;
+    }).sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
 
     if (monthEvents.length === 0) {
         return `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.9rem;">ไม่มีกำหนดการในเดือนนี้</div>`;
     }
 
     return `<div class="activity-list">
-        ${monthEvents.map(e => `
+        ${monthEvents.map(e => {
+            const start = new Date(e.startDate);
+            const end = new Date(e.endDate);
+            let dateText = start.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' });
+            if (e.startDate !== e.endDate) {
+                const endText = end.toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' });
+                // If same month and year, simplify
+                if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+                    dateText = `${start.getDate()} - ${endText}`;
+                } else {
+                    dateText = `${start.toLocaleDateString('th-TH', { day:'numeric', month:'short' })} - ${endText}`;
+                }
+            }
+            
+            return `
             <div class="activity-item">
                 <div class="activity-dot ${e.type === 'exam' ? 'orange' : e.type === 'holiday' ? 'green' : e.type === 'register' ? 'purple' : e.type === 'thesis' ? 'red' : 'blue'}"></div>
                 <div>
@@ -107,10 +130,10 @@ window.buildEventListHTML = function(year, month) {
                         ${e.cohort !== 'all' ? `<span class="badge" style="padding:1px 6px; font-size:0.75rem; margin-right:5px; background:var(--bg-tertiary); color:var(--text-secondary);">รหัส ${e.cohort}</span>` : ''}
                         ${e.title}
                     </div>
-                    <div class="activity-time">${new Date(e.date).toLocaleDateString('th-TH', { day:'numeric', month:'short', year:'numeric' })}</div>
+                    <div class="activity-time">${dateText}</div>
                 </div>
-            </div>
-        `).join('')}
+            </div>`;
+        }).join('')}
     </div>`;
 };
 
