@@ -285,7 +285,7 @@ pages['eval-instructor'] = function() {
                             <div style="display:flex; gap:8px;">
                                 ${isEval 
                                     ? (isEval.skipped 
-                                        ? '<button class="btn btn-sm" disabled style="opacity:0.7; background:var(--border-color); color:var(--text-muted); border:none; cursor:not-allowed;">ข้ามการประเมิน</button>'
+                                        ? `<button class="btn btn-sm" style="border:1px solid var(--warning); color:var(--warning); background:transparent;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ยกเลิก (เปลี่ยนเป็นประเมิน)</button>`
                                         : '<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed;">ประเมินแล้ว</button>')
                                     : `<button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-muted); background:white;" onclick="quickSkipInstructor('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ไม่ได้เรียนด้วย</button>
                                        <button class="btn btn-primary btn-sm" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ทำแบบประเมิน</button>`

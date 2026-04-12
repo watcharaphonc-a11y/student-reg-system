@@ -1152,8 +1152,36 @@ function submitEvaluationResult(payload) {
     'date': dateStr
   };
   
-  // Ensure headers exist
-  const currentHeaders = sheet.getRange(1, 1, 1, Math.max(sheet.getLastColumn(), 1)).getValues()[0].map(h => String(h).trim());
+  const data = sheet.getDataRange().getValues();
+  const currentHeaders = data[0].map(h => String(h).trim());
+  const rows = data.slice(1);
+  
+  // Find existing row (to prevent duplicates and allow undo)
+  let existingRowIdx = -1;
+  const sIdIdx = currentHeaders.indexOf('student_id');
+  const typeIdx = currentHeaders.indexOf('type');
+  const cCodeIdx = currentHeaders.indexOf('course_code');
+  const instIdx = currentHeaders.indexOf('instructor_id');
+  
+  if (sIdIdx > -1 && typeIdx > -1 && cCodeIdx > -1) {
+      for (let i = 0; i < rows.length; i++) {
+          if (String(rows[i][sIdIdx]).trim() === String(payload.studentId).trim() &&
+              String(rows[i][typeIdx]).trim() === String(payload.type).trim() &&
+              String(rows[i][cCodeIdx]).trim() === String(payload.courseCode).trim()) {
+              
+              if (payload.type === 'instructor' && instIdx > -1) {
+                  if (String(rows[i][instIdx]).trim() === String(payload.instructor).trim()) {
+                      existingRowIdx = i + 2;
+                      break;
+                  }
+              } else if (payload.type === 'course') {
+                  existingRowIdx = i + 2;
+                  break;
+              }
+          }
+      }
+  }
+
   const requiredHeaders = Object.keys(rowPayload);
   
   requiredHeaders.forEach(h => {
@@ -1166,9 +1194,17 @@ function submitEvaluationResult(payload) {
   // Build row based on actual header order
   const updatedHeaders = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(h => String(h).trim());
   const newRow = updatedHeaders.map(h => rowPayload[h] || '');
-  sheet.appendRow(newRow);
   
-  return createResponse({ status: 'success', id: evalId });
+  if (existingRowIdx > 0) {
+      // Preserve ID
+      const idCol = updatedHeaders.indexOf('id');
+      if (idCol > -1) newRow[idCol] = sheet.getRange(existingRowIdx, idCol + 1).getValue();
+      sheet.getRange(existingRowIdx, 1, 1, updatedHeaders.length).setValues([newRow]);
+  } else {
+      sheet.appendRow(newRow);
+  }
+  
+  return createResponse({ status: 'success' });
 }
 
 /**
