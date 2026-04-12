@@ -121,10 +121,11 @@ pages['eval-course'] = function() {
                 <div style="display:grid; grid-template-columns: 1fr; gap:0;">
                     ${uniqueEnrolled.map(course => {
                         const isEval = evals.find(e => e.courseCode === course.code && e.type === 'course' && e.studentId === studentId);
-                        // Check if course has questions in EvalQuestions sheet
-                        const hasQuestions = (MOCK.evalQuestions || []).some(q => 
-                            normalizeCode(q.course_code) === normalizeCode(course.code)
-                        );
+                        // Check if course has questions in EvalQuestions sheet (including common ones)
+                        const hasQuestions = (MOCK.evalQuestions || []).some(q => {
+                            const cCode = normalizeCode(q.course_code);
+                            return cCode === normalizeCode(course.code) || cCode === 'ALL' || cCode === '' || cCode === '*';
+                        });
                         // Get instructors for this course
                         const instructors = (MOCK.courseInstructors || [])
                             .filter(ci => normalizeCode(ci.course_code) === normalizeCode(course.code))
@@ -306,10 +307,11 @@ pages['eval-instructor'] = function() {
 let wizardState = {};
 
 window.startCourseEvalWizard = function(courseCode, courseName) {
-    // Get per-course questions from EvalQuestions sheet
-    const allQuestions = (MOCK.evalQuestions || []).filter(q => 
-        String(q.course_code || '').trim() === String(courseCode).trim()
-    );
+    // Get per-course questions from EvalQuestions sheet, including common questions (ALL, *, or blank)
+    const allQuestions = (MOCK.evalQuestions || []).filter(q => {
+        const cCode = String(q.course_code || '').trim().toUpperCase();
+        return cCode === String(courseCode).trim().toUpperCase() || cCode === 'ALL' || cCode === '*' || cCode === '';
+    });
     
     // Group questions by category/section
     const sections = {};
