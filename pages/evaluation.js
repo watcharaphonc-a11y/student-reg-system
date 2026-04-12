@@ -278,26 +278,27 @@ pages['eval-instructor'] = function() {
                                 <div style="min-width: 0;">
                                     ${(() => {
                                         let nameTokens = String(ins.name || '').trim().split(/\\s+/);
-                                        let htmlName = ins.name;
+                                        let htmlName = `<div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${ins.name}</div>`;
                                         if (nameTokens.length > 1) {
                                             let lName = nameTokens.pop();
                                             let fName = nameTokens.join(' ');
-                                            htmlName = `${fName} <span style="display:inline-block; white-space:nowrap;">${lName}</span>`;
+                                            htmlName = `<div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${fName}</div>
+                                                        <div style="font-weight:500; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'var(--text-primary)'}; line-height: 1.2; margin-top:2px;">${lName}</div>`;
                                         }
-                                        return `<div style="font-weight:600; font-size:1.05rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${htmlName}</div>`;
+                                        return htmlName;
                                     })()}
-                                    <div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">
+                                    <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
                                         ID: ${ins.id} · ${isEval ? '<span style="color:var(--success)">✓ ทำการประเมินแล้ว</span>' : 'ยังไม่ได้ประเมิน'}
                                     </div>
                                 </div>
                             </div>
-                            <div style="display:flex; flex-direction:column; gap:6px; width: 160px; flex-shrink: 0;">
+                            <div style="display:flex; flex-direction:column; gap:6px; width: 155px; flex-shrink: 0;">
                                 ${isEval 
                                     ? (isEval.skipped 
-                                        ? `<button class="btn btn-sm" style="border:1px solid var(--warning); color:var(--warning); background:transparent; width:100%; padding: 6px 8px; font-size: 0.9rem;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ยกเลิก (เป็นประเมิน)</button>`
-                                        : '<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed; width:100%; padding: 6px 8px; font-size: 0.9rem;">ประเมินแล้ว</button>')
-                                    : `<button class="btn btn-primary btn-sm" style="width:100%; padding: 6px 8px; font-size: 0.95rem; font-weight:600;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ทำแบบประเมิน</button>
-                                       <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-muted); background:white; width:100%; padding: 4px 6px; font-size: 0.85rem; line-height: 1.2;" onclick="quickSkipInstructor('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ไม่ได้เรียนกับอาจารย์ท่านนี้</button>`
+                                        ? `<button class="btn btn-sm" style="border:1px solid var(--warning); color:var(--warning); background:transparent; width:100%; padding: 6px 8px; font-size: 0.85rem;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ยกเลิก (เปลี่ยนเป็นประเมิน)</button>`
+                                        : '<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed; width:100%; padding: 6px 8px; font-size: 0.85rem;">ประเมินแล้ว</button>')
+                                    : `<button class="btn btn-primary btn-sm" style="width:100%; padding: 6px 8px; font-size: 0.9rem;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ทำแบบประเมิน</button>
+                                       <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-muted); background:white; width:100%; padding: 4px 6px; font-size: 0.8rem; line-height: 1.2;" onclick="quickSkipInstructor('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ไม่ได้เรียนกับอาจารย์ท่านนี้</button>`
                                 }
                             </div>
                         </div>`;
