@@ -283,7 +283,7 @@ pages['eval-instructor'] = function() {
                                             let lName = nameTokens.pop();
                                             let fName = nameTokens.join(' ');
                                             htmlName = `<div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${fName}</div>
-                                                        <div style="font-weight:500; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'var(--text-primary)'}; line-height: 1.2; margin-top:2px;">${lName}</div>`;
+                                                        <div style="font-weight:500; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'var(--text-primary)'}; line-height: 1.2; margin-top:2px; white-space:nowrap;">${lName}</div>`;
                                         }
                                         return htmlName;
                                     })()}
