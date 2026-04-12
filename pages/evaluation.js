@@ -16,15 +16,15 @@ function getInstructorDisplayName(id) {
 const normalizeCode = (c) => String(c || '').trim().replace(/^0+/, '');
 
 
-pages['eval-course'] = function() {
+pages['eval-course'] = function () {
     const evals = MOCK.evaluations || [];
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
-    
+
     // 1. Build enrolled courses from student's grades (official Enrollments)
-    let enrolled = (MOCK.grades || []).flatMap(sem => 
-        (sem.courses || []).map(c => ({ 
-            code: c.code, 
-            name: c.name, 
+    let enrolled = (MOCK.grades || []).flatMap(sem =>
+        (sem.courses || []).map(c => ({
+            code: c.code,
+            name: c.name,
             credits: c.credits,
             semester: sem.term,
             year: sem.year
@@ -35,10 +35,10 @@ pages['eval-course'] = function() {
     if (enrolled.length === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
         const planInfo = window.getStudyPlanForStudent(MOCK.student);
         // Show all courses for the current relative year up to the current semester
-        const relevantSems = (planInfo.data || []).filter(s => 
+        const relevantSems = (planInfo.data || []).filter(s =>
             s.year === planInfo.relYear && s.sem <= planInfo.relSem
         );
-        
+
         relevantSems.forEach(currentSemData => {
             (currentSemData.courses || []).forEach(cStr => {
                 const parts = cStr.split(' ');
@@ -56,7 +56,7 @@ pages['eval-course'] = function() {
             });
         });
     }
-    
+
     // Deduplicate by normalized course code
     const uniqueEnrolled = [];
     const seenCodes = new Set();
@@ -67,9 +67,9 @@ pages['eval-course'] = function() {
             uniqueEnrolled.push(c);
         }
     });
-    
+
     const total = uniqueEnrolled.length;
-    const completed = uniqueEnrolled.filter(c => 
+    const completed = uniqueEnrolled.filter(c =>
         evals.some(e => e.courseCode === c.code && e.type === 'course' && e.studentId === studentId)
     ).length;
     const pending = total - completed;
@@ -120,18 +120,18 @@ pages['eval-course'] = function() {
             <div class="card-body" style="padding:0">
                 <div style="display:grid; grid-template-columns: 1fr; gap:0;">
                     ${uniqueEnrolled.map(course => {
-                        const isEval = evals.find(e => e.courseCode === course.code && e.type === 'course' && e.studentId === studentId);
-                        // Check if course has questions in EvalQuestions sheet (including common ones)
-                        const hasQuestions = (MOCK.evalQuestions || []).some(q => {
-                            const cCode = normalizeCode(q.course_code);
-                            return cCode === normalizeCode(course.code) || cCode === 'ALL' || cCode === '' || cCode === '*';
-                        });
-                        // Get instructors for this course
-                        const instructors = (MOCK.courseInstructors || [])
-                            .filter(ci => normalizeCode(ci.course_code) === normalizeCode(course.code))
-                            .map(ci => getInstructorDisplayName(ci.instructor_id));
-                        
-                        return `
+        const isEval = evals.find(e => e.courseCode === course.code && e.type === 'course' && e.studentId === studentId);
+        // Check if course has questions in EvalQuestions sheet (including common ones)
+        const hasQuestions = (MOCK.evalQuestions || []).some(q => {
+            const cCode = normalizeCode(q.course_code);
+            return cCode === normalizeCode(course.code) || cCode === 'ALL' || cCode === '' || cCode === '*';
+        });
+        // Get instructors for this course
+        const instructors = (MOCK.courseInstructors || [])
+            .filter(ci => normalizeCode(ci.course_code) === normalizeCode(course.code))
+            .map(ci => getInstructorDisplayName(ci.instructor_id));
+
+        return `
                         <div style="display:flex; align-items:center; justify-content:space-between; padding:16px 20px; border-bottom:1px solid var(--border-color); ${isEval ? 'background:rgba(40,167,69,0.05)' : ''}">
                             <div style="flex:1;">
                                 <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
@@ -142,19 +142,19 @@ pages['eval-course'] = function() {
                                 ${course.semester && course.year ? `<div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:4px;">ภาคเรียนที่ ${course.semester}/${course.year}</div>` : ''}
                                 <div style="font-size:0.8rem; color:var(--text-muted);">
                                     หน่วยกิต: ${course.credits || '-'} 
-                                    ${instructors.length > 0 ? ' · อาจารย์: ' + instructors.slice(0,3).join(', ') + (instructors.length > 3 ? ` +${instructors.length-3}` : '') : ''}
+                                    ${instructors.length > 0 ? ' · อาจารย์: ' + instructors.slice(0, 3).join(', ') + (instructors.length > 3 ? ` +${instructors.length - 3}` : '') : ''}
                                 </div>
                             </div>
                             <div>
                                 ${isEval
-                                    ? '<button class="btn btn-sm" disabled style="opacity:0.5;cursor:not-allowed;background:var(--success);color:white;border:none;">ประเมินแล้ว</button>'
-                                    : `<button class="btn btn-primary btn-sm" onclick="startCourseEvalWizard('${course.code}', '${course.name.replace(/'/g, "\\\\'")}')">
+                ? '<button class="btn btn-sm" disabled style="opacity:0.5;cursor:not-allowed;background:var(--success);color:white;border:none;">ประเมินแล้ว</button>'
+                : `<button class="btn btn-primary btn-sm" onclick="startCourseEvalWizard('${course.code}', '${course.name.replace(/'/g, "\\\\'")}')">
                                         ${hasQuestions ? 'เริ่มประเมิน →' : 'ประเมินรายวิชา →'}
                                        </button>`
-                                }
+            }
                             </div>
                         </div>`;
-                    }).join('')}
+    }).join('')}
                     ${uniqueEnrolled.length === 0 ? '<div style="padding:40px;text-align:center;color:var(--text-muted);">ไม่พบรายวิชาที่ลงทะเบียน</div>' : ''}
                 </div>
             </div>
@@ -165,10 +165,10 @@ pages['eval-course'] = function() {
 // ============================
 // Instructor Evaluation Page
 // ============================
-pages['eval-instructor'] = function() {
+pages['eval-instructor'] = function () {
     const evals = MOCK.evaluations || [];
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
-    
+
     // Group instructors by course from CourseInstructors sheet
     const courseInstructors = MOCK.courseInstructors || [];
     const courseMap = {};
@@ -200,7 +200,7 @@ pages['eval-instructor'] = function() {
     if (enrolledCodes.size === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
         const planInfo = window.getStudyPlanForStudent(MOCK.student);
         // Show all courses for the current relative year up to the current semester
-        const relevantSems = (planInfo.data || []).filter(s => 
+        const relevantSems = (planInfo.data || []).filter(s =>
             s.year === planInfo.relYear && s.sem <= planInfo.relSem
         );
         relevantSems.forEach(currentSemData => {
@@ -211,9 +211,9 @@ pages['eval-instructor'] = function() {
             });
         });
     }
-    
+
     const evalItems = Object.values(courseMap).filter(c => enrolledCodes.has(normalizeCode(c.code)));
-    
+
     let totalInstructors = 0;
     let completedInstructors = 0;
     evalItems.forEach(item => {
@@ -260,7 +260,7 @@ pages['eval-instructor'] = function() {
 
         <div style="display:grid; grid-template-columns: 1fr; gap:20px;">
         ${evalItems.length > 0 ? evalItems.map((item, idx) => `
-            <div class="card animate-in animate-delay-${Math.min(idx+2,4)}">
+            <div class="card animate-in animate-delay-${Math.min(idx + 2, 4)}">
                 <div class="card-body">
                     <div style="margin-bottom:16px; border-bottom:1px solid var(--border-color); padding-bottom:12px;">
                         <span style="font-weight:600; font-size:1.15rem; color:var(--accent-primary);">${window.formatDisplayCode(item.code)}</span>
@@ -270,39 +270,39 @@ pages['eval-instructor'] = function() {
                     </div>
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:12px;">
                     ${item.instructors.map(ins => {
-                        const isEval = evals.find(e => (e.instructor === ins.id || e.instructor === ins.name) && e.courseCode === item.code && e.type === 'instructor' && e.studentId === studentId);
-                        return `
+        const isEval = evals.find(e => (e.instructor === ins.id || e.instructor === ins.name) && e.courseCode === item.code && e.type === 'instructor' && e.studentId === studentId);
+        return `
                         <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--bg-secondary); border-radius:var(--radius-sm); border: 1px solid ${isEval ? 'var(--success)' : 'transparent'};">
                             <div style="display:flex; align-items:center; gap:12px; flex: 1; min-width: 0;">
                                 <div style="width:40px;height:40px;border-radius:50%;background:${isEval ? 'var(--success)' : 'var(--border-color)'};display:flex;align-items:center;justify-content:center;color:${isEval ? 'white' : 'var(--text-muted)'};font-weight:600;font-size:1rem; flex-shrink:0;">${ins.name[0] || '?'}</div>
                                 <div style="min-width: 0;">
                                     ${(() => {
-                                        let nameTokens = String(ins.name || '').trim().split(/\\s+/);
-                                        let htmlName = `<div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${ins.name}</div>`;
-                                        if (nameTokens.length > 1) {
-                                            let lName = nameTokens.pop();
-                                            let fName = nameTokens.join(' ');
-                                            htmlName = `<div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${fName}</div>
+                let nameTokens = String(ins.name || '').trim().split(/\\s+/);
+                let htmlName = `<div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${ins.name}</div>`;
+                if (nameTokens.length > 1) {
+                    let lName = nameTokens.pop();
+                    let fName = nameTokens.join(' ');
+                    htmlName = `<div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${fName}</div>
                                                         <div style="font-weight:500; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'var(--text-primary)'}; line-height: 1.2; margin-top:2px; white-space:nowrap;">${lName}</div>`;
-                                        }
-                                        return htmlName;
-                                    })()}
+                }
+                return htmlName;
+            })()}
                                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">
                                         ID: ${ins.id} · ${isEval ? '<span style="color:var(--success)">✓ ทำการประเมินแล้ว</span>' : 'ยังไม่ได้ประเมิน'}
                                     </div>
                                 </div>
                             </div>
                             <div style="display:flex; flex-direction:column; gap:6px; width: 155px; flex-shrink: 0;">
-                                ${isEval 
-                                    ? (isEval.skipped 
-                                        ? `<button class="btn btn-sm" style="border:1px solid var(--warning); color:var(--warning); background:transparent; width:100%; padding: 6px 8px; font-size: 0.85rem;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ยกเลิก (เปลี่ยนเป็นประเมิน)</button>`
-                                        : '<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed; width:100%; padding: 6px 8px; font-size: 0.85rem;">ประเมินแล้ว</button>')
-                                    : `<button class="btn btn-primary btn-sm" style="width:100%; padding: 6px 8px; font-size: 0.9rem;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ทำแบบประเมิน</button>
-                                       <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-muted); background:white; width:100%; padding: 4px 6px; font-size: 0.8rem; line-height: 1.2;" onclick="quickSkipInstructor('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ไม่ได้เรียนกับอาจารย์ท่านนี้</button>`
-                                }
+                                ${isEval
+                ? (isEval.skipped
+                    ? `<button class="btn btn-sm" style="border:1px solid var(--warning); color:var(--warning); background:transparent; width:100%; padding: 6px 8px; font-size: 0.85rem;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}', '${item.code}', '${item.name.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}')">ยกเลิก (เปลี่ยนเป็นประเมิน)</button>`
+                    : '<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed; width:100%; padding: 6px 8px; font-size: 0.85rem;">ประเมินแล้ว</button>')
+                : `<button class="btn btn-primary btn-sm" style="width:100%; padding: 6px 8px; font-size: 0.9rem;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}', '${item.code}', '${item.name.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}')">ทำแบบประเมิน</button>
+                                       <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-muted); background:white; width:100%; padding: 4px 6px; font-size: 0.8rem; line-height: 1.2;" onclick="quickSkipInstructor('${ins.id.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}', '${item.code}', '${item.name.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}')">ไม่ได้เรียนกับอาจารย์ท่านนี้</button>`
+            }
                             </div>
                         </div>`;
-                    }).join('')}
+    }).join('')}
                     </div>
                 </div>
             </div>`).join('') : `
@@ -319,13 +319,13 @@ pages['eval-instructor'] = function() {
 // ============================
 let wizardState = {};
 
-window.startCourseEvalWizard = function(courseCode, courseName) {
+window.startCourseEvalWizard = function (courseCode, courseName) {
     // Get per-course questions from EvalQuestions sheet, including common questions (ALL, *, or blank)
     const allQuestions = (MOCK.evalQuestions || []).filter(q => {
         const cCode = String(q.course_code || '').trim().toUpperCase();
         return cCode === String(courseCode).trim().toUpperCase() || cCode === 'ALL' || cCode === '*' || cCode === '';
     });
-    
+
     // Group questions by category/section
     const sections = {};
     const sectionOrder = ['course_structure', 'pre_learning', 'post_learning', 'clo', 'llo'];
@@ -384,7 +384,7 @@ window.startCourseEvalWizard = function(courseCode, courseName) {
             name: getInstructorDisplayName(ci.instructor_id || ci.instructor_name)
         }))
         .filter(ins => ins.id);
-    
+
     // Deduplicate by ID
     const uniqueInstructors = [];
     const seenIds = new Set();
@@ -411,7 +411,7 @@ window.startCourseEvalWizard = function(courseCode, courseName) {
 
     // Build wizard pages: course sections + instructor sections
     const wizardPages = [];
-    
+
     // Course evaluation pages
     orderedSections.forEach(section => {
         wizardPages.push({
@@ -438,7 +438,7 @@ window.startCourseEvalWizard = function(courseCode, courseName) {
 function renderWizardPage() {
     const ws = wizardState;
     if (!ws.pages || !ws.pages[ws.currentPage]) return;
-    
+
     const page = ws.pages[ws.currentPage];
     const totalPages = ws.pages.length;
     const pageNum = ws.currentPage + 1;
@@ -467,24 +467,24 @@ function renderWizardPage() {
             const currentVal = ws.scores[scoreKey];
             const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
             const likertLabels = ['น้อยที่สุด', 'น้อย', 'ปานกลาง', 'มาก', 'มากที่สุด'];
-            
+
             questionsHtml += `
             <div id="q_container_${i}" style="margin-bottom:12px; padding:12px 16px; background:var(--bg-secondary); border-radius:var(--radius-md); border:2px solid transparent; transition:0.3s;">
                 <label style="font-size:0.92rem; font-weight:500; display:block; margin-bottom:8px; color:var(--text-primary); line-height:1.3;">
-                    ${i+1}. ${q.text} <span style="color:var(--danger)">${isText ? '(ไม่บังคับ)' : '*'}</span>
+                    ${i + 1}. ${q.text} <span style="color:var(--danger)">${isText ? '(ไม่บังคับ)' : '*'}</span>
                 </label>
                 ${isText ? `
                     <textarea class="form-control" placeholder="ข้อเสนอแนะเพิ่มเติม..." rows="2" onchange="setWizardText('${scoreKey}', this.value, ${i})" style="width:100%; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:10px; font-size:0.9rem;">${currentVal || ''}</textarea>
                 ` : `
                     <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; max-width:100%;" id="likert_${i}">
-                        ${[1,2,3,4,5].map(s => `
+                        ${[1, 2, 3, 4, 5].map(s => `
                             <button type="button" class="likert-btn"
                                     onclick="setWizardScore('${scoreKey}', ${s}, ${i}); document.getElementById('q_container_${i}').style.borderColor='transparent'; document.getElementById('q_container_${i}').style.background='var(--bg-secondary)';" 
                                     style="border:2px solid ${currentVal === s ? 'var(--accent-primary)' : 'var(--border-color)'}; 
                                            background:${currentVal === s ? 'var(--accent-primary)' : 'var(--bg-card)'}; 
                                            color:${currentVal === s ? 'white' : 'inherit'};">
                                 <span style="font-weight:700; font-size:1.15rem; line-height:1;">${s}</span>
-                                <span class="likert-btn-label">${likertLabels[s-1]}</span>
+                                <span class="likert-btn-label">${likertLabels[s - 1]}</span>
                             </button>
                         `).join('')}
                     </div>
@@ -535,11 +535,11 @@ function renderWizardPage() {
     openModal(mainTitle, modalHtml, `หน้า ${pageNum}/${totalPages} (${progressPercent}%)`);
 }
 
-window.setWizardText = function(scoreKey, text, questionIdx) {
+window.setWizardText = function (scoreKey, text, questionIdx) {
     wizardState.scores[scoreKey] = text;
 };
 
-window.setWizardScore = function(scoreKey, score, questionIdx) {
+window.setWizardScore = function (scoreKey, score, questionIdx) {
     wizardState.scores[scoreKey] = score;
     // Re-render buttons for this question
     const container = document.getElementById('likert_' + questionIdx);
@@ -553,23 +553,23 @@ window.setWizardScore = function(scoreKey, score, questionIdx) {
     }
 };
 
-window.toggleInstructorSkip = function(instructorId, checked) {
+window.toggleInstructorSkip = function (instructorId, checked) {
     wizardState.instructorSkipped[instructorId] = checked;
     renderWizardPage();
 };
 
-window.wizardNext = function() {
+window.wizardNext = function () {
     // Validate current page
     const page = wizardState.pages[wizardState.currentPage];
     const isInstructor = page.type === 'instructor';
     const isSkipped = isInstructor && wizardState.instructorSkipped[page.instructorId];
-    
+
     if (!isSkipped) {
         const unansweredIndices = [];
         const unanswered = page.questions.filter((q, i) => {
             const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
             if (isText) return false; // Text fields are optional
-            
+
             const scoreKey = `${page.key}_${q.id}`;
             if (!wizardState.scores[scoreKey]) {
                 unansweredIndices.push(i);
@@ -586,14 +586,14 @@ window.wizardNext = function() {
                     el.style.background = '#fff5f5';
                 }
             });
-            
+
             const firstUnansweredEl = document.getElementById('q_container_' + unansweredIndices[0]);
             if (firstUnansweredEl) firstUnansweredEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
+
             const alertMsg = `โปรดระบุคำตอบให้ครบถ้วน\n(คุณข้ามคำถามไป ${unanswered.length} ข้อ)`;
             if (typeof showToast === 'function') showToast(alertMsg, 'error');
             else alert(alertMsg);
-            
+
             return;
         }
     }
@@ -602,25 +602,25 @@ window.wizardNext = function() {
     renderWizardPage();
 };
 
-window.wizardPrev = function() {
+window.wizardPrev = function () {
     if (wizardState.currentPage > 0) {
         wizardState.currentPage--;
         renderWizardPage();
     }
 };
 
-window.submitWizardEval = async function() {
+window.submitWizardEval = async function () {
     // Validate last page
     const lastPage = wizardState.pages[wizardState.currentPage];
     const isInstructor = lastPage.type === 'instructor';
     const isSkipped = isInstructor && wizardState.instructorSkipped[lastPage.instructorId];
-    
+
     if (!isSkipped) {
         const unansweredIndices = [];
         const unanswered = lastPage.questions.filter((q, i) => {
             const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
             if (isText) return false;
-            
+
             const scoreKey = `${lastPage.key}_${q.id}`;
             if (!wizardState.scores[scoreKey]) {
                 unansweredIndices.push(i);
@@ -638,11 +638,11 @@ window.submitWizardEval = async function() {
             });
             const firstUnansweredEl = document.getElementById('q_container_' + unansweredIndices[0]);
             if (firstUnansweredEl) firstUnansweredEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
+
             const alertMsg = `โปรดระบุคำตอบให้ครบถ้วน\n(คุณข้ามคำถามไป ${unanswered.length} ข้อ)`;
             if (typeof showToast === 'function') showToast(alertMsg, 'error');
             else alert(alertMsg);
-            
+
             return;
         }
     }
@@ -716,7 +716,7 @@ window.submitWizardEval = async function() {
 
         hideApiLoading();
         closeModal();
-        
+
         // Show success
         openModal('สำเร็จ', `
             <div style="text-align:center;padding:20px;">
@@ -735,10 +735,10 @@ window.submitWizardEval = async function() {
 // ============================
 // Instructor Modal (Standalone)
 // ============================
-window.openInstructorEvalModal = function(instructorId, courseCode, courseName) {
+window.openInstructorEvalModal = function (instructorId, courseCode, courseName) {
     const instName = getInstructorDisplayName(instructorId);
     const instQuestions = MOCK.evalInstructorQuestions || [];
-    const questions = instQuestions.length > 0 
+    const questions = instQuestions.length > 0
         ? instQuestions.map(q => ({ id: q.question_id, text: q.question_text }))
         : [
             { id: 1, text: 'เนื้อหาตอดคล้องกับวัตถุประสงค์' },
@@ -772,23 +772,23 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
 
         <div id="instQuestionsArea" style="padding: 12px 0;">
             ${questions.map((q, i) => {
-                const likertLabels = ['น้อยที่สุด', 'น้อย', 'ปานกลาง', 'มาก', 'มากที่สุด'];
-                const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
-                return `
+        const likertLabels = ['น้อยที่สุด', 'น้อย', 'ปานกลาง', 'มาก', 'มากที่สุด'];
+        const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
+        return `
             <div id="inst_q_container_${i}" style="margin-bottom:12px; padding:12px 16px; background:var(--bg-secondary); border-radius:var(--radius-md); border:2px solid transparent; transition:0.3s;">
                 <label style="font-size:0.92rem; font-weight:500; display:block; margin-bottom:8px; line-height:1.3;">
-                    ${i+1}. ${q.text} <span style="color:var(--danger)">${isText ? '(ไม่บังคับ)' : '*'}</span>
+                    ${i + 1}. ${q.text} <span style="color:var(--danger)">${isText ? '(ไม่บังคับ)' : '*'}</span>
                 </label>
                 ${isText ? `
                     <textarea class="form-control" placeholder="ข้อเสนอแนะเพิ่มเติม..." rows="2" onchange="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=this.value;" style="width:100%; border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:10px; font-size:0.9rem;"></textarea>
                 ` : `
                     <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; max-width:100%;" id="instLikert_${i}">
-                        ${[1,2,3,4,5].map(s => `
+                        ${[1, 2, 3, 4, 5].map(s => `
                             <button type="button" class="likert-btn"
-                                    onclick="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=${s}; document.getElementById('inst_q_container_${i}').style.borderColor='transparent'; document.getElementById('inst_q_container_${i}').style.background='var(--bg-secondary)'; document.querySelectorAll('#instLikert_${i} button').forEach((b,idx)=>{b.style.borderColor=idx===${s-1}?'var(--accent-primary)':'var(--border-color)';b.style.background=idx===${s-1}?'var(--accent-primary)':'var(--bg-card)';b.style.color=idx===${s-1}?'white':'inherit';})" 
+                                    onclick="window._instScores=window._instScores||{}; window._instScores['q_${q.id}']=${s}; document.getElementById('inst_q_container_${i}').style.borderColor='transparent'; document.getElementById('inst_q_container_${i}').style.background='var(--bg-secondary)'; document.querySelectorAll('#instLikert_${i} button').forEach((b,idx)=>{b.style.borderColor=idx===${s - 1}?'var(--accent-primary)':'var(--border-color)';b.style.background=idx===${s - 1}?'var(--accent-primary)':'var(--bg-card)';b.style.color=idx===${s - 1}?'white':'inherit';})" 
                                     style="border:2px solid var(--border-color); background:var(--bg-card);">
                                 <span style="font-weight:700; font-size:1.15rem; line-height:1;">${s}</span>
-                                <span class="likert-btn-label">${likertLabels[s-1]}</span>
+                                <span class="likert-btn-label">${likertLabels[s - 1]}</span>
                             </button>
                         `).join('')}
                     </div>
@@ -797,7 +797,7 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
         </div>
 
         <div style="position: sticky; bottom: -16px; z-index: 100; background: var(--bg-modal); padding: 12px 20px 16px 20px; margin: 0 -20px -16px -20px; border-top: 1px solid var(--border-color);">
-            <button class="btn btn-primary" style="width:100%;font-size:1.05rem;padding:10px;" onclick="submitStandaloneInstructorEval('${instructorId.replace(/'/g,"\\\\'")}', '${courseCode}', '${courseName.replace(/'/g,"\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
+            <button class="btn btn-primary" style="width:100%;font-size:1.05rem;padding:10px;" onclick="submitStandaloneInstructorEval('${instructorId.replace(/'/g, "\\\\'")}', '${courseCode}', '${courseName.replace(/'/g, "\\\\'")}')">ส่งแบบประเมินอาจารย์</button>
         </div>
     </div>`;
 
@@ -806,21 +806,21 @@ window.openInstructorEvalModal = function(instructorId, courseCode, courseName) 
     openModal('ประเมินอาจารย์ผู้สอน', buildHtml());
 };
 
-window.submitStandaloneInstructorEval = async function(instructorId, courseCode, courseName) {
+window.submitStandaloneInstructorEval = async function (instructorId, courseCode, courseName) {
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
     const skipped = window._instSkipped || false;
     const scores = window._instScores || {};
-    
+
     // Check validation
     if (!skipped) {
         const instQuestions = MOCK.evalInstructorQuestions || [];
-        const questionsList = instQuestions.length > 0 ? instQuestions.map(q=>({id:q.question_id, text:q.question_text})) : [1,2,3,4,5,6].map(id=>({id, text:'Question'}));
+        const questionsList = instQuestions.length > 0 ? instQuestions.map(q => ({ id: q.question_id, text: q.question_text })) : [1, 2, 3, 4, 5, 6].map(id => ({ id, text: 'Question' }));
         let unansweredCount = 0;
         const unansweredIndices = [];
-        
+
         questionsList.forEach((q, i) => {
             const isText = String(q.text).includes('ข้อเสนอแนะ') || String(q.id).toLowerCase().includes('text');
-            if (!isText && !scores['q_'+q.id]) {
+            if (!isText && !scores['q_' + q.id]) {
                 unansweredCount++;
                 unansweredIndices.push(i);
             }
@@ -840,11 +840,11 @@ window.submitStandaloneInstructorEval = async function(instructorId, courseCode,
             const alertMsg = `โปรดระบุคำตอบให้ครบถ้วน\n(คุณข้ามคำถามไป ${unansweredCount} ข้อ)`;
             if (typeof showToast === 'function') showToast(alertMsg, 'error');
             else alert(alertMsg);
-            
+
             return;
         }
     }
-    
+
     showApiLoading('กำลังบันทึกผลการประเมินอาจารย์...');
 
     await postData('submitEvaluation', {
@@ -874,9 +874,9 @@ window.submitStandaloneInstructorEval = async function(instructorId, courseCode,
     renderPage();
 };
 
-window.quickSkipInstructor = async function(instructorId, courseCode, courseName) {
+window.quickSkipInstructor = async function (instructorId, courseCode, courseName) {
     if (!confirm('คุณยืนยันที่จะ "ข้าม" การประเมินอาจารย์ท่านนี้ เนื่องจากไม่ได้เรียนด้วย ใช่หรือไม่?')) return;
-    
+
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
     showApiLoading('กำลังบันทึก...');
 
@@ -915,7 +915,7 @@ window.quickSkipInstructor = async function(instructorId, courseCode, courseName
         hideApiLoading();
         renderPage();
         if (typeof showToast === 'function') showToast('ข้ามการประเมินสำเร็จ', 'success');
-        
+
     } catch (err) {
         hideApiLoading();
         alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
