@@ -7,7 +7,21 @@ pages.courses = function() {
         <div class="page-header" style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
                 <h1 class="page-title">รายวิชา</h1>
-                <p class="page-subtitle">รายวิชาทั้งหมดที่เปิดสอนในภาคเรียนปัจจุบัน</p>
+                <div style="display:flex; gap:8px; margin-top:8px;">
+                    <select class="form-select" id="filterYear" style="width:auto;padding:6px 12px;font-size:0.85rem">
+                        <option value="">เลือกปีการศึกษา...</option>
+                        <option value="2566">2566</option>
+                        <option value="2567">2567</option>
+                        <option value="2568">2568</option>
+                        <option value="2569">2569</option>
+                    </select>
+                    <select class="form-select" id="filterSemester" style="width:auto;padding:6px 12px;font-size:0.85rem">
+                        <option value="">เลือกภาคเรียน...</option>
+                        <option value="1">ภาคเรียนที่ 1</option>
+                        <option value="2">ภาคเรียนที่ 2</option>
+                        <option value="3">ภาคฤดูร้อน</option>
+                    </select>
+                </div>
             </div>
             <div style="display:flex;gap:8px; align-items:center;">
                 ${(window.currentUserRole === 'staff' || window.currentUserRole === 'admin') ? `
@@ -36,7 +50,7 @@ pages.courses = function() {
                         <thead><tr><th>รหัส</th><th>ชื่อวิชา</th><th>หน่วยกิต</th><th>ประเภท</th><th>อาจารย์</th><th>เวลา</th><th>ห้อง</th><th>ที่นั่ง</th><th>สถานะ</th></tr></thead>
                         <tbody>
                             ${MOCK.courses.map(c => `
-                                <tr data-type="${c.type}">
+                                <tr data-type="${c.type}" data-year="${c.year}" data-semester="${c.semester}">
                                     <td style="color:var(--accent-primary-hover);font-weight:600">${window.formatDisplayCode(c.code)}</td>
                                     <td>${c.name}</td>
                                     <td style="text-align:center">${c.credits}</td>
@@ -57,15 +71,68 @@ pages.courses = function() {
 };
 
 window.init_courses = function() {
-    const filter = document.getElementById('courseFilter');
-    if (filter) {
-        filter.addEventListener('change', () => {
-            const val = filter.value;
-            document.querySelectorAll('#courseTable tbody tr').forEach(row => {
-                row.style.display = (!val || row.dataset.type === val) ? '' : 'none';
-            });
+    const filterType = document.getElementById('courseFilter');
+    const filterYear = document.getElementById('filterYear');
+    const filterSemester = document.getElementById('filterSemester');
+    
+    function applyFilters() {
+        const typeVal = filterType ? filterType.value : '';
+        const yearVal = filterYear ? filterYear.value : '';
+        const semVal = filterSemester ? filterSemester.value : '';
+        
+        let hasCourses = false;
+        document.querySelectorAll('#courseTable tbody tr').forEach(row => {
+            const matchesType = !typeVal || row.dataset.type === typeVal;
+            const matchesYear = !yearVal || String(row.dataset.year) === String(yearVal);
+            
+            // Map ภาคฤดูร้อน to 3 if needed, or exact match
+            let rowSem = String(row.dataset.semester);
+            if (rowSem === 'ฤดูร้อน') rowSem = '3';
+            
+            const matchesSem = !semVal || rowSem === String(semVal);
+            
+            // User requested "instead of showing everything", so if no year/sem chosen, maybe show none?
+            // Let's hide if neither year nor semester is selected, OR just let it filter normally.
+            // Normally, empty dropdowns mean "Show All".
+            if (!yearVal && !semVal) {
+                row.style.display = 'none'; // Hide all implicitly until user selects something.
+            } else {
+                if (matchesType && matchesYear && matchesSem) {
+                    row.style.display = '';
+                    hasCourses = true;
+                } else {
+                    row.style.display = 'none';
+                }
+            }
         });
+        
+        // Show empty state if nothing matches
+        let tbody = document.querySelector('#courseTable tbody');
+        let emptyRow = document.getElementById('emptyCourseRow');
+        if (!hasCourses) {
+            if (!emptyRow) {
+                emptyRow = document.createElement('tr');
+                emptyRow.id = 'emptyCourseRow';
+                emptyRow.innerHTML = `<td colspan="9" style="text-align:center; padding:30px; color:var(--text-muted);">ไม่พบรายวิชาที่ค้นหา กรุณาเลือกปีการศึกษาและภาคเรียน</td>`;
+                tbody.appendChild(emptyRow);
+            } else {
+                emptyRow.style.display = '';
+            }
+        } else if (emptyRow) {
+            emptyRow.style.display = 'none';
+        }
     }
+
+    if (filterType) filterType.addEventListener('change', applyFilters);
+    if (filterYear) filterYear.addEventListener('change', applyFilters);
+    if (filterSemester) filterSemester.addEventListener('change', applyFilters);
+    
+    // Auto preset active year if available
+    if (filterYear && MOCK.activeYear) {
+        // filterYear.value = MOCK.activeYear; // Uncomment if we want to auto-fill
+    }
+    
+    applyFilters();
 };
 
 // ============================
