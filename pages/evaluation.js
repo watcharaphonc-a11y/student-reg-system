@@ -863,3 +863,51 @@ window.submitStandaloneInstructorEval = async function(instructorId, courseCode,
     closeModal();
     renderPage();
 };
+
+window.quickSkipInstructor = async function(instructorId, courseCode, courseName) {
+    if (!confirm('คุณยืนยันที่จะ "ข้าม" การประเมินอาจารย์ท่านนี้ เนื่องจากไม่ได้เรียนด้วย ใช่หรือไม่?')) return;
+    
+    const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
+    showApiLoading('กำลังบันทึก...');
+
+    try {
+        await postData('submitEvaluation', {
+            type: 'instructor',
+            studentId: studentId,
+            courseCode: courseCode,
+            courseName: courseName,
+            instructor: instructorId,
+            scores: {},
+            skipped: true,
+            comment: ''
+        });
+
+        // Update locally
+        if (!MOCK.evaluations) MOCK.evaluations = [];
+        const existingIdx = MOCK.evaluations.findIndex(e => e.studentId === studentId && e.courseCode === courseCode && e.instructor === instructorId && e.type === 'instructor');
+        if (existingIdx !== -1) {
+            MOCK.evaluations[existingIdx].scores = '{}';
+            MOCK.evaluations[existingIdx].skipped = true;
+            MOCK.evaluations[existingIdx].date = new Date().toISOString().split('T')[0];
+        } else {
+            MOCK.evaluations.push({
+                type: 'instructor',
+                studentId: studentId,
+                courseCode: courseCode,
+                courseName: courseName,
+                instructor: instructorId,
+                scores: '{}',
+                skipped: true,
+                date: new Date().toISOString().split('T')[0]
+            });
+        }
+
+        hideApiLoading();
+        renderPage();
+        if (typeof showToast === 'function') showToast('ข้ามการประเมินสำเร็จ', 'success');
+        
+    } catch (err) {
+        hideApiLoading();
+        alert('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
+    }
+};
