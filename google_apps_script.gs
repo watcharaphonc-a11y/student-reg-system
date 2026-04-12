@@ -1563,6 +1563,10 @@ function updateStudentDetail(payload) {
         if (colIdx === -1) {
           if (key === 'advisor') colIdx = rawHeaders.indexOf('อาจารย์ที่ปรึกษา');
           if (key === 'thesisAdvisor') colIdx = rawHeaders.indexOf('อาจารย์ที่ปรึกษาวิทยานิพนธ์');
+          if (key === 'workplace') colIdx = rawHeaders.indexOf('สถานที่ปฏิบัติงาน');
+          if (key === 'position') colIdx = rawHeaders.indexOf('ตำแหน่ง');
+          if (key === 'phone') colIdx = rawHeaders.indexOf('เบอร์โทร');
+          if (key === 'personalEmail') colIdx = rawHeaders.indexOf('อีเมลส่วนตัว');
         }
       }
       
