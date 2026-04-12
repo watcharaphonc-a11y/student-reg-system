@@ -277,13 +277,15 @@ pages['eval-instructor'] = function () {
                                 <div style="width:40px;height:40px;border-radius:50%;background:${isEval ? 'var(--success)' : 'var(--border-color)'};display:flex;align-items:center;justify-content:center;color:${isEval ? 'white' : 'var(--text-muted)'};font-weight:600;font-size:1rem; flex-shrink:0;">${ins.name[0] || '?'}</div>
                                 <div style="min-width: 0;">
                                     ${(() => {
-                let nameTokens = String(ins.name || '').trim().split(/\\s+/);
+                let nameStr = String(ins.name || '').trim();
+                let nameTokens = nameStr.split(/\s+/);
                 let htmlName = `<div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${ins.name}</div>`;
                 if (nameTokens.length > 1) {
-                    let lName = nameTokens.pop();
-                    let fName = nameTokens.join(' ');
+                    let splitIndex = nameTokens.length >= 3 ? 2 : 1;
+                    let fName = nameTokens.slice(0, splitIndex).join(' ');
+                    let lName = nameTokens.slice(splitIndex).join(' ');
                     htmlName = `<div style="font-weight:600; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'inherit'}; line-height: 1.3;">${fName}</div>
-                                                        <div style="font-weight:500; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'var(--text-primary)'}; line-height: 1.2; margin-top:2px; white-space:nowrap;">${lName}</div>`;
+                                <div style="font-weight:500; font-size:0.95rem; color:${isEval ? 'var(--success)' : 'var(--text-primary)'}; line-height: 1.2; margin-top:2px; white-space:nowrap;">${lName}</div>`;
                 }
                 return htmlName;
             })()}
