@@ -282,13 +282,13 @@ pages['eval-instructor'] = function() {
                                     </div>
                                 </div>
                             </div>
-                            <div style="display:flex; gap:8px;">
+                            <div style="display:flex; flex-direction:column; gap:6px; min-width: 200px;">
                                 ${isEval 
                                     ? (isEval.skipped 
-                                        ? `<button class="btn btn-sm" style="border:1px solid var(--warning); color:var(--warning); background:transparent;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ยกเลิก (เปลี่ยนเป็นประเมิน)</button>`
-                                        : '<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed;">ประเมินแล้ว</button>')
-                                    : `<button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-muted); background:white;" onclick="quickSkipInstructor('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ไม่ได้เรียนด้วย</button>
-                                       <button class="btn btn-primary btn-sm" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ทำแบบประเมิน</button>`
+                                        ? `<button class="btn btn-sm" style="border:1px solid var(--warning); color:var(--warning); background:transparent; width:100%;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ยกเลิก (เปลี่ยนเป็นประเมิน)</button>`
+                                        : '<button class="btn btn-sm" disabled style="opacity:0.5; background:var(--success); color:white; border:none; cursor:not-allowed; width:100%;">ประเมินแล้ว</button>')
+                                    : `<button class="btn btn-primary btn-sm" style="width:100%;" onclick="openInstructorEvalModal('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ทำแบบประเมิน</button>
+                                       <button class="btn btn-sm" style="border:1px solid var(--border-color); color:var(--text-muted); background:white; width:100%; font-size: 0.8rem;" onclick="quickSkipInstructor('${ins.id.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}', '${item.code}', '${item.name.replace(/'/g,"\\\\'").replace(/"/g,'\\\\"')}')">ไม่ได้เรียนกับอาจารย์ท่านนี้</button>`
                                 }
                             </div>
                         </div>`;
