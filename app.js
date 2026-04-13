@@ -278,8 +278,8 @@ async function bootApp() {
                 // Group enrollments into student.grades format
                 const gradesMap = {};
                 studentEnrollments.forEach(e => {
-                    const year = parseInt(e['academic_year'] || e['ปีการศึกษา'] || '0');
-                    const sem = parseInt(e['semester'] || e['ภาคเรียน'] || '0');
+                    const year = parseInt(e['ปีการศึกษา'] || e['academic_year'] || e.academicYear || '0');
+                    const sem = parseInt(e['ภาคเรียน'] || e['semester'] || '0');
                     const semKey = `${year}_${sem}`;
                     const semName = `ภาคเรียนที่ ${sem}/${year}`;
 
@@ -312,8 +312,8 @@ async function bootApp() {
                     }
 
                     gradesMap[semKey].courses.push({
-                        code: String(e['course_code'] || e['รหัสวิชา'] || '-').trim(),
-                        name: String(e['course_name'] || e['ชื่อวิชา'] || '-').trim(),
+                        code: String(e['รหัสวิชา'] || e['course_code'] || '-').trim(),
+                        name: String(e['ชื่อวิชา'] || e['course_name'] || '-').trim(),
                         credits: cCredits,
                         creditsDisplay: creditsRaw,
                         grade: cGrade,
