@@ -175,37 +175,49 @@ pages['eval-instructor'] = function () {
     const evals = MOCK.evaluations || [];
     const studentId = MOCK.student ? (MOCK.student.studentId || MOCK.student.id) : '';
 
-    // Group instructors by course from CourseInstructors sheet
+    // Group instructors by course+semester+year (key = normCode_sem_year)
+    // This ensures each year's class has a separate instructor list
     const courseInstructors = MOCK.courseInstructors || [];
-    const courseMap = {};
+    const courseMap = {}; // key: normCode_sem_year → { code, name, semester, academicYear, instructors[] }
     courseInstructors.forEach(ci => {
-        const code = String(ci.course_code || '').trim();
+        const code   = String(ci.course_code || '').trim();
+        const sem    = String(ci.semester || '').trim();
+        const year   = String(ci.academic_year || ci.year || '').trim();
         const normCode = normalizeCode(code);
-        if (!courseMap[normCode]) {
-            courseMap[normCode] = {
-                code: code, // Original display code
+        const mapKey = `${normCode}_${sem}_${year}`;
+
+        if (!courseMap[mapKey]) {
+            courseMap[mapKey] = {
+                code: code,
+                normCode: normCode,
                 name: ci.course_name || '',
-                semester: ci.semester || '',
-                academicYear: ci.academic_year || ci.year || '',
-                instructors: [] // Store as objects {id, name}
+                semester: sem,
+                academicYear: year,
+                instructors: []
             };
         }
         const instId = String(ci.instructor_id || ci.instructor_name || '').trim();
         const instName = getInstructorDisplayName(instId);
-        if (instId && !courseMap[normCode].instructors.find(ins => ins.id === instId)) {
-            courseMap[normCode].instructors.push({ id: instId, name: instName });
+        if (instId && !courseMap[mapKey].instructors.find(ins => ins.id === instId)) {
+            courseMap[mapKey].instructors.push({ id: instId, name: instName });
         }
     });
 
-    // Filter to only enrolled courses (or Study Plan fallback)
-    const enrolledCodes = new Set();
-    const enrolledArr = (MOCK.grades || []).flatMap(sem => sem.courses || []);
-    enrolledArr.forEach(c => enrolledCodes.add(normalizeCode(c.code)));
+    // Build enrollment lookup: normCode → { term, year } from student's actual enrollment
+    const enrolledSemMap = {};
+    (MOCK.grades || []).forEach(sem => {
+        (sem.courses || []).forEach(c => {
+            const norm = normalizeCode(c.code);
+            if (norm && !enrolledSemMap[norm]) {
+                enrolledSemMap[norm] = { term: String(sem.term), year: String(sem.year) };
+            }
+        });
+    });
 
-    // Fallback to Study Plan if no enrollments
+    // Fallback to Study Plan if enrollment data is empty
+    const enrolledCodes = new Set(Object.keys(enrolledSemMap));
     if (enrolledCodes.size === 0 && MOCK.student && typeof window.getStudyPlanForStudent === 'function') {
         const planInfo = window.getStudyPlanForStudent(MOCK.student);
-        // Show all courses for the current relative year up to the current semester
         const relevantSems = (planInfo.data || []).filter(s =>
             s.year === planInfo.relYear && s.sem <= planInfo.relSem
         );
@@ -213,33 +225,26 @@ pages['eval-instructor'] = function () {
             (currentSemData.courses || []).forEach(cStr => {
                 const code = String(cStr.split(' ')[0]).trim();
                 const norm = normalizeCode(code);
-                if (norm) enrolledCodes.add(norm);
+                if (norm) {
+                    enrolledCodes.add(norm);
+                    enrolledSemMap[norm] = {
+                        term: String(currentSemData.sem),
+                        year: String(planInfo.startYear + (currentSemData.year - 1))
+                    };
+                }
             });
         });
     }
 
-    // Build enrollment lookup: normCode → { term, year } from student's actual enrollment data
-    const enrolledSemMap = {};
-    (MOCK.grades || []).forEach(sem => {
-        (sem.courses || []).forEach(c => {
-            const norm = normalizeCode(c.code);
-            if (norm && !enrolledSemMap[norm]) {
-                enrolledSemMap[norm] = { term: sem.term, year: sem.year };
-            }
-        });
+    // Match CourseInstructors entries to the student's specific semester+year for each enrolled course
+    const evalItems = [];
+    Object.entries(enrolledSemMap).forEach(([normCode, enrollment]) => {
+        const mapKey = `${normCode}_${enrollment.term}_${enrollment.year}`;
+        const entry = courseMap[mapKey];
+        if (entry && entry.instructors.length > 0) {
+            evalItems.push(entry);
+        }
     });
-
-    const evalItems = Object.values(courseMap)
-        .filter(c => enrolledCodes.has(normalizeCode(c.code)))
-        .map(c => {
-            // Override semester/year from enrollment data (student-specific), not from CourseInstructors sheet
-            const enrollment = enrolledSemMap[normalizeCode(c.code)];
-            return {
-                ...c,
-                semester: enrollment ? enrollment.term : c.semester,
-                academicYear: enrollment ? enrollment.year : c.academicYear
-            };
-        });
 
     let totalInstructors = 0;
     let completedInstructors = 0;
