@@ -218,7 +218,28 @@ pages['eval-instructor'] = function () {
         });
     }
 
-    const evalItems = Object.values(courseMap).filter(c => enrolledCodes.has(normalizeCode(c.code)));
+    // Build enrollment lookup: normCode → { term, year } from student's actual enrollment data
+    const enrolledSemMap = {};
+    (MOCK.grades || []).forEach(sem => {
+        (sem.courses || []).forEach(c => {
+            const norm = normalizeCode(c.code);
+            if (norm && !enrolledSemMap[norm]) {
+                enrolledSemMap[norm] = { term: sem.term, year: sem.year };
+            }
+        });
+    });
+
+    const evalItems = Object.values(courseMap)
+        .filter(c => enrolledCodes.has(normalizeCode(c.code)))
+        .map(c => {
+            // Override semester/year from enrollment data (student-specific), not from CourseInstructors sheet
+            const enrollment = enrolledSemMap[normalizeCode(c.code)];
+            return {
+                ...c,
+                semester: enrollment ? enrollment.term : c.semester,
+                academicYear: enrollment ? enrollment.year : c.academicYear
+            };
+        });
 
     let totalInstructors = 0;
     let completedInstructors = 0;
