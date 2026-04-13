@@ -57,6 +57,12 @@ pages['eval-course'] = function () {
         });
     }
 
+    // Filter out courses from semesters before the student's admission year
+    const admissionYear = parseInt((MOCK.student && MOCK.student.admissionYear) || 0);
+    if (admissionYear > 0) {
+        enrolled = enrolled.filter(c => !c.year || c.year >= admissionYear);
+    }
+
     // Deduplicate by normalized course code
     const uniqueEnrolled = [];
     const seenCodes = new Set();
