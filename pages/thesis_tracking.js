@@ -6,7 +6,7 @@ const THESIS_MILESTONES = [
     { id: 'M1',  label: 'เสนอหัวข้อวิทยานิพนธ์',            icon: '📝', fields: [] },
     { id: 'M2',  label: 'แต่งตั้งอาจารย์ที่ปรึกษา',       icon: '👤', fields: [] },
     { id: 'M3',  label: 'สอบโครงร่างวิทยานิพนธ์',           icon: '🎯', fields: [] },
-    { id: 'M4',  label: 'พิจารณาจริยธรรมการวิจัย (EC)',     icon: '⚖️', fields: [{ id: 'EthicsNo', label: 'เลขรับรอง/อนุมัติ EC', type: 'text' }] },
+    { id: 'M4',  label: 'พิจารณาจริยธรรมการวิจัย (EC)',     icon: '⚖️', fields: [{ id: 'EthicsNo1', label: 'เลขรับรอง/อนุมัติ EC (1)', type: 'text' }, { id: 'EthicsNo2', label: 'เลขรับรอง/อนุมัติ EC (2)', type: 'text' }] },
     { id: 'M5',  label: 'สอบป้องกันวิทยานิพนธ์',            icon: '🛡️', fields: [{ id: 'Score', label: 'ผลประเมิน/คะแนนสอบ', type: 'text' }] },
     { id: 'M6',  label: 'เผยแพร่ผลงาน (บทความวิชาการ)',      icon: '🌐', fields: [{ id: 'Journal', label: 'ชื่อวารสาร/สถานที่ตีพิมพ์', type: 'text' }] },
     { id: 'M7',  label: 'แก้ไขตามมติกรรมการ',               icon: '✍️', fields: [] },
