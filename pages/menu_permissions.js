@@ -48,7 +48,13 @@ pages['menu-permissions'] = function() {
         { id: 'nav-manage-forms', label: 'จัดการแบบฟอร์ม', section: 'ตั้งค่าระบบ' },
         { id: 'nav-admission', label: 'จัดการการรับสมัคร', section: 'ตั้งค่าระบบ' },
         { id: 'nav-thesis-dashboard', label: 'รายงานความก้าวหน้า', section: 'วิทยานิพนธ์' },
-        { id: 'nav-thesis-update', label: 'อัปเดตสถานะวิทยานิพนธ์', section: 'วิทยานิพนธ์' }
+        { id: 'nav-thesis-update', label: 'อัปเดตสถานะวิทยานิพนธ์', section: 'วิทยานิพนธ์' },
+        { id: 'nav-student-presentation', label: 'นำเสนอผลงานของนักศึกษา', section: 'วิทยานิพนธ์' },
+        { id: 'nav-eval-curriculum', label: 'ประเมินการบริหารหลักสูตร', section: 'แบบประเมินอื่นๆ' },
+        { id: 'nav-eval-facilities', label: 'ประเมินสิ่งสนับสนุนการเรียนรู้', section: 'แบบประเมินอื่นๆ' },
+        { id: 'nav-eval-services', label: 'ประเมินการบริการนักศึกษา', section: 'แบบประเมินอื่นๆ' },
+        { id: 'nav-eval-learning-outcomes', label: 'ประเมินผลลัพธ์การเรียนรู้ (หลักสูตร)', section: 'แบบประเมินอื่นๆ' },
+        { id: 'nav-eval-leadership', label: 'แบบประเมินอัตลักษณ์ผู้นำ', section: 'แบบประเมินอื่นๆ' }
     ];
 
     const roles = [
