@@ -96,7 +96,7 @@ pages.dashboard = function() {
         </div>
 
         <!-- Student List (Full Width) -->
-        <div class="card animate-in animate-delay-2">
+        <div class="card animate-in animate-delay-2" style="margin-bottom: 24px;">
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 class="card-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
@@ -114,7 +114,7 @@ pages.dashboard = function() {
 
         ${(window.currentUserRole === 'admin') ? `
         <!-- Teacher List (Full Width) -->
-        <div class="card animate-in animate-delay-3">
+        <div class="card animate-in animate-delay-3" style="margin-bottom: 24px;">
             <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                 <h3 class="card-title">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:middle; margin-right:6px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -130,60 +130,24 @@ pages.dashboard = function() {
         </div>
         ` : ''}
 
-        <div class="grid-2">
-            <div class="card animate-in animate-delay-2">
-                <div class="card-header">
-                    <h3 class="card-title">GPA แต่ละภาคเรียน</h3>
-                </div>
-                <div class="card-body">
-                    <div class="bar-chart" id="gpaChart">
-                        ${(MOCK.gpaHistory || []).map(h => `
-                            <div class="bar-group">
-                                <div class="bar" style="height:${(parseFloat(h.gpa || 0)/4)*180}px;background:var(--accent-gradient);">
-                                    <span class="bar-value">${parseFloat(h.gpa || 0).toFixed(2)}</span>
-                                </div>
-                                <span class="bar-label">${h.semester || '-'}</span>
+        <!-- Recent Activities (Full Width now) -->
+        <div class="card animate-in animate-delay-4" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h3 class="card-title">กิจกรรมล่าสุด</h3>
+            </div>
+            <div class="card-body">
+                <div class="activity-list">
+                    ${(MOCK.recentActivities || []).map(a => `
+                        <div class="activity-item">
+                            <div class="activity-dot ${a.color || 'purple'}"></div>
+                            <div>
+                                <div class="activity-text">${a.text || '-'}</div>
+                                <div class="activity-time">${a.time || '-'}</div>
                             </div>
-                        `).join('')}
-                    </div>
+                        </div>
+                    `).join('')}
                 </div>
             </div>
-            <div class="card animate-in animate-delay-3">
-                <div class="card-header">
-                    <h3 class="card-title">กิจกรรมล่าสุด</h3>
-                </div>
-                <div class="card-body">
-                    <div class="activity-list">
-                        ${(MOCK.recentActivities || []).map(a => `
-                            <div class="activity-item">
-                                <div class="activity-dot ${a.color || 'purple'}"></div>
-                                <div>
-                                    <div class="activity-text">${a.text || '-'}</div>
-                                    <div class="activity-time">${a.time || '-'}</div>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="card animate-in animate-delay-4">
-                <div class="card-header">
-                    <h3 class="card-title">รายวิชาที่ลงทะเบียน ภาคเรียนปัจจุบัน</h3>
-                    <span class="badge info">${enrolledCourses.length} วิชา / ${enrolledCourses.reduce((s,c)=>s+(parseFloat(c.credits)||0),0)} หน่วยกิต</span>
-                </div>
-                <div class="card-body">
-                    <div class="table-wrapper">
-                        <table class="data-table">
-                            <thead><tr><th>รหัสวิชา</th><th>ชื่อวิชา</th><th>หน่วยกิต</th><th>อาจารย์</th><th>เวลาเรียน</th><th>ห้อง</th></tr></thead>
-                            <tbody>
-                                ${enrolledCourses.map(c => `
-                                    <tr><td style="color:var(--accent-primary-hover);font-weight:600">${c.code || '-'}</td><td>${c.name || '-'}</td><td style="text-align:center">${c.credits || 0}</td><td>${c.instructor || '-'}</td><td>${c.schedule || '-'}</td><td>${c.room || '-'}</td></tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
         </div>
     </div>`;
 };
