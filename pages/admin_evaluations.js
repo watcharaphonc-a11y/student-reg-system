@@ -1,7 +1,7 @@
 // ============================
 // Admin: Manage Evaluations (Per-course questions + Instructor mapping)
 // ============================
-pages['manage-evals'] = function() {
+pages['manage-evals'] = function () {
     const evalQuestions = MOCK.evalQuestions || [];
     const courseInstructors = MOCK.courseInstructors || [];
     const instQuestions = MOCK.evalInstructorQuestions || [];
@@ -110,7 +110,7 @@ pages['manage-evals'] = function() {
                                         <span style="color:var(--text-muted); font-size:0.85rem;"> — ${info.instructors.length} คน</span>
                                     </div>
                                     <div style="font-size:0.8rem; color:var(--text-muted); margin-top:2px;">
-                                        ${info.instructors.map(ins => `${ins.name} (${ins.id})`).slice(0,3).join(', ')}${info.instructors.length > 3 ? '...' : ''}
+                                        ${info.instructors.map(ins => `${ins.name} (${ins.id})`).slice(0, 3).join(', ')}${info.instructors.length > 3 ? '...' : ''}
                                     </div>
                                 </div>
                             `).join('')}
@@ -147,9 +147,9 @@ pages['manage-evals'] = function() {
                     <div style="border-top:1px solid var(--border-color); padding-top:16px; margin-top:16px;">
                         <h5 style="margin-bottom:8px;">คำถามที่มีในระบบ (${instQuestions.length} ข้อ)</h5>
                         <div style="max-height:150px; overflow-y:auto;">
-                            ${instQuestions.map((q,i) => `
+                            ${instQuestions.map((q, i) => `
                                 <div style="padding:6px 12px; font-size:0.85rem; background:var(--bg-secondary); border-radius:var(--radius-sm); margin-bottom:4px;">
-                                    ${i+1}. ${q.question_text || q.question}
+                                    ${i + 1}. ${q.question_text || q.question}
                                 </div>
                             `).join('')}
                         </div>
@@ -159,63 +159,63 @@ pages['manage-evals'] = function() {
 
             <!-- 4. ประเมินการบริหารหลักสูตร -->
             ${renderOtherEvalAdminCard({
-                cardDelay: 'animate-delay-4',
-                title: 'คำถามประเมินการบริหารหลักสูตร',
-                description: 'คำถามที่ใช้ในแบบประเมินการบริหารหลักสูตร',
-                type: 'curriculum_questions',
-                uploadId: 'curriculumQUpload',
-                previewId: 'curriculumQPreview',
-                mockKey: 'evalCurriculumQuestions',
-                currentList: MOCK.evalCurriculumQuestions || []
-            })}
+        cardDelay: 'animate-delay-4',
+        title: 'คำถามประเมินการบริหารหลักสูตร',
+        description: 'คำถามที่ใช้ในแบบประเมินการบริหารหลักสูตร',
+        type: 'curriculum_questions',
+        uploadId: 'curriculumQUpload',
+        previewId: 'curriculumQPreview',
+        mockKey: 'evalCurriculumQuestions',
+        currentList: MOCK.evalCurriculumQuestions || []
+    })}
 
             <!-- 5. ประเมินสิ่งสนับสนุนการเรียนรู้ -->
             ${renderOtherEvalAdminCard({
-                cardDelay: 'animate-delay-5',
-                title: 'คำถามประเมินสิ่งสนับสนุนการเรียนรู้',
-                description: 'คำถามที่ใช้ในแบบประเมินสิ่งสนับสนุนการเรียนรู้',
-                type: 'facilities_questions',
-                uploadId: 'facilitiesQUpload',
-                previewId: 'facilitiesQPreview',
-                mockKey: 'evalFacilitiesQuestions',
-                currentList: MOCK.evalFacilitiesQuestions || []
-            })}
+        cardDelay: 'animate-delay-5',
+        title: 'คำถามประเมินสิ่งสนับสนุนการเรียนรู้',
+        description: 'คำถามที่ใช้ในแบบประเมินสิ่งสนับสนุนการเรียนรู้',
+        type: 'facilities_questions',
+        uploadId: 'facilitiesQUpload',
+        previewId: 'facilitiesQPreview',
+        mockKey: 'evalFacilitiesQuestions',
+        currentList: MOCK.evalFacilitiesQuestions || []
+    })}
 
             <!-- 6. ประเมินการบริการนักศึกษา -->
             ${renderOtherEvalAdminCard({
-                cardDelay: 'animate-delay-1',
-                title: 'คำถามประเมินการบริการนักศึกษา',
-                description: 'คำถามที่ใช้ในแบบประเมินการบริการนักศึกษา',
-                type: 'services_questions',
-                uploadId: 'servicesQUpload',
-                previewId: 'servicesQPreview',
-                mockKey: 'evalServicesQuestions',
-                currentList: MOCK.evalServicesQuestions || []
-            })}
+        cardDelay: 'animate-delay-1',
+        title: 'คำถามประเมินการบริการนักศึกษา',
+        description: 'คำถามที่ใช้ในแบบประเมินการบริการนักศึกษา',
+        type: 'services_questions',
+        uploadId: 'servicesQUpload',
+        previewId: 'servicesQPreview',
+        mockKey: 'evalServicesQuestions',
+        currentList: MOCK.evalServicesQuestions || []
+    })}
 
             <!-- 7. ประเมินผลลัพธ์การเรียนรู้ -->
             ${renderOtherEvalAdminCard({
-                cardDelay: 'animate-delay-2',
-                title: 'คำถามประเมินผลลัพธ์การเรียนรู้ (หลักสูตร)',
-                description: 'คำถามที่ใช้ในแบบประเมินผลลัพธ์การเรียนรู้ระดับหลักสูตร (PLOs)',
-                type: 'learning_outcomes_questions',
-                uploadId: 'learningQUpload',
-                previewId: 'learningQPreview',
-                mockKey: 'evalLearningOutcomesQuestions',
-                currentList: MOCK.evalLearningOutcomesQuestions || []
-            })}
+        cardDelay: 'animate-delay-2',
+        title: 'คำถามประเมินผลลัพธ์การเรียนรู้ (หลักสูตร)',
+        description: 'คำถามที่ใช้ในแบบประเมินผลลัพธ์การเรียนรู้ระดับหลักสูตร (PLOs)',
+        type: 'learning_outcomes_questions',
+        uploadId: 'learningQUpload',
+        previewId: 'learningQPreview',
+        mockKey: 'evalLearningOutcomesQuestions',
+        currentList: MOCK.evalLearningOutcomesQuestions || []
+    })}
 
-            <!-- 8. แบบประเมินอัตลักษณ์ผู้นำ -->
+            <!-- 8. ประเมินอัตลักษณ์ผู้นำ -->
             ${renderOtherEvalAdminCard({
-                cardDelay: 'animate-delay-3',
-                title: 'คำถามแบบประเมินอัตลักษณ์ผู้นำ',
-                description: 'คำถามที่ใช้ในแบบประเมินทักษะและพฤติกรรมผู้นำ',
-                type: 'leadership_questions',
-                uploadId: 'leadershipQUpload',
-                previewId: 'leadershipQPreview',
-                mockKey: 'evalLeadershipQuestions',
-                currentList: MOCK.evalLeadershipQuestions || []
-            })}
+        cardDelay: 'animate-delay-3',
+        title: 'คำถามประเมินอัตลักษณ์ผู้นำ',
+        description: 'คำถามที่ใช้ในแบบประเมินทักษะและพฤติกรรมผู้นำ',
+        type: 'leadership_questions',
+        uploadId: 'leadershipQUpload',
+        previewId: 'leadershipQPreview',
+        mockKey: 'evalLeadershipQuestions',
+        currentList: MOCK.evalLeadershipQuestions || []
+    })}
 
         </div>
     </div>`;
@@ -255,7 +255,7 @@ function renderOtherEvalAdminCard({ cardDelay, title, description, type, uploadI
                 <div style="max-height:150px; overflow-y:auto;">
                     ${currentList.map((q, i) => `
                         <div style="padding:6px 12px; font-size:0.85rem; background:var(--bg-secondary); border-radius:var(--radius-sm); margin-bottom:4px;">
-                            ${i+1}. ${q.question_text || q.question || ''}
+                            ${i + 1}. ${q.question_text || q.question || ''}
                         </div>
                     `).join('')}
                 </div>
@@ -267,7 +267,7 @@ function renderOtherEvalAdminCard({ cardDelay, title, description, type, uploadI
 // ============================
 // Download CSV Templates
 // ============================
-window.downloadEvalTemplate = function(type) {
+window.downloadEvalTemplate = function (type) {
     const BOM = '\uFEFF';
     let headers = [];
     let sampleRows = [];
@@ -351,7 +351,7 @@ window.downloadEvalTemplate = function(type) {
             ['4', 'ความสามารถในการสร้างแรงบันดาลใจและกระตุ้นให้เกิดการทำงานเป็นทีมที่มีประสิทธิภาพ'],
             ['5', 'ความเสียสละและการคำนึงถึงประโยชน์ส่วนรวมมากกว่าประโยชน์ส่วนตน']
         ];
-        filename = 'template_คำถามแบบประเมินอัตลักษณ์ผู้นำ.csv';
+        filename = 'template_คำถามประเมินอัตลักษณ์ผู้นำ.csv';
     }
 
     let csvContent = BOM + headers.join(',') + '\n' + sampleRows.map(row => '"' + row.join('","') + '"').join('\n');
@@ -367,15 +367,15 @@ window.downloadEvalTemplate = function(type) {
 // ============================
 // Handle CSV Upload
 // ============================
-window.handleEvalUpload = function(input, type) {
+window.handleEvalUpload = function (input, type) {
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
-    
+
     const reader = new FileReader();
-    reader.onload = function(e) {
+    reader.onload = function (e) {
         const text = e.target.result;
         const lines = text.split('\n').filter(l => l.trim().length > 0);
-        
+
         if (lines.length < 2) {
             alert('ไฟล์ต้องมีอย่างน้อย 1 แถวหัวตาราง และ 1 แถวข้อมูล');
             return;
@@ -428,7 +428,7 @@ window.handleEvalUpload = function(input, type) {
                 ยืนยันการนำเข้าข้อมูล
             </button>
         `;
-        
+
         document.getElementById(previewId).innerHTML = html;
         input.value = '';
     };
@@ -449,9 +449,9 @@ function parseCSVLineSimple(line) {
     return result;
 }
 
-window.saveEvalImport = function(type, jsonStr) {
+window.saveEvalImport = function (type, jsonStr) {
     const dataRows = JSON.parse(decodeURIComponent(jsonStr));
-    
+
     if (type === 'course_questions') {
         MOCK.evalQuestions = dataRows;
     } else if (type === 'course_instructors') {

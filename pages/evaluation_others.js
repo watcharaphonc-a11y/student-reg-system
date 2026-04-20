@@ -48,7 +48,7 @@ function renderGenericEvaluationForm(evalId, title, subtitle, questions) {
     const questionRows = questions.map((q, idx) => `
         <div style="margin-bottom:12px; padding:12px 16px; background:var(--bg-secondary); border-radius:var(--radius-md); border:2px solid transparent;">
             <label style="font-size:0.92rem; font-weight:500; display:block; margin-bottom:8px; color:var(--text-primary); line-height:1.3;">
-                ${idx+1}. ${q} <span style="color:var(--danger)">*</span>
+                ${idx + 1}. ${q} <span style="color:var(--danger)">*</span>
             </label>
             <div style="display:grid; grid-template-columns:repeat(5, 1fr); gap:6px; max-width:100%;">
                 ${[1, 2, 3, 4, 5].map(s => `
@@ -110,7 +110,7 @@ function renderGenericEvaluationForm(evalId, title, subtitle, questions) {
     `;
 }
 
-window.updateGenericLikertUI = function(radioName) {
+window.updateGenericLikertUI = function (radioName) {
     const radios = document.getElementsByName(radioName);
     radios.forEach(r => {
         const box = document.getElementById(\`lbl_\${radioName}_\${r.value}\`);
@@ -154,7 +154,7 @@ window.submitGenericEvaluation = function(e, evalId, title) {
         window.hideLoading && window.hideLoading();
         
         let modalHtml = `
-        <div style="text-align:center; padding:20px;">
+            < div style = "text-align:center; padding:20px;" >
             <div style="font-size:3.5rem; margin-bottom:16px;">🙏</div>
             <h3 style="color:var(--success); margin-bottom:12px;">ขอบคุณสำหรับการประเมิน!</h3>
             <p style="color:var(--text-secondary); margin-bottom:24px; line-height:1.6;">
@@ -162,12 +162,12 @@ window.submitGenericEvaluation = function(e, evalId, title) {
                 ข้อมูลของคุณจะถูกนำไปใช้เพื่อการพัฒนาและปรับปรุงให้ดียิ่งขึ้น
             </p>
             <button class="btn btn-primary" onclick="window.closeModalAndRedirect()">ตกลง</button>
-        </div>
-        `;
+        </div >
+            `;
         
         if (typeof openModal === 'function') {
             openModal('ส่งผลการประเมินสำเร็จ', modalHtml);
-            document.getElementById(`form_${evalId}`).reset();
+            document.getElementById(`form_${ evalId } `).reset();
         } else {
             alert('ส่งผลการประเมินสำเร็จ');
         }
@@ -181,27 +181,36 @@ window.closeModalAndRedirect = function() {
 
 // --- การสร้างเมนูหน้าประเมินเชื่อมกับ Routing ---
 
-// 2. ประเมินความพึงพอใจต่อการบริหารหลักสูตร
+// Helper: ดึงคำถามจาก MOCK ถ้ามี ไม่งั้นใช้ EVAL_QUESTIONS เดิม
+function getEvalQuestions(mockKey, fallbackKey) {
+    const fromMock = MOCK[mockKey];
+    if (fromMock && fromMock.length > 0) {
+        return fromMock.map(q => q.question_text || q.question || '');
+    }
+    return EVAL_QUESTIONS[fallbackKey] || [];
+}
+
+// 1. ประเมินความพึงพอใจต่อการบริหารหลักสูตร
 pages['eval-curriculum'] = function () {
-    return renderGenericEvaluationForm('curriculum', "ประเมินความพึงพอใจต่อการบริหารหลักสูตร", "กรุณาประเมินระดับความพึงพอใจต่อภาพรวมของการบริหารหลักสูตร", EVAL_QUESTIONS['curriculum']);
+    return renderGenericEvaluationForm('curriculum', "ประเมินความพึงพอใจต่อการบริหารหลักสูตร", "กรุณาประเมินระดับความพึงพอใจต่อภาพรวมของการบริหารหลักสูตร", getEvalQuestions('evalCurriculumQuestions', 'curriculum'));
 };
 
-// 3. ประเมินความพึงพอใจต่อสิ่งสนับสนุนการเรียนรู้
+// 2. ประเมินความพึงพอใจต่อสิ่งสนับสนุนการเรียนรู้
 pages['eval-facilities'] = function () {
-    return renderGenericEvaluationForm('facilities', "ประเมินความพึงพอใจต่อสิ่งสนับสนุนการเรียนรู้", "แบบประเมินทรัพยากร ห้องสมุด ระบบอินเทอร์เน็ต คอมพิวเตอร์ และสถานที่", EVAL_QUESTIONS['facilities']);
+    return renderGenericEvaluationForm('facilities', "ประเมินความพึงพอใจต่อสิ่งสนับสนุนการเรียนรู้", "แบบประเมินทรัพยากร ห้องสมุด ระบบอินเทอร์เน็ต คอมพิวเตอร์ และสถานที่", getEvalQuestions('evalFacilitiesQuestions', 'facilities'));
 };
 
-// 4. ประเมินความพึงพอใจต่อการบริการนักศึกษา
+// 3. ประเมินความพึงพอใจต่อการบริการนักศึกษา
 pages['eval-services'] = function () {
-    return renderGenericEvaluationForm('services', "ประเมินความพึงพอใจต่อการบริการนักศึกษา", "ประเมินการบริการของเจ้าหน้าที่ การให้คำปรึกษา และสวัสดิการมหาวิทยาลัย", EVAL_QUESTIONS['services']);
+    return renderGenericEvaluationForm('services', "ประเมินความพึงพอใจต่อการบริการนักศึกษา", "ประเมินการบริการของเจ้าหน้าที่ การให้คำปรึกษา และสวัสดิการมหาวิทยาลัย", getEvalQuestions('evalServicesQuestions', 'services'));
 };
 
-// 5. ประเมินผลลัพธ์การเรียนรู้ระดับหลักสูตร
+// 4. ประเมินผลลัพธ์การเรียนรู้ระดับหลักสูตร
 pages['eval-learning-outcomes'] = function () {
-    return renderGenericEvaluationForm('learning-outcomes', "ประเมินผลลัพธ์การเรียนรู้ (หลักสูตร)", "ประเมินพัฒนาการของตนเองตามเกณฑ์มาตรฐานผลลัพธ์การเรียนรู้ (PLOs)", EVAL_QUESTIONS['learning-outcomes']);
+    return renderGenericEvaluationForm('learning-outcomes', "ประเมินผลลัพธ์การเรียนรู้ (หลักสูตร)", "ประเมินพัฒนาการของตนเองตามเกณฑ์มาตรฐานผลลัพธ์การเรียนรู้ (PLOs)", getEvalQuestions('evalLearningOutcomesQuestions', 'learning-outcomes'));
 };
 
-// 6. แบบประเมินอัตลักษณ์ผู้นำ
+// 5. ประเมินอัตลักษณ์ผู้นำ
 pages['eval-leadership'] = function () {
-    return renderGenericEvaluationForm('leadership', "แบบประเมินอัตลักษณ์ผู้นำ", "แบบประเมินทักษะและพฤติกรรมสะท้อนความเป็นผู้นำของนักศึกษา", EVAL_QUESTIONS['leadership']);
+    return renderGenericEvaluationForm('leadership', "ประเมินอัตลักษณ์ผู้นำ", "แบบประเมินทักษะและพฤติกรรมสะท้อนความเป็นผู้นำของนักศึกษา", getEvalQuestions('evalLeadershipQuestions', 'leadership'));
 };
