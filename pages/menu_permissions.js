@@ -23,8 +23,8 @@ pages['menu-permissions'] = function() {
         { id: 'nav-study-plan', label: 'แผนการศึกษา', section: 'ทะเบียน' },
         { id: 'nav-grades', label: 'ผลการเรียน / เกรด', section: 'ผลการศึกษา' },
         { id: 'nav-schedule', label: 'ตารางเรียน', section: 'ผลการศึกษา' },
-        { id: 'nav-eval-course', label: 'ประเมินรายวิชา', section: 'ผลการศึกษา' },
-        { id: 'nav-eval-instructor', label: 'ประเมินอาจารย์ผู้สอน', section: 'ผลการศึกษา' },
+        { id: 'nav-eval-course', label: 'ประเมินรายวิชา', section: 'แบบประเมิน' },
+        { id: 'nav-eval-instructor', label: 'ประเมินอาจารย์ผู้สอน', section: 'แบบประเมิน' },
         { id: 'nav-transcript', label: 'ใบแสดงผลการศึกษา', section: 'ผลการศึกษา' },
         { id: 'nav-exams', label: 'ผลการสอบ', section: 'ผลการศึกษา' },
         { id: 'nav-graduation', label: 'ยื่นเรื่องสำเร็จการศึกษา', section: 'ผลการศึกษา' },
@@ -50,11 +50,11 @@ pages['menu-permissions'] = function() {
         { id: 'nav-thesis-dashboard', label: 'รายงานความก้าวหน้า', section: 'วิทยานิพนธ์' },
         { id: 'nav-thesis-update', label: 'อัปเดตสถานะวิทยานิพนธ์', section: 'วิทยานิพนธ์' },
         { id: 'nav-student-presentation', label: 'นำเสนอผลงานของนักศึกษา', section: 'วิทยานิพนธ์' },
-        { id: 'nav-eval-curriculum', label: 'ประเมินการบริหารหลักสูตร', section: 'แบบประเมินอื่นๆ' },
-        { id: 'nav-eval-facilities', label: 'ประเมินสิ่งสนับสนุนการเรียนรู้', section: 'แบบประเมินอื่นๆ' },
-        { id: 'nav-eval-services', label: 'ประเมินการบริการนักศึกษา', section: 'แบบประเมินอื่นๆ' },
-        { id: 'nav-eval-learning-outcomes', label: 'ประเมินผลลัพธ์การเรียนรู้ (หลักสูตร)', section: 'แบบประเมินอื่นๆ' },
-        { id: 'nav-eval-leadership', label: 'แบบประเมินอัตลักษณ์ผู้นำ', section: 'แบบประเมินอื่นๆ' }
+        { id: 'nav-eval-curriculum', label: 'ประเมินการบริหารหลักสูตร', section: 'แบบประเมิน' },
+        { id: 'nav-eval-facilities', label: 'ประเมินสิ่งสนับสนุนการเรียนรู้', section: 'แบบประเมิน' },
+        { id: 'nav-eval-services', label: 'ประเมินการบริการนักศึกษา', section: 'แบบประเมิน' },
+        { id: 'nav-eval-learning-outcomes', label: 'ประเมินผลลัพธ์การเรียนรู้ (หลักสูตร)', section: 'แบบประเมิน' },
+        { id: 'nav-eval-leadership', label: 'แบบประเมินอัตลักษณ์ผู้นำ', section: 'แบบประเมิน' }
     ];
 
     const roles = [
