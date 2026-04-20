@@ -113,7 +113,7 @@ function renderGenericEvaluationForm(evalId, title, subtitle, questions) {
 window.updateGenericLikertUI = function (radioName) {
     const radios = document.getElementsByName(radioName);
     radios.forEach(r => {
-        const box = document.getElementById(\`lbl_\${radioName}_\${r.value}\`);
+        const box = document.getElementById(`lbl_${radioName}_${r.value}`);
         if (box) {
             if (r.checked) {
                 box.style.borderColor = 'var(--accent-primary)';
@@ -133,7 +133,7 @@ window.updateGenericLikertUI = function (radioName) {
 window.resetGenericLikertUI = function(evalId, qCount) {
     for(let idx=0; idx<qCount; idx++) {
         for(let s=1; s<=5; s++) {
-            const box = document.getElementById(\`lbl_q_\${evalId}_\${idx}_\${s}\`);
+            const box = document.getElementById(`lbl_q_${evalId}_${idx}_${s}`);
             if(box) {
                 box.style.borderColor = 'var(--border-color)';
                 box.style.background = 'var(--bg-card)';
@@ -153,8 +153,8 @@ window.submitGenericEvaluation = function(e, evalId, title) {
     setTimeout(() => {
         window.hideLoading && window.hideLoading();
         
-        let modalHtml = `
-            < div style = "text-align:center; padding:20px;" >
+        const modalHtml = `
+            <div style="text-align:center; padding:20px;">
             <div style="font-size:3.5rem; margin-bottom:16px;">🙏</div>
             <h3 style="color:var(--success); margin-bottom:12px;">ขอบคุณสำหรับการประเมิน!</h3>
             <p style="color:var(--text-secondary); margin-bottom:24px; line-height:1.6;">
@@ -162,12 +162,12 @@ window.submitGenericEvaluation = function(e, evalId, title) {
                 ข้อมูลของคุณจะถูกนำไปใช้เพื่อการพัฒนาและปรับปรุงให้ดียิ่งขึ้น
             </p>
             <button class="btn btn-primary" onclick="window.closeModalAndRedirect()">ตกลง</button>
-        </div >
-            `;
+            </div>
+        `;
         
         if (typeof openModal === 'function') {
             openModal('ส่งผลการประเมินสำเร็จ', modalHtml);
-            document.getElementById(`form_${ evalId } `).reset();
+            document.getElementById(`form_${evalId}`).reset();
         } else {
             alert('ส่งผลการประเมินสำเร็จ');
         }
