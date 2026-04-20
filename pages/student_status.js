@@ -138,25 +138,41 @@ window.filterStudentStatus = function() {
 };
 
 window.updateStudentStatusInline = async function(index, newStatus) {
-    if(!confirm('ยืนยันการเปลี่ยนสถานะนักศึกษาเป็น: ' + newStatus + ' หรือไม่?')) {
+    const student = MOCK.statusStudents[index];
+    if(!student) return;
+
+    if(!confirm(`ยืนยันการเปลี่ยนสถานะของ ${student.name} เป็น: ${newStatus} หรือไม่?`)) {
         renderPage(); // re-render to revert select box
         return;
     }
     
-    showApiLoading('กำลังอัปเดตสถานะ...');
+    showApiLoading('กำลังส่งข้อมูลไปยัง Google Sheets...');
     try {
-        // Mock API call delay
-        await new Promise(r => setTimeout(r, 600));
+        // 1. Call real API from api.js
+        const studentId = student.id;
+        const result = await window.api.updateStudentStatus(studentId, newStatus);
         
-        // Update local MOCK
-        MOCK.statusStudents[index].status = newStatus;
-        
-        // Show success alert
-        alert('อัปเดตสถานะสำเร็จ!');
-        renderPage();
-        
+        if (result && result.status === 'success') {
+            // 2. Update local lists for UI consistency
+            student.status = newStatus; // Update flat list used in this page
+            
+            // 3. Sync with main MOCK.students list (used by other pages like Profile)
+            if (MOCK.students) {
+                const globalIdx = MOCK.students.findIndex(s => (s.id || s.studentId || s.StudentID) === studentId);
+                if (globalIdx !== -1) {
+                    MOCK.students[globalIdx].status = newStatus;
+                }
+            }
+            
+            alert('อัปเดตสถานะลงใน Google Sheets สำเร็จเรียบร้อยครับ!');
+            renderPage();
+        } else {
+            throw new Error(result ? result.message : 'ไม่สามารถเชื่อมต่อ Server ได้');
+        }
     } catch(e) {
-        alert('Error: ' + e.message);
+        console.error('Update Status Error:', e);
+        alert('เกิดข้อผิดพลาดในการบันทึก: ' + e.message);
+        renderPage(); // Revert UI
     } finally {
         hideApiLoading();
     }
