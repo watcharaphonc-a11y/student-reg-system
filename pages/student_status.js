@@ -16,14 +16,23 @@ pages['student-status'] = function() {
         // Try merging from MOCK.students if available
         if (MOCK.students && MOCK.students.length > 0) {
             MOCK.students.forEach((ms, idx) => {
-                const sId = ms.StudentID || ms.id || ('680'+idx);
+                const sId = ms.studentId || ms.id || ms.StudentID || ('680'+idx);
                 if(!MOCK.statusStudents.find(s => s.id === sId)) {
+                    const fullName = ms.firstName && ms.lastName 
+                        ? `${ms.prefix||''}${ms.firstName} ${ms.lastName}`
+                        : (ms.Name || ms.name || '-');
+                    
+                    const major = ms.department || ms.program || ms.Major || ms.major || 'การพยาบาลผู้ใหญ่';
+                    let gpaVal = ms.gpa || ms.GPAX || ms.gpax;
+                    if(typeof gpaVal === 'number') gpaVal = gpaVal.toFixed(2);
+                    else if(!gpaVal) gpaVal = '0.00';
+
                     MOCK.statusStudents.push({
                         id: sId,
-                        name: ms.Name || ms.name || '-',
-                        major: ms.Major || ms.major || 'การพยาบาลผู้ใหญ่',
-                        gpa: ms.GPAX || ms.gpax || '0.00',
-                        status: ms.Status || 'กำลังศึกษา'
+                        name: fullName,
+                        major: major,
+                        gpa: gpaVal,
+                        status: ms.status || ms.Status || 'กำลังศึกษา'
                     });
                 }
             });
