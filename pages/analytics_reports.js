@@ -9,7 +9,7 @@ pages['analytics-reports'] = function() {
         </div>
 
         <!-- 4 Summary Cards -->
-        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px;">
+        <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
             <div class="stat-card">
                 <div class="stat-icon" style="background:#eef2ff; color:#4f46e5;">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -71,7 +71,7 @@ pages['analytics-reports'] = function() {
         </div>
 
         <!-- Charts Layout -->
-        <div class="dashboard-grid" style="grid-template-columns: 2fr 1fr; margin-bottom: 24px;">
+        <div class="dashboard-grid" style="grid-template-columns: 2fr 1fr;">
             <!-- Bar Chart: Students by Cohort -->
             <div class="card">
                 <h3 class="card-title">จำนวนนักศึกษาแยกตามรุ่น (รหัส)</h3>
