@@ -156,9 +156,113 @@ pages['manage-evals'] = function() {
                     </div>` : ''}
                 </div>
             </div>
+
+            <!-- 4. ประเมินการบริหารหลักสูตร -->
+            ${renderOtherEvalAdminCard({
+                cardDelay: 'animate-delay-4',
+                title: 'คำถามประเมินการบริหารหลักสูตร',
+                description: 'คำถามที่ใช้ในแบบประเมินการบริหารหลักสูตร',
+                type: 'curriculum_questions',
+                uploadId: 'curriculumQUpload',
+                previewId: 'curriculumQPreview',
+                mockKey: 'evalCurriculumQuestions',
+                currentList: MOCK.evalCurriculumQuestions || []
+            })}
+
+            <!-- 5. ประเมินสิ่งสนับสนุนการเรียนรู้ -->
+            ${renderOtherEvalAdminCard({
+                cardDelay: 'animate-delay-5',
+                title: 'คำถามประเมินสิ่งสนับสนุนการเรียนรู้',
+                description: 'คำถามที่ใช้ในแบบประเมินสิ่งสนับสนุนการเรียนรู้',
+                type: 'facilities_questions',
+                uploadId: 'facilitiesQUpload',
+                previewId: 'facilitiesQPreview',
+                mockKey: 'evalFacilitiesQuestions',
+                currentList: MOCK.evalFacilitiesQuestions || []
+            })}
+
+            <!-- 6. ประเมินการบริการนักศึกษา -->
+            ${renderOtherEvalAdminCard({
+                cardDelay: 'animate-delay-1',
+                title: 'คำถามประเมินการบริการนักศึกษา',
+                description: 'คำถามที่ใช้ในแบบประเมินการบริการนักศึกษา',
+                type: 'services_questions',
+                uploadId: 'servicesQUpload',
+                previewId: 'servicesQPreview',
+                mockKey: 'evalServicesQuestions',
+                currentList: MOCK.evalServicesQuestions || []
+            })}
+
+            <!-- 7. ประเมินผลลัพธ์การเรียนรู้ -->
+            ${renderOtherEvalAdminCard({
+                cardDelay: 'animate-delay-2',
+                title: 'คำถามประเมินผลลัพธ์การเรียนรู้ (หลักสูตร)',
+                description: 'คำถามที่ใช้ในแบบประเมินผลลัพธ์การเรียนรู้ระดับหลักสูตร (PLOs)',
+                type: 'learning_outcomes_questions',
+                uploadId: 'learningQUpload',
+                previewId: 'learningQPreview',
+                mockKey: 'evalLearningOutcomesQuestions',
+                currentList: MOCK.evalLearningOutcomesQuestions || []
+            })}
+
+            <!-- 8. แบบประเมินอัตลักษณ์ผู้นำ -->
+            ${renderOtherEvalAdminCard({
+                cardDelay: 'animate-delay-3',
+                title: 'คำถามแบบประเมินอัตลักษณ์ผู้นำ',
+                description: 'คำถามที่ใช้ในแบบประเมินทักษะและพฤติกรรมผู้นำ',
+                type: 'leadership_questions',
+                uploadId: 'leadershipQUpload',
+                previewId: 'leadershipQPreview',
+                mockKey: 'evalLeadershipQuestions',
+                currentList: MOCK.evalLeadershipQuestions || []
+            })}
+
         </div>
     </div>`;
 };
+
+// ============================
+// Helper: Render Other Eval Admin Card
+// ============================
+function renderOtherEvalAdminCard({ cardDelay, title, description, type, uploadId, previewId, mockKey, currentList }) {
+    return `
+    <div class="card animate-in ${cardDelay}">
+        <div class="card-header">
+            <h3 class="card-title">${title}</h3>
+        </div>
+        <div class="card-body">
+            <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:12px;">
+                ${description} — CSV: <code>question_id, question_text</code>
+            </p>
+            <button class="btn btn-secondary" onclick="downloadEvalTemplate('${type}')" style="width:100%; margin-bottom:12px; justify-content:center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                ดาวน์โหลด Template (.csv)
+            </button>
+
+            <div style="border-top:1px solid var(--border-color); padding-top:16px;">
+                <input type="file" id="${uploadId}" accept=".csv" style="display:none;" onchange="handleEvalUpload(this, '${type}')">
+                <div style="border:2px dashed var(--border-color); border-radius:var(--radius-md); padding:24px; text-align:center; cursor:pointer; background:var(--bg-secondary);"
+                     onclick="document.getElementById('${uploadId}').click()">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="margin-bottom:8px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <div style="color:var(--text-muted); font-size:0.9rem;">คลิก หรือ ลากไฟล์ CSV มาวางที่นี่</div>
+                </div>
+                <div id="${previewId}" style="margin-top:16px;"></div>
+            </div>
+
+            ${currentList.length > 0 ? `
+            <div style="border-top:1px solid var(--border-color); padding-top:16px; margin-top:16px;">
+                <h5 style="margin-bottom:8px;">คำถามที่มีในระบบ (${currentList.length} ข้อ)</h5>
+                <div style="max-height:150px; overflow-y:auto;">
+                    ${currentList.map((q, i) => `
+                        <div style="padding:6px 12px; font-size:0.85rem; background:var(--bg-secondary); border-radius:var(--radius-sm); margin-bottom:4px;">
+                            ${i+1}. ${q.question_text || q.question || ''}
+                        </div>
+                    `).join('')}
+                </div>
+            </div>` : ''}
+        </div>
+    </div>`;
+}
 
 // ============================
 // Download CSV Templates
@@ -198,6 +302,56 @@ window.downloadEvalTemplate = function(type) {
             ['6', 'เทคนิคการาสอนทำให้นักศึกษาเข้าใจง่าย']
         ];
         filename = 'template_คำถามประเมินอาจารย์.csv';
+    } else if (type === 'curriculum_questions') {
+        headers = ['question_id', 'question_text'];
+        sampleRows = [
+            ['1', 'โครงสร้างหลักสูตรมีความทันสมัยและตอบสนองต่อความต้องการของสังคม'],
+            ['2', 'การจัดตารางสอนและรายวิชามีความเหมาะสมและสอดคล้องกับแผนการศึกษา'],
+            ['3', 'กระบวนการรับฟังความคิดเห็นของนักศึกษาเพื่อนำไปพัฒนาหลักสูตรมีประสิทธิภาพ'],
+            ['4', 'ความพร้อมของคู่มือและเอกสารแนะนำการศึกษาของหลักสูตร'],
+            ['5', 'การบริหารจัดการและการประสานงานของประธาน/กรรมการหลักสูตร']
+        ];
+        filename = 'template_คำถามประเมินการบริหารหลักสูตร.csv';
+    } else if (type === 'facilities_questions') {
+        headers = ['question_id', 'question_text'];
+        sampleRows = [
+            ['1', 'ความพร้อมและคุณภาพของห้องเรียนและอุปกรณ์โสตทัศนูปกรณ์'],
+            ['2', 'ความเพียงพอของหนังสือ ตำรา และฐานข้อมูลออนไลน์ในห้องสมุด'],
+            ['3', 'ความเสถียรและความรวดเร็วของระบบเครือข่ายอินเทอร์เน็ต (Wi-Fi)'],
+            ['4', 'ความเพียงพอและสภาพแวดล้อมของพื้นที่นั่งอ่านหนังสือ'],
+            ['5', 'ความสะอาดและสุขอนามัยของสิ่งอำนวยความสะดวก']
+        ];
+        filename = 'template_คำถามประเมินสิ่งสนับสนุนการเรียนรู้.csv';
+    } else if (type === 'services_questions') {
+        headers = ['question_id', 'question_text'];
+        sampleRows = [
+            ['1', 'ความรวดเร็ว ถูกต้อง และเป็นมิตรในการให้บริการของเจ้าหน้าที่สายสนับสนุน'],
+            ['2', 'ประสิทธิภาพและเสถียรภาพของระบบสารสนเทศ (เช่น ระบบลงทะเบียน ระบบคำร้อง)'],
+            ['3', 'การเข้าถึงและการให้ความช่วยเหลือในด้านสวัสดิการและทุนการศึกษา'],
+            ['4', 'การประชาสัมพันธ์ข่าวสารและกิจกรรมต่างๆ มีความชัดเจนและทั่วถึง'],
+            ['5', 'ช่องทางการร้องเรียนหรือข้อเสนอแนะมีความสะดวกและได้รับการตอบสนอง']
+        ];
+        filename = 'template_คำถามประเมินการบริการนักศึกษา.csv';
+    } else if (type === 'learning_outcomes_questions') {
+        headers = ['question_id', 'question_text'];
+        sampleRows = [
+            ['1', 'ความสามารถในการประยุกต์ใช้ความรู้เชิงทฤษฎีสู่การปฏิบัติและการทำงานวิจัย'],
+            ['2', 'ทักษะการคิดวิเคราะห์ สังเคราะห์ และการแก้ปัญหาที่ซับซ้อนอย่างเป็นระบบ'],
+            ['3', 'ทักษะการสื่อสาร การนำเสนอ และการใช้เทคโนโลยีสารสนเทศอย่างเหมาะสม'],
+            ['4', 'ความสามารถในการทำงานร่วมกับผู้อื่นและการปรับตัวในสภาพแวดล้อมที่หลากหลาย'],
+            ['5', 'ความรับผิดชอบต่อหน้าที่ จรรยาบรรณทางวิชาชีพ และจริยธรรมการวิจัย']
+        ];
+        filename = 'template_คำถามประเมินผลลัพธ์การเรียนรู้.csv';
+    } else if (type === 'leadership_questions') {
+        headers = ['question_id', 'question_text'];
+        sampleRows = [
+            ['1', 'ความสามารถในการเป็นผู้นำกลุ่มและการเคารพ/รับฟังความคิดเห็นของผู้ร่วมงาน'],
+            ['2', 'ความกล้าแสดงออกและการนำเสนอแนวคิดเชิงนำหรือริเริ่มสร้างสรรค์สิ่งใหม่'],
+            ['3', 'ความรับผิดชอบในการตัดสินใจและการมีวุฒิภาวะในการแก้ไขปัญหาความขัดแย้ง'],
+            ['4', 'ความสามารถในการสร้างแรงบันดาลใจและกระตุ้นให้เกิดการทำงานเป็นทีมที่มีประสิทธิภาพ'],
+            ['5', 'ความเสียสละและการคำนึงถึงประโยชน์ส่วนรวมมากกว่าประโยชน์ส่วนตน']
+        ];
+        filename = 'template_คำถามแบบประเมินอัตลักษณ์ผู้นำ.csv';
     }
 
     let csvContent = BOM + headers.join(',') + '\n' + sampleRows.map(row => '"' + row.join('","') + '"').join('\n');
@@ -248,6 +402,11 @@ window.handleEvalUpload = function(input, type) {
         if (type === 'course_questions') previewId = 'courseQPreview';
         else if (type === 'course_instructors') previewId = 'courseInstPreview';
         else if (type === 'instructor_questions') previewId = 'instQPreview';
+        else if (type === 'curriculum_questions') previewId = 'curriculumQPreview';
+        else if (type === 'facilities_questions') previewId = 'facilitiesQPreview';
+        else if (type === 'services_questions') previewId = 'servicesQPreview';
+        else if (type === 'learning_outcomes_questions') previewId = 'learningQPreview';
+        else if (type === 'leadership_questions') previewId = 'leadershipQPreview';
 
         const html = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
@@ -299,6 +458,32 @@ window.saveEvalImport = function(type, jsonStr) {
         MOCK.courseInstructors = dataRows;
     } else if (type === 'instructor_questions') {
         MOCK.evalInstructorQuestions = dataRows;
+    } else if (type === 'curriculum_questions') {
+        MOCK.evalCurriculumQuestions = dataRows;
+        // Sync to EVAL_QUESTIONS for immediate use in evaluation form
+        if (typeof EVAL_QUESTIONS !== 'undefined') {
+            EVAL_QUESTIONS['curriculum'] = dataRows.map(r => r.question_text || r.question || '');
+        }
+    } else if (type === 'facilities_questions') {
+        MOCK.evalFacilitiesQuestions = dataRows;
+        if (typeof EVAL_QUESTIONS !== 'undefined') {
+            EVAL_QUESTIONS['facilities'] = dataRows.map(r => r.question_text || r.question || '');
+        }
+    } else if (type === 'services_questions') {
+        MOCK.evalServicesQuestions = dataRows;
+        if (typeof EVAL_QUESTIONS !== 'undefined') {
+            EVAL_QUESTIONS['services'] = dataRows.map(r => r.question_text || r.question || '');
+        }
+    } else if (type === 'learning_outcomes_questions') {
+        MOCK.evalLearningOutcomesQuestions = dataRows;
+        if (typeof EVAL_QUESTIONS !== 'undefined') {
+            EVAL_QUESTIONS['learning-outcomes'] = dataRows.map(r => r.question_text || r.question || '');
+        }
+    } else if (type === 'leadership_questions') {
+        MOCK.evalLeadershipQuestions = dataRows;
+        if (typeof EVAL_QUESTIONS !== 'undefined') {
+            EVAL_QUESTIONS['leadership'] = dataRows.map(r => r.question_text || r.question || '');
+        }
     }
 
     openModal('สำเร็จ', `
