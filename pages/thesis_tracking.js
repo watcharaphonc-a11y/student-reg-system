@@ -515,43 +515,6 @@ function renderUpdatePage() {
             ${extraFieldsHtml}
         </div>`;
     }).join('');
-') ? cDate.split('T')[0] : cDate;
-
-        let headerBg = '';
-        if (cStatus === 'Complete')    headerBg = 'background:#f0fdf4;border-color:#6ee7b7;';
-        else if (cStatus === 'InProgress') headerBg = 'background:#eff6ff;border-color:#93c5fd;';
-
-        return `
-        <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;${headerBg}">
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e2e8f0;flex-wrap:wrap;gap:10px;">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <span style="font-size:1.3rem;">${m.icon}</span>
-                    <div>
-                        <div style="font-size:0.75rem;color:#94a3b8;font-weight:600;">ขั้นตอนที่ ${idx+1}</div>
-                        <div style="font-size:0.95rem;font-weight:700;color:#1e293b;">${m.label}</div>
-                    </div>
-                </div>
-                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                    <select id="${m.id}_Status" class="form-select" style="height:36px;padding:0 10px;border-radius:8px;font-size:0.85rem;min-width:155px;">
-                        <option value="Pending"    ${cStatus==='Pending'   ?'selected':''}>⬜ ยังไม่เริ่ม</option>
-                        <option value="InProgress" ${cStatus==='InProgress'?'selected':''}>🔵 กำลังดำเนินการ</option>
-                        <option value="Complete"   ${cStatus==='Complete'  ?'selected':''}>✅ ผ่าน / เสร็จสิ้น</option>
-                    </select>
-                    <input type="date" id="${m.id}_Date" class="form-input" value="${dateVal}"
-                        style="height:36px;border-radius:8px;font-size:0.85rem;width:145px;">
-                </div>
-            </div>
-            <div style="padding:12px 16px;display:flex;gap:10px;flex-wrap:wrap;background:white;">
-                <input type="text" id="${m.id}_Note" class="form-input" placeholder="หมายเหตุ / รายละเอียด" value="${cNote}"
-                    style="flex:2;min-width:200px;height:36px;font-size:0.83rem;border-radius:8px;">
-                ${(m.fields || []).map(f => {
-                    const fVal = track[`${m.id}_${f.id}`] || '';
-                    return `<input type="${f.type}" id="${m.id}_${f.id}" class="form-input" placeholder="${f.label}" value="${fVal}"
-                        style="flex:1;min-width:160px;height:36px;font-size:0.83rem;border-radius:8px;background:#fafafa;border-color:#94a3b8;">`;
-                }).join('')}
-            </div>
-        </div>`;
-    }).join('');
 
     document.getElementById('milestoneFormArea').innerHTML = `
     <div class="card">
