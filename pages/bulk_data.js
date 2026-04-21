@@ -159,7 +159,7 @@ window.downloadCSVTemplate = function(type) {
             break;
         case 'schedule':
             headers = [
-                'Day (1-7)', 'StartSlot (1-10)', 'EndSlot (1-10)', 'CourseCode', 'CourseName', 'Instructor', 'Room', 'Semester', 'AcademicYear'
+                'Day', 'StartSlot', 'EndSlot', 'CourseCode', 'CourseName', 'InstructorID', 'InstructorName', 'Room', 'Semester', 'AcademicYear', 'Section', 'Color'
             ];
             filename = 'template_schedule.csv';
             break;

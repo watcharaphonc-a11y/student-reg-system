@@ -935,10 +935,10 @@ function importDocumentTemplatesBatch(payload) {
 function setupInitialSheets() {
   const defaultHeaders = {
     [SHEETS.USERS]: ['Username', 'Password', 'Name', 'Role', 'Status'],
-    [SHEETS.STUDENTS]: ['คำนำหน้า','ชื่อ (ไทย)','นามสกุล (ไทย)','ชื่อ (EN)','นามสกุล (EN)','เลขบัตรประชาชน','รหัสนักศึกษา','วันเกิด (YYYY-MM-DD)','เพศ','อีเมล','E-mail ของสถาบัน','เบอร์โทร','สาขาวิชา','ปีการศึกษาที่เข้า','ที่อยู่','Username','Password','อาจารย์ที่ปรึกษาหลัก','อาจารย์ที่ปรึกษาร่วมภายใน','อาจารย์ที่ปรึกษาร่วมภายนอก','หัวข้อวิทยานิพนธ์','สถานะ'],
+    [SHEETS.STUDENTS]: ['รหัสนักศึกษา', 'คำนำหน้า', 'ชื่อ (ไทย)', 'นามสกุล (ไทย)', 'ชื่อ (EN)', 'นามสกุล (EN)', 'เลขประจำตัวประชาชน', 'เพศ', 'วันเกิด (YYYY-MM-DD)', 'ที่อยู่', 'เบอร์โทร', 'อีเมลส่วนตัว', 'E-mail ของสถาบัน', 'คณะ', 'สาขาวิชา', 'หลักสูตร', 'ชั้นปี', 'สถานะ', 'ปีการศึกษาที่เข้า', 'อาจารย์ที่ปรึกษา', 'อาจารย์ที่ปรึกษาวิทยานิพนธ์', 'หัวข้อวิทยานิพนธ์', 'สถานที่ปฏิบัติงาน', 'ตำแหน่ง', 'ผู้ปกครอง', 'เบอร์ผู้ปกครอง'],
     [SHEETS.TEACHERS]: ['คำนำหน้า','ชื่อ','นามสกุล','ตำแหน่งทางวิชาการ','ความเชี่ยวชาญ','อีเมล','เบอร์โทร','คณะ/สังกัด','นศ. ในกำกับ','Username','Password','ประเภทอาจารย์'],
     [SHEETS.COURSES]: ['รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'กลุ่ม', 'อาจารย์ผู้สอน'],
-    [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'ภาคเรียน', 'ปีการศึกษา', 'เกรด'],
+    [SHEETS.ENROLLMENTS]: ['รหัสนักศึกษา', 'ชื่อ-นามสกุล', 'รหัสวิชา', 'ชื่อวิชา', 'หน่วยกิต', 'หมวดวิชา', 'กลุ่มเรียน', 'เกรด', 'ภาคเรียน', 'ปีการศึกษา'],
     [SHEETS.PAYMENTS]: ['รหัสนักศึกษา', 'รายการ', 'จำนวนเงิน', 'สถานะ', 'วันที่'],
     [SHEETS.EVALUATIONS]: ['รหัสวิชา', 'คะแนน', 'ข้อคิดเห็น', 'วันที่'],
     [SHEETS.DOCUMENTS]: ['รหัสติดตาม', 'รหัสนักศึกษา', 'ชื่อผู้ส่ง', 'ประเภทเอกสาร', 'ชื่อไฟล์', 'ลิงก์เอกสาร', 'วันที่ส่ง', 'สถานะ', 'ผู้รับผิดชอบถัดไป', 'ลิงก์เอกสารที่ลงนาม', 'หมายเหตุ', 'ประวัติการดำเนินการ'],
@@ -954,16 +954,16 @@ function setupInitialSheets() {
     [SHEETS.COURSE_INSTRUCTORS]: ['course_code', 'course_name', 'instructor_id', 'instructor_name', 'group', 'semester', 'academic_year'],
     [SHEETS.EVAL_INSTRUCTOR_QUESTIONS]: ['question_id', 'question_text'],
     [SHEETS.APPLICANTS]: ['ApplicationID', 'Status', 'Date', 'Prefix', 'FirstName', 'LastName', 'FirstNameEn', 'LastNameEn', 'IdCard', 'Dob', 'Age', 'Religion', 'Nationality', 'Email', 'Phone', 'PhoneHome', 'PhoneWork', 'Program', 'Major', 'Address', 'EducationHistory', 'TrainingHistory', 'WorkStatus', 'WorkHistory', 'CurrentWorkplace', 'ResearchTopic', 'DocumentsLink', 'Notes'],
-    [SHEETS.SCHEDULE]: ['CourseCode', 'CourseName', 'Day', 'StartSlot', 'EndSlot', 'Room', 'InstructorID', 'InstructorName', 'Color', 'Semester', 'AcademicYear', 'Section'],
+    [SHEETS.SCHEDULE]: ['Day', 'StartSlot', 'EndSlot', 'CourseCode', 'CourseName', 'InstructorID', 'InstructorName', 'Room', 'Semester', 'AcademicYear', 'Section', 'Color'],
     [SHEETS.DOCUMENT_TEMPLATES]: ['id', 'name', 'type'],
     [SHEETS.THESIS_PROGRESS]: [
       'StudentID','StudentName','Major','Cohort','AdvisorName',
       'M1_Status','M1_Date','M1_Note',
       'M2_Status','M2_Date','M2_Note',
       'M3_Status','M3_Date','M3_Note',
-      'M4_Status','M4_Date','M4_Note','M4_EthicsNo',
-      'M5_Status','M5_Date','M5_Note','M5_Score',
-      'M6_Status','M6_Date','M6_Note','M6_Journal',
+      'M4_Status','M4_EthicsDate1','M4_EthicsNo1','M4_EthicsDate2','M4_EthicsNo2','M4_Note',
+      'M5_Status','M5_Date','M5_Score','M5_Note',
+      'M6_Status','M6_Date','M6_Journal','M6_Note',
       'M7_Status','M7_Date','M7_Note',
       'M8_Status','M8_Date','M8_Note',
       'LastUpdated','UpdatedBy'
