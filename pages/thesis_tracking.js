@@ -59,8 +59,8 @@ function renderAdminDashboard() {
         return {
             studentId:   s.studentId,
             name:        getStudentDisplayName(s),
-            major:       s.major || track.Major || '-',
-            cohort:      s.cohort || track.Cohort || '-',
+            major:       s.major || s.department || track.Major || '-',
+            cohort:      s.cohort || s.admissionYear || track.Cohort || '-',
             progress:    prog,
             doneCount:   done,
             currentStep: curM ? `ขั้นที่ ${THESIS_MILESTONES.indexOf(curM)+1}: ${curM.label}` : `✅ ครบทั้ง ${THESIS_MILESTONES.length} ขั้นตอน`,

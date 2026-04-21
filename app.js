@@ -379,6 +379,8 @@ async function bootApp() {
                     lastNameEn: s['นามสกุล (LN)'] || s['lastNameEn'] || s['นามสกุล (EN)'] || '',
                     faculty: s['คณะ'] || s.faculty,
                     department: s['สาขาวิชา'] || s.department,
+                    major: s['สาขาวิชา'] || s.department || s.major || '-',
+                    cohort: s['รุ่น'] || s.cohort || (sId ? sId.substring(0, 2) : '-'),
                     program: s['หลักสูตร'] || s.program,
                     year: parseInt(s['ชั้นปี'] || s.year) || 1,
                     status: s['สถานะ'] || s.status || 'กำลังศึกษา',
