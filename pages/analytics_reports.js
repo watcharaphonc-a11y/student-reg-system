@@ -65,6 +65,31 @@ pages['analytics-reports'] = function() {
                     majors[m] = Math.round((majorCounts[m]/total)*100);
                 }
             }
+
+            // Gender calc
+            let genderCounts = { 'ชาย': 0, 'หญิง': 0 };
+            let totalGenders = 0;
+            activeStudents.forEach(s => {
+                let g = s.gender || s.Gender || s['เพศ'] || '';
+                // basic mapping
+                if (g.includes('ชาย') && !g.includes('หญิง')) {
+                    genderCounts['ชาย']++;
+                    totalGenders++;
+                } else if (g.includes('หญิง')) {
+                    genderCounts['หญิง']++;
+                    totalGenders++;
+                }
+            });
+            if (totalGenders > 0) {
+                window._genderStats = {
+                    male: Math.round((genderCounts['ชาย'] / totalGenders) * 100),
+                    female: Math.round((genderCounts['หญิง'] / totalGenders) * 100),
+                    maleCount: genderCounts['ชาย'],
+                    femaleCount: genderCounts['หญิง']
+                };
+            } else {
+                window._genderStats = { male: 0, female: 0, maleCount: 0, femaleCount: 0 };
+            }
         }
     }
 
@@ -118,6 +143,32 @@ pages['analytics-reports'] = function() {
         `;
     }).join('');
 
+    // --- Gender HTML ---
+    let gs = window._genderStats || { male: 0, female: 0, maleCount: 0, femaleCount: 0 };
+    let genderHtml = `
+        <div style="display:flex; flex-direction:column; gap:20px; align-items:center;">
+            <div style="display:flex; width:100%; justify-content:space-between; margin-bottom:-10px;">
+                <div style="text-align:left; color:#2563eb;">
+                    <div style="font-weight:700; font-size:1.5rem;">${gs.male}%</div>
+                    <div style="font-size:0.9rem; font-weight:600;">ชาย (${gs.maleCount} คน)</div>
+                </div>
+                <div style="text-align:right; color:#db2777;">
+                    <div style="font-weight:700; font-size:1.5rem;">${gs.female}%</div>
+                    <div style="font-size:0.9rem; font-weight:600;">หญิง (${gs.femaleCount} คน)</div>
+                </div>
+            </div>
+            
+            <div style="width:100%; height:20px; border-radius:10px; display:flex; overflow:hidden; box-shadow:var(--shadow-sm); background:var(--bg-tertiary);">
+                <div style="width:${gs.male}%; height:100%; background:linear-gradient(90deg, #3b82f6, #2563eb); transition:width 1s ease-in-out;"></div>
+                <div style="width:${gs.female}%; height:100%; background:linear-gradient(90deg, #f472b6, #db2777); transition:width 1s ease-in-out;"></div>
+            </div>
+            
+            <div style="display:flex; width:100%; justify-content:space-between; margin-top:10px; color:var(--text-secondary); font-size:0.85rem;">
+                <span style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:#2563eb;"></div> นักศึกษาชาย</span>
+                <span style="display:flex; align-items:center; gap:4px;"><div style="width:10px;height:10px;border-radius:50%;background:#db2777;"></div> นักศึกษาหญิง</span>
+            </div>
+        </div>
+    `;
 
     // 3. Render
     return `
@@ -238,6 +289,21 @@ pages['analytics-reports'] = function() {
                     <div style="display:flex; flex-direction:column; gap: 24px;">
                         ${majorHtml}
                     </div>
+                </div>
+            </div>
+            
+            <!-- Gender Proportion Chart -->
+            <div class="card" style="display:flex; flex-direction:column;">
+                <div class="card-header">
+                    <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:#8b5cf6">
+                            <path d="M12 2a4 4 0 100 8 4 4 0 000-8zm0 10c-3.86 0-7 3.14-7 7v1h14v-1c0-3.86-3.14-7-7-7z"/>
+                        </svg>
+                        สัดส่วนนักศึกษา (ชาย/หญิง)
+                    </h3>
+                </div>
+                <div class="card-body" style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 30px;">
+                    ${genderHtml}
                 </div>
             </div>
         </div>

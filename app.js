@@ -397,6 +397,7 @@ async function bootApp() {
                     position: s['ตำแหน่ง'] || s.position || '-',
                     dob: s['วันเกิด (YYYY-MM-DD)'] || s['วันเกิด'] || s.dob || '-',
                     address: s['ที่อยู่'] || s.address || '-',
+                    gender: s['เพศ'] || s.gender || 'ไม่ระบุ',
                     parentName: s['ผู้ปกครอง'] || s.parentName || '-',
                     parentPhone: s['เบอร์ผู้ปกครอง'] || s.parentPhone || '-',
                     gpa: overallGpa,
