@@ -422,7 +422,52 @@ function renderUpdatePage() {
                             <input type="text" id="thesisStudentSearch" placeholder="พิมพ์ชื่อหรือรหัสนักศึกษา..."
                                 style="width:100%;border-radius:10px;border:2px solid #e2e8f0;padding:10px 14px 10px 36px;font-size:0.92rem;outline:none;"
                                 oninput="window.filterStudentSelect(this.value)">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3    let milestonesHtml = THESIS_MILESTONES.map((m, idx) => {
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </div>
+                    </div>
+                    <div style="flex:1;min-width:280px;">
+                        <label style="display:block;font-size:0.8rem;font-weight:600;color:#64748b;margin-bottom:6px;">รายชื่อนักศึกษา</label>
+                        <select id="thesisStudentSelect" class="form-select" onchange="window.loadStudentMilestoneForm(this.value)"
+                            style="width:100%;border-radius:10px;height:42px;border:2px solid #e2e8f0;outline:none;font-size:0.92rem;padding:0 12px;">
+                            <option value="">-- เลือกเพื่อเริ่มต้นอัปเดต --</option>
+                            ${studentOptions}
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="milestoneFormArea" class="animate-in"></div>
+    </div>`;
+}
+
+window.filterStudentSelect = function(q) {
+    const keyword = q.toLowerCase();
+    const sel = document.getElementById('thesisStudentSelect');
+    if (!sel) return;
+    for (let opt of sel.options) {
+        if (!opt.value) continue;
+        const txt = (opt.dataset.name + ' ' + opt.value + ' ' + (opt.dataset.major||'') + ' ' + (opt.dataset.cohort||'')).toLowerCase();
+        opt.style.display = txt.includes(keyword) ? '' : 'none';
+    }
+};
+
+window.loadStudentMilestoneForm = function(studentId) {
+    if (!studentId) {
+        document.getElementById('milestoneFormArea').innerHTML = '';
+        return;
+    }
+
+    const student = (MOCK.students || []).find(s => String(s.studentId) === String(studentId));
+    const track   = (MOCK.thesisProgress || []).find(t => String(t.StudentID) === String(studentId)) || {};
+    if (!student) return;
+
+    const prog   = calcThesisProgress(track);
+    const name   = getStudentDisplayName(student);
+    const major  = student.major || track.Major || '-';
+    const cohort = student.cohort || track.Cohort || '-';
+
+    let milestonesHtml = THESIS_MILESTONES.map((m, idx) => {
         const cStatus = track[`${m.id}_Status`] || 'Pending';
         const cDate   = track[`${m.id}_Date`]   || '';
         const cNote   = track[`${m.id}_Note`]   || '';
@@ -519,7 +564,6 @@ function renderUpdatePage() {
     document.getElementById('milestoneFormArea').innerHTML = `
     <div class="card">
         <div class="card-body" style="padding:0;">
-            <!-- Student info header -->
             <div style="padding:20px 24px;border-bottom:1px solid #e2e8f0;background:linear-gradient(135deg,#f8fafc,#eef2ff);border-radius:16px 16px 0 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
                 <div>
                     <div style="font-size:1.1rem;font-weight:700;color:#1e293b;">${name}</div>
@@ -539,7 +583,6 @@ function renderUpdatePage() {
                 </div>
             </div>
 
-            <!-- Milestones -->
             <div style="padding:20px 24px;display:flex;flex-direction:column;gap:12px;">
                 <input type="hidden" id="tu_studentId"   value="${studentId}">
                 <input type="hidden" id="tu_studentName" value="${name}">
@@ -548,7 +591,6 @@ function renderUpdatePage() {
                 ${milestonesHtml}
             </div>
 
-            <!-- Save Button -->
             <div style="padding:16px 24px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:12px;background:#f8fafc;border-radius:0 0 16px 16px;">
                 <button class="btn btn-secondary" onclick="document.getElementById('milestoneFormArea').innerHTML=''">ยกเลิก</button>
                 <button class="btn btn-primary" onclick="window.saveThesisMilestonesInline()" style="gap:8px;display:flex;align-items:center;">
@@ -571,13 +613,12 @@ window.saveThesisMilestonesInline = async function() {
     const milestones = {};
     THESIS_MILESTONES.forEach(m => {
         milestones[`${m.id}_Status`] = document.getElementById(`${m.id}_Status`)?.value || '';
-        // M4 uses EthicsDate1/EthicsDate2 instead of a single _Date
         if (m.id === 'M4') {
             milestones[`${m.id}_Date`] = '';
         } else {
             milestones[`${m.id}_Date`] = document.getElementById(`${m.id}_Date`)?.value || '';
         }
-        milestones[`${m.id}_Note`]   = document.getElementById(`${m.id}_Note`)?.value || '';
+        milestones[`${m.id}_Note`] = document.getElementById(`${m.id}_Note`)?.value || '';
         (m.fields || []).forEach(f => {
             milestones[`${m.id}_${f.id}`] = document.getElementById(`${m.id}_${f.id}`)?.value || '';
         });
@@ -599,7 +640,6 @@ window.saveThesisMilestonesInline = async function() {
         window.hideLoading && window.hideLoading();
 
         if (result.status === 'success') {
-            // Update local MOCK immediately
             let existing = MOCK.thesisProgress.find(t => String(t.StudentID) === String(studentId));
             if (existing) {
                 Object.assign(existing, milestones, { LastUpdated: new Date().toISOString() });
@@ -607,7 +647,6 @@ window.saveThesisMilestonesInline = async function() {
                 MOCK.thesisProgress.push({ StudentID: studentId, StudentName: studentName, Major: major, Cohort: cohort, LastUpdated: new Date().toISOString(), ...milestones });
             }
 
-            // Show success in-page (no alert popup)
             document.getElementById('milestoneFormArea').innerHTML = `
                 <div style="text-align:center;padding:40px;background:#f0fdf4;border-radius:16px;border:2px solid #6ee7b7;">
                     <div style="font-size:3rem;margin-bottom:12px;">✅</div>
