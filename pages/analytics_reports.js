@@ -8,8 +8,8 @@ pages['analytics-reports'] = function() {
     let cohorts = {};
     let majors = {};
 
-    if (window.MOCK && window.MOCK.students && window.MOCK.students.length > 0) {
-        let students = window.MOCK.students;
+    if (typeof MOCK !== 'undefined' && MOCK.students && MOCK.students.length > 0) {
+        let students = MOCK.students;
         
         let activeStudents = students.filter(s => {
             let st = s.status || s.Status || '';
@@ -18,8 +18,8 @@ pages['analytics-reports'] = function() {
         totalStudents = activeStudents.length;
         
         // Use statusStudents if available, else count from main students list
-        let alumniCount = window.MOCK.statusStudents ? 
-            window.MOCK.statusStudents.filter(s => s.status === 'สำเร็จการศึกษา').length :
+        let alumniCount = MOCK.statusStudents ? 
+            MOCK.statusStudents.filter(s => s.status === 'สำเร็จการศึกษา').length :
             students.filter(s => (s.status || s.Status) === 'สำเร็จการศึกษา').length;
             
         alumni = alumniCount;
