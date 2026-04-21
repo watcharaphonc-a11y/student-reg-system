@@ -111,6 +111,36 @@ if (notifBtn) {
 sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
 mobileMenuBtn.addEventListener('click', () => sidebar.classList.toggle('mobile-open'));
 
+// ====== Theme Toggle ======
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => window.toggleTheme());
+}
+
+window.toggleTheme = function() {
+    const html = document.documentElement;
+    const currentTheme = html.getAttribute('data-theme') || 'light';
+    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+    
+    html.setAttribute('data-theme', newTheme);
+    localStorage.setItem('theme', newTheme);
+    updateThemeIcons(newTheme);
+};
+
+function updateThemeIcons(theme) {
+    const sun = document.querySelector('.sun-icon');
+    const moon = document.querySelector('.moon-icon');
+    if (sun && moon) {
+        if (theme === 'dark') {
+            sun.style.display = 'none';
+            moon.style.display = 'block';
+        } else {
+            sun.style.display = 'block';
+            moon.style.display = 'none';
+        }
+    }
+}
+
 // ====== Global DatePicker Init ======
 window.initThaiDatePickers = function() {
     if (typeof flatpickr === 'undefined') return;
@@ -176,6 +206,11 @@ function updateHeaderSemester() {
 
 // ====== Boot ======
 async function bootApp() {
+    // Initial Theme Load
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+    updateThemeIcons(savedTheme);
+
     updateHeaderSemester();
     // Restore or Check Session
     if (window.currentUserRole) {

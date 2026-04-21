@@ -170,6 +170,33 @@ pages['analytics-reports'] = function() {
         </div>
     `;
 
+    // --- At-Risk Students Calc (Early Warning) ---
+    let atRiskStudents = [];
+    if (typeof MOCK !== 'undefined' && MOCK.students) {
+        atRiskStudents = MOCK.students.filter(s => {
+            const gpa = parseFloat(s.gpa || s.GPAX || s.gpax || 0);
+            return gpa > 0 && gpa < 2.5;
+        }).slice(0, 5); // Just show top 5 for demo
+    }
+
+    let atRiskHtml = atRiskStudents.length === 0 ? 
+        '<div style="text-align:center; padding:20px; color:var(--text-muted);">ไม่พบนักศึกษาในกลุ่มเสี่ยงขณะนี้</div>' :
+        atRiskStudents.map(s => `
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid var(--border-color);">
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div style="width:36px; height:36px; border-radius:50%; background:var(--danger-bg); color:var(--danger); display:flex; align-items:center; justify-content:center; font-weight:700;">${(s.firstName||'')[0]}</div>
+                    <div>
+                        <div style="font-weight:600; font-size:0.95rem;">${s.prefix||''}${s.firstName} ${s.lastName}</div>
+                        <div style="font-size:0.75rem; color:var(--text-muted);">${s.studentId} • ${s.department || s.major || '-'}</div>
+                    </div>
+                </div>
+                <div style="text-align:right;">
+                    <div style="font-weight:700; color:var(--danger);">${parseFloat(s.gpa||0).toFixed(2)}</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">GPAX</div>
+                </div>
+            </div>
+        `).join('');
+
     // 3. Render
     return `
     <div class="animate-in">
@@ -306,7 +333,29 @@ pages['analytics-reports'] = function() {
                     ${genderHtml}
                 </div>
             </div>
+
+            <!-- Early Warning Section (NEW) -->
+            <div class="card" style="display:flex; flex-direction:column; border-left: 4px solid var(--danger);">
+                <div class="card-header">
+                    <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--danger)">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        นักศึกษาที่ควรเฝ้าระวัง (Early Warning)
+                    </h3>
+                </div>
+                <div class="card-body" style="flex:1; display:flex; flex-direction:column; padding: 0 20px 20px;">
+                    <div style="margin-bottom:15px; font-size:0.85rem; color:var(--text-muted);">รายชื่อนักศึกษาที่มี GPAX < 2.50 (ควรติดตามใกล้ชิด)</div>
+                    ${atRiskHtml}
+                    <div style="margin-top:auto; padding-top:15px; text-align:center;">
+                        <button class="btn btn-secondary btn-sm" style="width:100%;" onclick="navigateTo('student-list')">ดูทั้งหมด</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>`;
 };
+
