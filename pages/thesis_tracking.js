@@ -9,8 +9,10 @@ const THESIS_MILESTONES = [
     { id: 'M4',  label: 'พิจารณาจริยธรรมการวิจัย (EC)',     icon: '⚖️', fields: [
         { id: 'EthicsDate1', label: 'วันที่อนุมัติ EC (1)', type: 'date' },
         { id: 'EthicsNo1',   label: 'เลขรับรอง/อนุมัติ EC (1)', type: 'text' },
+        { id: 'EthicsNote1', label: 'หมายเหตุ EC (1)', type: 'text' },
         { id: 'EthicsDate2', label: 'วันที่อนุมัติ EC (2)', type: 'date' },
-        { id: 'EthicsNo2',   label: 'เลขรับรอง/อนุมัติ EC (2)', type: 'text' }
+        { id: 'EthicsNo2',   label: 'เลขรับรอง/อนุมัติ EC (2)', type: 'text' },
+        { id: 'EthicsNote2', label: 'หมายเหตุ EC (2)', type: 'text' }
     ] },
     { id: 'M5',  label: 'สอบป้องกันวิทยานิพนธ์',            icon: '🛡️', fields: [{ id: 'Score', label: 'ผลประเมิน/คะแนนสอบ', type: 'text' }] },
     { id: 'M6',  label: 'เผยแพร่ผลงาน (บทความวิชาการ)',      icon: '🌐', fields: [{ id: 'Journal', label: 'ชื่อวารสาร/สถานที่ตีพิมพ์', type: 'text' }] },
@@ -484,6 +486,8 @@ window.loadStudentMilestoneForm = function(studentId) {
             const ec2DateVal = (track['M4_EthicsDate2'] || '').replace('T', ' ').split(' ')[0];
             const ec1No = track['M4_EthicsNo1'] || '';
             const ec2No = track['M4_EthicsNo2'] || '';
+            const ec1Note = track['M4_EthicsNote1'] || '';
+            const ec2Note = track['M4_EthicsNote2'] || '';
             extraFieldsHtml = `
                 <div style="padding:12px 16px;background:white;border-top:1px solid #e2e8f0;">
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -498,6 +502,11 @@ window.loadStudentMilestoneForm = function(studentId) {
                                 <div>
                                     <label style="display:block;font-size:0.75rem;color:#64748b;margin-bottom:3px;">เลขรับรอง/อนุมัติ EC (1)</label>
                                     <input type="text" id="M4_EthicsNo1" class="form-input" placeholder="เช่น EC 65-001" value="${ec1No}"
+                                        style="width:100%;height:34px;font-size:0.83rem;border-radius:7px;">
+                                </div>
+                                <div>
+                                    <label style="display:block;font-size:0.75rem;color:#64748b;margin-bottom:3px;">หมายเหตุ / รายละเอียด (1)</label>
+                                    <input type="text" id="M4_EthicsNote1" class="form-input" placeholder="หมายเหตุ EC (1)" value="${ec1Note}"
                                         style="width:100%;height:34px;font-size:0.83rem;border-radius:7px;">
                                 </div>
                             </div>
@@ -515,12 +524,13 @@ window.loadStudentMilestoneForm = function(studentId) {
                                     <input type="text" id="M4_EthicsNo2" class="form-input" placeholder="เช่น EC 65-002" value="${ec2No}"
                                         style="width:100%;height:34px;font-size:0.83rem;border-radius:7px;">
                                 </div>
+                                <div>
+                                    <label style="display:block;font-size:0.75rem;color:#64748b;margin-bottom:3px;">หมายเหตุ / รายละเอียด (2)</label>
+                                    <input type="text" id="M4_EthicsNote2" class="form-input" placeholder="หมายเหตุ EC (2)" value="${ec2Note}"
+                                        style="width:100%;height:34px;font-size:0.83rem;border-radius:7px;">
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div style="margin-top:10px;">
-                        <input type="text" id="${m.id}_Note" class="form-input" placeholder="หมายเหตุ / รายละเอียดเพิ่มเติม" value="${cNote}"
-                            style="width:100%;height:36px;font-size:0.83rem;border-radius:8px;">
                     </div>
                 </div>`;
         } else {

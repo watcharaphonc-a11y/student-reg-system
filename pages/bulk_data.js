@@ -149,7 +149,7 @@ window.downloadCSVTemplate = function(type) {
                 'M1_Status', 'M1_Date', 'M1_Note',
                 'M2_Status', 'M2_Date', 'M2_Note',
                 'M3_Status', 'M3_Date', 'M3_Note',
-                'M4_Status', 'M4_EthicsDate1', 'M4_EthicsNo1', 'M4_EthicsDate2', 'M4_EthicsNo2', 'M4_Note',
+                'M4_Status', 'M4_EthicsDate1', 'M4_EthicsNo1', 'M4_EthicsNote1', 'M4_EthicsDate2', 'M4_EthicsNo2', 'M4_EthicsNote2', 'M4_Note',
                 'M5_Status', 'M5_Date', 'M5_Score', 'M5_Note',
                 'M6_Status', 'M6_Date', 'M6_Journal', 'M6_Note',
                 'M7_Status', 'M7_Date', 'M7_Note',
