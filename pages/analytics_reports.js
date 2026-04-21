@@ -44,12 +44,14 @@ pages['analytics-reports'] = function() {
             // Majors calc
             let majorCounts = {};
             activeStudents.forEach(s => {
-                let major = s.major || s.Major || s.program || s.department || 'อื่นๆ';
-                if (major.includes('ผู้ใหญ่')) major = 'การพยาบาลผู้ใหญ่';
+                // Priority: สาขาวิชา (department) > หลักสูตร (program)
+                let major = s.department || s.major || s.Major || s.program || 'อื่นๆ';
+                
+                if (major.includes('ผู้ใหญ่')) major = 'การพยาบาลผู้ใหญ่และผู้สูงอายุ';
                 else if (major.includes('เด็ก')) major = 'การพยาบาลเด็ก';
                 else if (major.includes('บริหาร')) major = 'การบริหารทางการพยาบาล';
                 else if (major.includes('ชุมชน')) major = 'การพยาบาลเวชปฏิบัติชุมชน';
-                else if (major.includes('จิตเวช')) major = 'การพยาบาลจิตเวช';
+                else if (major.includes('จิตเวช')) major = 'การพยาบาลจิตเวชและสุขภาพจิต';
                 else if (major.includes('ผดุงครรภ์')) major = 'การผดุงครรภ์';
                 else major = 'อื่นๆ';
                 
