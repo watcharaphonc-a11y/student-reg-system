@@ -1,7 +1,7 @@
-pages['student-status'] = function() {
+pages['student-status'] = function () {
     // Generate some mock students if MOCK.students is empty or map existing ones
     // We will ensure they have a 'Status' property like 'กำลังศึกษา', 'รักษาสภาพ', 'ลาพัก', 'สำเร็จการศึกษา', 'พ้นสภาพ'
-    
+
     // Inject mock students for demonstration if missing
     if (!MOCK.statusStudents || MOCK.statusStudents.length === 0) {
         MOCK.statusStudents = [
@@ -12,20 +12,20 @@ pages['student-status'] = function() {
             { id: '630555', name: 'นาง สุรีย์ สว่างไสว', major: 'การผดุงครรภ์', gpa: '3.67', status: 'สำเร็จการศึกษา' },
             { id: '650888', name: 'นาย ทดสอบ พ้นสภาพ', major: 'การพยาบาลเวชปฏิบัติชุมชน', gpa: '1.20', status: 'พ้นสภาพ' },
         ];
-        
+
         // Try merging from MOCK.students if available
         if (MOCK.students && MOCK.students.length > 0) {
             MOCK.students.forEach((ms, idx) => {
-                const sId = ms.studentId || ms.id || ms.StudentID || ('680'+idx);
-                if(!MOCK.statusStudents.find(s => s.id === sId)) {
-                    const fullName = ms.firstName && ms.lastName 
-                        ? `${ms.prefix||''}${ms.firstName} ${ms.lastName}`
+                const sId = ms.studentId || ms.id || ms.StudentID || ('680' + idx);
+                if (!MOCK.statusStudents.find(s => s.id === sId)) {
+                    const fullName = ms.firstName && ms.lastName
+                        ? `${ms.prefix || ''}${ms.firstName} ${ms.lastName}`
                         : (ms.Name || ms.name || '-');
-                    
+
                     const major = ms.department || ms.program || ms.Major || ms.major || 'การพยาบาลผู้ใหญ่';
                     let gpaVal = ms.gpa || ms.GPAX || ms.gpax;
-                    if(typeof gpaVal === 'number') gpaVal = gpaVal.toFixed(2);
-                    else if(!gpaVal) gpaVal = '0.00';
+                    if (typeof gpaVal === 'number') gpaVal = gpaVal.toFixed(2);
+                    else if (!gpaVal) gpaVal = '0.00';
 
                     MOCK.statusStudents.push({
                         id: sId,
@@ -96,11 +96,11 @@ pages['student-status'] = function() {
                                 <td><span class="badge ${getBadgeClass(s.status)}" id="status-badge-${index}">${s.status}</span></td>
                                 <td style="text-align:center;">
                                     <select class="form-input" onchange="updateStudentStatusInline(${index}, this.value)" style="padding:4px 8px; font-size:0.85rem; max-width:140px; border-radius:4px; display:inline-block;">
-                                        <option value="กำลังศึกษา" ${s.status==='กำลังศึกษา'?'selected':''}>กำลังศึกษา</option>
-                                        <option value="รักษาสภาพ" ${s.status==='รักษาสภาพ'?'selected':''}>รักษาสภาพ</option>
-                                        <option value="ลาพัก" ${s.status==='ลาพัก'?'selected':''}>ลาพัก</option>
-                                        <option value="สำเร็จการศึกษา" ${s.status==='สำเร็จการศึกษา'?'selected':''}>สำเร็จการศึกษา</option>
-                                        <option value="พ้นสภาพ" ${s.status==='พ้นสภาพ'?'selected':''}>พ้นสภาพ</option>
+                                        <option value="กำลังศึกษา" ${s.status === 'กำลังศึกษา' ? 'selected' : ''}>กำลังศึกษา</option>
+                                        <option value="รักษาสภาพ" ${s.status === 'รักษาสภาพ' ? 'selected' : ''}>รักษาสภาพ</option>
+                                        <option value="ลาพัก" ${s.status === 'ลาพัก' ? 'selected' : ''}>ลาพัก</option>
+                                        <option value="สำเร็จการศึกษา" ${s.status === 'สำเร็จการศึกษา' ? 'selected' : ''}>สำเร็จการศึกษา</option>
+                                        <option value="พ้นสภาพ" ${s.status === 'พ้นสภาพ' ? 'selected' : ''}>พ้นสภาพ</option>
                                     </select>
                                 </td>
                             </tr>
@@ -113,20 +113,20 @@ pages['student-status'] = function() {
     </div>`;
 };
 
-window.filterStudentStatus = function() {
+window.filterStudentStatus = function () {
     const table = document.getElementById('studentStatusTable');
     if (!table) return;
     const rows = table.getElementsByTagName('tr');
-    
+
     const term = document.getElementById('statusSearch').value.toLowerCase();
     const statusFilter = document.getElementById('statusFilter').value;
-    
+
     for (let i = 1; i < rows.length; i++) {
         const text = rows[i].textContent.toLowerCase();
         let show = true;
-        
+
         if (term && !text.includes(term)) show = false;
-        
+
         // Status is in the 5th column <td> (index 4)
         if (statusFilter) {
             const statusCell = rows[i].getElementsByTagName('td')[4].textContent.trim();
@@ -137,25 +137,25 @@ window.filterStudentStatus = function() {
     }
 };
 
-window.updateStudentStatusInline = async function(index, newStatus) {
+window.updateStudentStatusInline = async function (index, newStatus) {
     const student = MOCK.statusStudents[index];
-    if(!student) return;
+    if (!student) return;
 
-    if(!confirm(`ยืนยันการเปลี่ยนสถานะของ ${student.name} เป็น: ${newStatus} หรือไม่?`)) {
+    if (!confirm(`ยืนยันการเปลี่ยนสถานะของ ${student.name} เป็น: ${newStatus} หรือไม่?`)) {
         renderPage(); // re-render to revert select box
         return;
     }
-    
+
     showApiLoading('กำลังส่งข้อมูลไปยัง Google Sheets...');
     try {
         // 1. Call real API from api.js
         const studentId = student.id;
         const result = await window.api.updateStudentStatus(studentId, newStatus);
-        
+
         if (result && result.status === 'success') {
             // 2. Update local lists for UI consistency
             student.status = newStatus; // Update flat list used in this page
-            
+
             // 3. Sync with main MOCK.students list (used by other pages like Profile)
             if (MOCK.students) {
                 const globalIdx = MOCK.students.findIndex(s => (s.id || s.studentId || s.StudentID) === studentId);
@@ -163,13 +163,13 @@ window.updateStudentStatusInline = async function(index, newStatus) {
                     MOCK.students[globalIdx].status = newStatus;
                 }
             }
-            
+
             alert('อัปเดตสถานะลงใน Google Sheets สำเร็จเรียบร้อยครับ!');
             renderPage();
         } else {
             throw new Error(result ? result.message : 'ไม่สามารถเชื่อมต่อ Server ได้');
         }
-    } catch(e) {
+    } catch (e) {
         console.error('Update Status Error:', e);
         alert('เกิดข้อผิดพลาดในการบันทึก: ' + e.message);
         renderPage(); // Revert UI

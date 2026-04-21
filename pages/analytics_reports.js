@@ -1,27 +1,28 @@
 pages['analytics-reports'] = function() {
-    // 1. Prepare Real Data from MOCK
-    let totalStudents = 1248;
-    let alumni = 8531;
-    let avgGpa = "3.45";
-    let gradRate = "89.2%";
+    // 1. Prepare Real Data from MOCK (No Fake Fallbacks)
+    let totalStudents = 0;
+    let alumni = 0;
+    let avgGpa = "0.00";
+    let gradRate = "0.0%";
     
-    let cohorts = { '64': 180, '65': 210, '66': 245, '67': 285, '68': 328 };
-    let majors = { 'การพยาบาลผู้ใหญ่': 35, 'การพยาบาลเด็ก': 22, 'การบริหารทางการพยาบาล': 18, 'การพยาบาลเวชปฏิบัติชุมชน': 15, 'อื่นๆ': 10 };
+    let cohorts = {};
+    let majors = {};
 
     if (window.MOCK && window.MOCK.students && window.MOCK.students.length > 0) {
         let students = window.MOCK.students;
         
         let activeStudents = students.filter(s => {
-            let st = s.status || s.Status;
+            let st = s.status || s.Status || '';
             return st !== 'สำเร็จการศึกษา' && st !== 'พ้นสภาพ';
         });
-        if (activeStudents.length > 0) totalStudents = activeStudents.length;
+        totalStudents = activeStudents.length;
         
+        // Use statusStudents if available, else count from main students list
         let alumniCount = window.MOCK.statusStudents ? 
             window.MOCK.statusStudents.filter(s => s.status === 'สำเร็จการศึกษา').length :
             students.filter(s => (s.status || s.Status) === 'สำเร็จการศึกษา').length;
             
-        if (alumniCount > 0) alumni = alumniCount;
+        alumni = alumniCount;
         
         let validGpas = students.map(s => parseFloat(s.gpa || s.GPAX || s.gpax)).filter(g => !isNaN(g) && g > 0);
         if (validGpas.length > 0) {
@@ -33,14 +34,12 @@ pages['analytics-reports'] = function() {
             let cohortCounts = {};
             activeStudents.forEach(s => {
                 let id = s.studentId || s.id || s.StudentID || "";
-                let cohort = id.toString().substring(0, 2);
+                let cohort = String(id).trim().substring(0, 2);
                 if(cohort && !isNaN(cohort) && cohort.length === 2) {
                     cohortCounts[cohort] = (cohortCounts[cohort] || 0) + 1;
                 }
             });
-            if (Object.keys(cohortCounts).length > 0) {
-                cohorts = cohortCounts;
-            }
+            cohorts = cohortCounts;
 
             // Majors calc
             let majorCounts = {};
