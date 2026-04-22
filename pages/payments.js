@@ -31,7 +31,7 @@ pages.payments = function() {
             </div>
 
             <!-- Expense Table Reference -->
-            <div class="card animate-in animate-delay-4 fee-table-card" style="min-width: 0; outline:none; border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden;">
+            <div class="card animate-in animate-delay-4 fee-table-card" style="outline:none; border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden;">
             <div class="card-header"><h3 class="card-title">🧾 อัตราค่าธรรมเนียมการศึกษา หลักสูตรพยาบาลศาสตรมหาบัณฑิต</h3></div>
             <div class="card-body" style="padding:0">
                 <div class="table-wrapper">

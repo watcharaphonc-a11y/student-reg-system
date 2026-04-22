@@ -1728,6 +1728,16 @@ input, select, textarea {
         grid-template-columns: 1fr;
     }
 
+    .payments-main-layout {
+        flex-direction: column;
+    }
+
+    .qr-payment-card, .fee-table-card {
+        flex: 1 1 100% !important;
+        max-width: 100%;
+        min-width: 0 !important; /* Allow shrinking in stacked mode if necessary */
+    }
+
     .modal {
         width: 98%;
         max-width: 740px;
@@ -1839,15 +1849,6 @@ input, select, textarea {
 
     .header-semester {
         display: none;
-    }
-
-    .payments-main-layout {
-        flex-direction: column;
-    }
-
-    .qr-payment-card, .fee-table-card {
-        flex: 1 1 100% !important;
-        max-width: 100%;
     }
 }
 
