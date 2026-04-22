@@ -4,6 +4,11 @@
 // ============================
 
 pages['thesis-advisor'] = function () {
+    const role = window.currentUserRole;
+    const isStudent = role === 'student';
+    const isStaff = role === 'staff';
+    const isAdmin = role === 'admin';
+
     // Persistent state for the current 5-step flow
     if (!window._thesisFlow) {
         window._thesisFlow = {
@@ -15,6 +20,17 @@ pages['thesis-advisor'] = function () {
             topicTh: '',
             topicEn: ''
         };
+
+        // Auto-select if student
+        if (isStudent && MOCK.student) {
+            const st = MOCK.student;
+            window._thesisFlow.studentId = st.studentId || st.id;
+            window._thesisFlow.main = st.mainAdvisor || '-';
+            window._thesisFlow.coInternal = st.coAdvisorInternal || '-';
+            window._thesisFlow.coExternal = st.coAdvisorExternal || '-';
+            window._thesisFlow.topicTh = st.thesisTopic || st.thesisInfo?.title || '';
+            window._thesisFlow.topicEn = st.thesisInfo?.titleEn || '';
+        }
     }
     
     const flow = window._thesisFlow;
@@ -42,18 +58,19 @@ pages['thesis-advisor'] = function () {
     return `
     <div class="animate-in">
         <div class="page-header">
-            <h1 class="page-title">จัดการอาจารย์ที่ปรึกษาวิทยานิพนธ์</h1>
-            <p class="page-subtitle">ขั้นตอนการแต่งตั้งทีมที่ปรึกษาและกำหนดหัวข้อวิทยานิพนธ์เบื้องต้น</p>
+            <h1 class="page-title">อาจารย์ที่ปรึกษาวิทยานิพนธ์</h1>
+            <p class="page-subtitle">${isAdmin ? 'ขั้นตอนการแต่งตั้งทีมที่ปรึกษาและกำหนดหัวข้อวิทยานิพนธ์เบื้องต้น' : 'สรุปข้อมูลทีมที่ปรึกษาและหัวข้อวิทยานิพนธ์'}</p>
         </div>
 
         <div style="display:flex; flex-direction:column; gap:25px;">
             
-            <!-- Left: Step Content -->
-            <div class="card" style="border:none; box-shadow:0 10px 30px -5px rgba(0,0,0,0.1);">
+            <!-- Left: Step Content (Wizard) -->
+            ${!isStudent ? `
+            <div class="card" style="border:none; box-shadow:0 10px 30px -5px rgba(0,0,0,0.1); ${!isAdmin && !isStaff ? 'display:none;' : ''}">
                 <div class="card-body" style="padding:0;">
                     
-                    <!-- Progress Bar -->
-                    <div style="display:flex; border-bottom:1px solid var(--border-color); background:var(--bg-light);">
+                    <!-- Progress Bar (Admin Only) -->
+                    <div style="display:${isAdmin ? 'flex' : 'none'}; border-bottom:1px solid var(--border-color); background:var(--bg-light);">
                         ${[1, 2, 3, 4, 5].map(s => `
                             <div style="flex:1; padding:15px; text-align:center; position:relative; border-right:1px solid var(--border-color); transition:all 0.3s;
                                 ${flow.step === s ? 'background:white; border-bottom:3px solid var(--accent-primary);' : 'opacity:0.6;'}">
@@ -66,27 +83,30 @@ pages['thesis-advisor'] = function () {
                     </div>
 
                     <!-- Step Content Areas -->
-                    <div style="padding:40px;">
+                    <div style="padding:${isAdmin ? '40px' : '25px 40px'};">
                         
-                        <!-- Step 1: Select Student -->
-                        <div style="display:${flow.step === 1 ? 'block' : 'none'}">
-                            <h3 style="margin-bottom:20px; font-size:1.3rem;">1. เลือกนักศึกษา</h3>
+                        <!-- Step 1: Select Student (Admin & Staff) -->
+                        <div style="display:${isAdmin ? (flow.step === 1 ? 'block' : 'none') : 'block'}">
+                            <h3 style="margin-bottom:20px; font-size:1.2rem;">${isAdmin ? '1. เลือกนักศึกษา' : 'ค้นหาข้อมูลนักศึกษา'}</h3>
                             <div class="form-group">
-                                <label class="form-label">ค้นหารายชื่อนักศึกษาที่ต้องการแต่งตั้ง</label>
+                                <label class="form-label">รายชื่อนักศึกษา</label>
                                 ${renderSearchableSelect('thesisStudentSelect', 
                                     students.map(s => ({ value: s.id || s.studentId, label: `${s.studentId} - ${s.prefix || ''}${s.firstName} ${s.lastName}` })), 
                                     flow.studentId, 
                                     '--- ค้นหารหัสนักศึกษา หรือ ชื่อ ---'
                                 )}
                             </div>
+                            ${isAdmin ? `
                             <div style="margin-top:25px; padding:15px; background:rgba(37, 99, 235, 0.05); border-radius:12px; display:flex; gap:12px; align-items:center;">
                                 <div style="font-size:1.5rem;">💡</div>
                                 <div style="font-size:0.9rem; color:var(--text-secondary); line-height:1.4;">
                                     ระบบจะดึงข้อมูลที่ปรึกษาและหัวข้อเดิมที่มีอยู่ในระบบมาแสดงให้ตรวจสอบโดยอัตโนมัติ
                                 </div>
                             </div>
+                            ` : ''}
                         </div>
 
+                        ${isAdmin ? `
                         <!-- Step 2: Main Advisor -->
                         <div style="display:${flow.step === 2 ? 'block' : 'none'}">
                             <h3 style="margin-bottom:20px; font-size:1.3rem;">2. เลือกอาจารย์ที่ปรึกษาหลัก</h3>
@@ -156,19 +176,20 @@ pages['thesis-advisor'] = function () {
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left:8px;"><polyline points="9 18 15 12 9 6"/></svg>
                                 </button>
                             ` : `
-                                <!-- Primary Save Button moved to Sidebar for better visibility -->
                                 <div style="color:var(--text-muted); font-size:0.85rem; display:flex; align-items:center; gap:8px;">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                    ตรวจสอบข้อมูลในแถบด้านขวาและกดบันทึก
+                                    ตรวจสอบข้อมูลด้านล่างและกดบันทึก
                                 </div>
                             `}
                         </div>
+                        ` : ''}
                     </div>
                 </div>
             </div>
+            ` : ''}
 
             <!-- Bottom: Summary Section -->
-            <div>
+            <div style="display:${flow.studentId ? 'block' : 'none'}">
                 <div class="card" style="border:none; box-shadow:0 10px 25px -5px rgba(0,0,0,0.05); border-left:4px solid var(--accent-primary);">
                     <div class="card-header"><h3 class="card-title">สรุปข้อมูลการแต่งตั้ง</h3></div>
                     <div class="card-body">
@@ -203,7 +224,7 @@ pages['thesis-advisor'] = function () {
                             <p><strong>กฎเกณฑ์:</strong> กำหนดที่ปรึกษาได้ไม่เกิน 3 ท่าน โดยเป็นประธาน 1 ท่าน และกรรมการร่วมไม่เกิน 2 ท่าน</p>
                         </div>
 
-                        ${flow.step === 5 ? `
+                        ${isAdmin && flow.step === 5 ? `
                         <button class="btn btn-primary" style="width:100%; height:45px; font-weight:700; background:#10b981; color:#fff; border:none; box-shadow:0 4px 12px rgba(16, 185, 129, 0.2);" 
                                 onclick="window.saveThesisAssignments()">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:8px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -232,6 +253,7 @@ window.init_thesis_advisor = function() {
 };
 
 window.thesisNextStep = function() {
+    if (window.currentUserRole !== 'admin') return;
     if (window._thesisFlow.step < 5) {
         window._thesisFlow.step++;
         renderPage();
@@ -239,6 +261,7 @@ window.thesisNextStep = function() {
 };
 
 window.thesisPrevStep = function() {
+    if (window.currentUserRole !== 'admin') return;
     if (window._thesisFlow.step > 1) {
         window._thesisFlow.step--;
         renderPage();
@@ -260,21 +283,25 @@ window.selectThesisStudent = function(val) {
 };
 
 window.selectMainAdvisor = function(val) {
+    if (window.currentUserRole !== 'admin') return;
     window._thesisFlow.main = val || '-';
     renderPage();
 };
 
 window.selectCoInternal = function(val) {
+    if (window.currentUserRole !== 'admin') return;
     window._thesisFlow.coInternal = val || '-';
     renderPage();
 };
 
 window.selectCoExternal = function(val) {
+    if (window.currentUserRole !== 'admin') return;
     window._thesisFlow.coExternal = val || '-';
     renderPage();
 };
 
 window.saveThesisAssignments = async function() {
+    if (window.currentUserRole !== 'admin') return;
     const flow = window._thesisFlow;
     if (!flow.studentId || flow.main === '-') {
         showToast('กรุณาเลือกนักศึกษาและอาจารย์ที่ปรึกษาหลักให้ครบถ้วน', 'warning');
