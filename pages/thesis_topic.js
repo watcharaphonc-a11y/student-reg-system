@@ -49,6 +49,7 @@ function renderStudentThesisTopic() {
                             <label class="form-label">ชื่อหัวข้อ (ภาษาไทย)</label>
                             <textarea id="topic-th" class="form-control" rows="3" placeholder="ระบุชื่อหัวข้อวิทยานิพนธ์ภาษาไทย">${st.thesisInfo?.title || ''}</textarea>
                         </div>
+                        <div class="divider"></div>
                         <div class="form-group">
                             <label class="form-label">ชื่อหัวข้อ (ภาษาอังกฤษ)</label>
                             <textarea id="topic-en" class="form-control" rows="3" placeholder="Specify Thesis Title in English">${st.thesisInfo?.titleEn || ''}</textarea>

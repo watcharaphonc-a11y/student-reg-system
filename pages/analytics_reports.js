@@ -309,7 +309,7 @@ pages['analytics-reports'] = function() {
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--success)">
                             <path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/>
                         </svg>
-                        สัดส่วนตามสาขาวิชา (ป.โท)
+                        สัดส่วนนักศึกษาตามสาขาวิชา
                     </h3>
                 </div>
                 <div class="card-body" style="flex:1; display:flex; flex-direction:column; justify-content:center; padding: 30px;">
