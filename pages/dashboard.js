@@ -179,23 +179,34 @@ function renderDashboardOverview(cohorts, majors, genderStats, atRiskStudents) {
     // Process Cohorts HTML
     let sortedCohorts = Object.keys(cohorts).sort();
     let maxCohort = Math.max(...Object.values(cohorts), 1);
-    let cohortHtml = sortedCohorts.map(c => {
+    const barColors = [
+        'linear-gradient(180deg, #6366f1, #4338ca)', // Indigo
+        'linear-gradient(180deg, #ec4899, #be185d)', // Pink
+        'linear-gradient(180deg, #f59e0b, #d97706)', // Orange
+        'linear-gradient(180deg, #10b981, #059669)', // Green
+        'linear-gradient(180deg, #06b6d4, #0891b2)', // Cyan
+        'linear-gradient(180deg, #8b5cf6, #6d28d9)'  // Purple
+    ];
+
+    let cohortHtml = sortedCohorts.map((c, idx) => {
         let count = cohorts[c];
         let height = (count / maxCohort) * 150;
+        let color = barColors[idx % barColors.length];
         return `
             <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:45px;">
                 <span style="font-size:0.75rem; font-weight:700;">${count}</span>
-                <div style="background:var(--accent-gradient); width:100%; height:${height}px; border-radius:4px 4px 0 0;"></div>
+                <div style="background:${color}; width:100%; height:${height}px; border-radius:4px 4px 0 0; transition: height 0.5s ease;"></div>
                 <span style="font-size:0.75rem; color:var(--text-muted);">รุ่น ${c}</span>
             </div>
         `;
     }).join('');
 
     // Process Majors HTML
-    let majorHtml = Object.keys(majors).sort((a,b) => majors[b] - majors[a]).map(m => {
+    let majorHtml = Object.keys(majors).sort((a,b) => majors[b] - majors[a]).map((m, idx) => {
         let count = majors[m];
         let total = Object.values(majors).reduce((a,b)=>a+b, 0);
         let pct = Math.round((count/total)*100);
+        let color = barColors[idx % barColors.length];
         return `
             <div style="margin-bottom:15px;">
                 <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:5px;">
@@ -203,7 +214,7 @@ function renderDashboardOverview(cohorts, majors, genderStats, atRiskStudents) {
                     <span style="font-weight:700;">${count} คน (${pct}%)</span>
                 </div>
                 <div style="height:8px; background:var(--bg-tertiary); border-radius:4px; overflow:hidden;">
-                    <div style="width:${pct}%; height:100%; background:var(--accent-gradient);"></div>
+                    <div style="width:${pct}%; height:100%; background:${color}; border-radius:4px; transition: width 0.5s ease;"></div>
                 </div>
             </div>
         `;
