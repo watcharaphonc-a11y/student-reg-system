@@ -1,7 +1,7 @@
 // ============================
 // Dashboard Page (Merged with Analytics)
 // ============================
-pages.dashboard = function () {
+pages.dashboard = function() {
     // 1. Data Preparation
     const allStudents = MOCK.students || [];
     const activeStudents = allStudents.filter(s => s.status !== 'สำเร็จการศึกษา' && s.status !== 'Graduated' && s.status !== 'พ้นสภาพ');
@@ -9,9 +9,9 @@ pages.dashboard = function () {
     const advisors = MOCK.academicAdvisors || [];
     const enrolledCourses = MOCK.enrolledCourses || [];
     const uniqueCourseNames = new Set(enrolledCourses.map(c => c.name));
-
+    
     const s = MOCK.dashboardStats || { totalStudents: 0, totalAlumni: 0, totalTeachers: 0, totalCourses: 0, avgGPA: 0 };
-
+    
     const totalStudents = activeStudents.length || s.totalStudents;
     const totalAlumni = alumniStudents.length || s.totalAlumni;
     const totalAdvisors = advisors.length || s.totalTeachers;
@@ -29,7 +29,7 @@ pages.dashboard = function () {
         activeStudents.forEach(st => {
             let id = st.studentId || st.id || "";
             let cohort = String(id).trim().substring(0, 2);
-            if (cohort && !isNaN(cohort) && cohort.length === 2) {
+            if(cohort && !isNaN(cohort) && cohort.length === 2) {
                 cohorts[cohort] = (cohorts[cohort] || 0) + 1;
             }
         });
@@ -182,13 +182,13 @@ function renderDashboardOverview(cohorts, majors, genderStats, atRiskStudents) {
     let cohortHtml = sortedCohorts.map(c => {
         let count = cohorts[c];
         let height = (count / maxCohort) * 150;
-        return \`
+        return `
             <div style="display:flex; flex-direction:column; align-items:center; gap:8px; width:45px;">
-                <span style="font-size:0.75rem; font-weight:700;">\${count}</span>
-                <div style="background:var(--accent-gradient); width:100%; height:\${height}px; border-radius:4px 4px 0 0;"></div>
-                <span style="font-size:0.75rem; color:var(--text-muted);">รุ่น \${c}</span>
+                <span style="font-size:0.75rem; font-weight:700;">${count}</span>
+                <div style="background:var(--accent-gradient); width:100%; height:${height}px; border-radius:4px 4px 0 0;"></div>
+                <span style="font-size:0.75rem; color:var(--text-muted);">รุ่น ${c}</span>
             </div>
-        \`;
+        `;
     }).join('');
 
     // Process Majors HTML
@@ -196,22 +196,22 @@ function renderDashboardOverview(cohorts, majors, genderStats, atRiskStudents) {
         let count = majors[m];
         let total = Object.values(majors).reduce((a,b)=>a+b, 0);
         let pct = Math.round((count/total)*100);
-        return \`
+        return `
             <div style="margin-bottom:15px;">
                 <div style="display:flex; justify-content:space-between; font-size:0.82rem; margin-bottom:5px;">
-                    <span>\${m}</span>
-                    <span style="font-weight:700;">\${count} คน (\${pct}%)</span>
+                    <span>${m}</span>
+                    <span style="font-weight:700;">${count} คน (${pct}%)</span>
                 </div>
                 <div style="height:8px; background:var(--bg-tertiary); border-radius:4px; overflow:hidden;">
-                    <div style="width:\${pct}%; height:100%; background:var(--accent-gradient);"></div>
+                    <div style="width:${pct}%; height:100%; background:var(--accent-gradient);"></div>
                 </div>
             </div>
-        \`;
+        `;
     }).join('');
 
     return `
-            < div class="dashboard-grid" style = "grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px;" >
-        < !--Students by Cohort-- >
+    <div class="dashboard-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px;">
+        <!-- Students by Cohort -->
         <div class="card animate-in">
             <div class="card-header"><h3 class="card-title">จำนวนนักศึกษาแยกตามรุ่น</h3></div>
             <div class="card-body">
@@ -221,7 +221,7 @@ function renderDashboardOverview(cohorts, majors, genderStats, atRiskStudents) {
             </div>
         </div>
 
-        <!--Students by Major-- >
+        <!-- Students by Major -->
         <div class="card animate-in animate-delay-1">
             <div class="card-header"><h3 class="card-title">สัดส่วนตามสาขาวิชา</h3></div>
             <div class="card-body">
@@ -229,55 +229,55 @@ function renderDashboardOverview(cohorts, majors, genderStats, atRiskStudents) {
             </div>
         </div>
 
-        <!--Gender & Early Warning-- >
-            <div style="display:flex; flex-direction:column; gap:24px;">
-                <div class="card animate-in animate-delay-2">
-                    <div class="card-header"><h3 class="card-title">สัดส่วนนักศึกษา (เพศ)</h3></div>
-                    <div class="card-body">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:600; font-size:0.9rem;">
-                            <span style="color:var(--info);">ชาย ${genderStats.male}%</span>
-                            <span style="color:var(--danger);">หญิง ${genderStats.female}%</span>
-                        </div>
-                        <div style="height:15px; display:flex; border-radius:10px; overflow:hidden; background:var(--bg-tertiary);">
-                            <div style="width:${genderStats.male}%; background:var(--info);"></div>
-                            <div style="width:${genderStats.female}%; background:var(--accent-primary);"></div>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.75rem; color:var(--text-muted);">
-                            <span>${genderStats.maleCount} คน</span>
-                            <span>${genderStats.femaleCount} คน</span>
-                        </div>
+        <!-- Gender & Early Warning -->
+        <div style="display:flex; flex-direction:column; gap:24px;">
+            <div class="card animate-in animate-delay-2">
+                <div class="card-header"><h3 class="card-title">สัดส่วนนักศึกษา (เพศ)</h3></div>
+                <div class="card-body">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:10px; font-weight:600; font-size:0.9rem;">
+                        <span style="color:var(--info);">ชาย ${genderStats.male}%</span>
+                        <span style="color:var(--danger);">หญิง ${genderStats.female}%</span>
                     </div>
-                </div>
-
-                <div class="card animate-in animate-delay-3" style="border-left: 4px solid var(--danger);">
-                    <div class="card-header" style="background: rgba(220, 38, 38, 0.05);">
-                        <h3 class="card-title" style="color:var(--danger);">นักศึกษาที่ควรเฝ้าระวัง (GPA < 2.5)</h3>
+                    <div style="height:15px; display:flex; border-radius:10px; overflow:hidden; background:var(--bg-tertiary);">
+                        <div style="width:${genderStats.male}%; background:var(--info);"></div>
+                        <div style="width:${genderStats.female}%; background:var(--accent-primary);"></div>
                     </div>
-                    <div class="card-body" style="padding:0;">
-                        ${atRiskStudents.length === 0 ? '<div style="padding:20px; text-align:center; color:var(--text-muted);">ไม่พบข้อมูล</div>' :
-                            atRiskStudents.map(st => \`
-                        <div style="display:flex; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="viewStudentProfile('\${st.studentId}')">
-                            <div>
-                                <div style="font-weight:600; font-size:0.9rem;">\${st.prefix}\${st.firstName} \${st.lastName}</div>
-                                <div style="font-size:0.72rem; color:var(--text-muted);">\${st.studentId} • \${st.department}</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="color:var(--danger); font-weight:700;">\${Number(st.gpa).toFixed(2)}</div>
-                                <div style="font-size:0.65rem; color:var(--text-muted);">GPAX</div>
-                            </div>
-                        </div>
-                        \`).join('')
-                    }
+                    <div style="display:flex; justify-content:space-between; margin-top:8px; font-size:0.75rem; color:var(--text-muted);">
+                        <span>${genderStats.maleCount} คน</span>
+                        <span>${genderStats.femaleCount} คน</span>
                     </div>
                 </div>
             </div>
-    </div > `;
+
+            <div class="card animate-in animate-delay-3" style="border-left: 4px solid var(--danger);">
+                <div class="card-header" style="background: rgba(220, 38, 38, 0.05);">
+                    <h3 class="card-title" style="color:var(--danger);">นักศึกษาที่ควรเฝ้าระวัง (GPA < 2.5)</h3>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    ${atRiskStudents.length === 0 ? '<div style="padding:20px; text-align:center; color:var(--text-muted);">ไม่พบข้อมูล</div>' : 
+                        atRiskStudents.map(st => `
+                            <div style="display:flex; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="viewStudentProfile('${st.studentId}')">
+                                <div>
+                                    <div style="font-weight:600; font-size:0.9rem;">${st.prefix}${st.firstName} ${st.lastName}</div>
+                                    <div style="font-size:0.72rem; color:var(--text-muted);">${st.studentId} • ${st.department}</div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="color:var(--danger); font-weight:700;">${Number(st.gpa).toFixed(2)}</div>
+                                    <div style="font-size:0.65rem; color:var(--text-muted);">GPAX</div>
+                                </div>
+                            </div>
+                        `).join('')
+                    }
+                </div>
+            </div>
+        </div>
+    </div>`;
 }
 
 function renderDashboardData(activeStudents, advisors) {
     return `
-        < div class="animate-in" >
-        < !--Search Bar-- >
+    <div class="animate-in">
+        <!-- Search Bar -->
         <div class="admin-search-box" style="margin-bottom: 24px; background: white; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
             <div style="flex: 1; position: relative; min-width: 250px;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -313,7 +313,7 @@ function renderDashboardData(activeStudents, advisors) {
                 </div>
             </div>
         </div>
-    </div > `;
+    </div>`;
 }
 
 // ============================
@@ -322,7 +322,7 @@ function renderDashboardData(activeStudents, advisors) {
 
 window.switchDashboardTab = function(tab) {
     window._dashboardActiveTab = tab;
-    // Re-render only the dashboard (via navigateTo to maintain state or just call pages.dashboard())
+    // Re-render only the dashboard
     const content = pages.dashboard();
     document.getElementById('contentArea').innerHTML = content;
     // Update active tab button classes
@@ -340,7 +340,7 @@ window.filterDashboardLists = function() {
 
     const allStudents = MOCK.students || [];
     const filteredStudents = query ? allStudents.filter(st => {
-        const fullName = \`\${st.prefix || ''}\${st.firstName || ''} \${st.lastName || ''}\`.toLowerCase();
+        const fullName = `${st.prefix || ''}${st.firstName || ''} ${st.lastName || ''}`.toLowerCase();
         const studentId = String(st.studentId || st.id || '').toLowerCase();
         const dept = String(st.department || '').toLowerCase();
         return fullName.includes(query) || studentId.includes(query) || dept.includes(query);
@@ -350,7 +350,7 @@ window.filterDashboardLists = function() {
     if (studentContainer) studentContainer.innerHTML = renderStudentListTable(filteredStudents);
     
     const studentBadge = document.getElementById('studentCountBadge');
-    if (studentBadge) studentBadge.textContent = \`\${filteredStudents.length} คน\`;
+    if (studentBadge) studentBadge.textContent = `${filteredStudents.length} คน`;
 
     const allTeachers = MOCK.academicAdvisors || [];
     const filteredTeachers = query ? allTeachers.filter(t => {
@@ -364,45 +364,45 @@ window.filterDashboardLists = function() {
     if (teacherContainer) teacherContainer.innerHTML = renderTeacherListTable(filteredTeachers);
     
     const teacherBadge = document.getElementById('teacherCountBadge');
-    if (teacherBadge) teacherBadge.textContent = \`\${filteredTeachers.length} คน\`;
+    if (teacherBadge) teacherBadge.textContent = `${filteredTeachers.length} คน`;
 };
 
-// Reuse existing helpers
+// Helpers
 function renderStudentListTable(list) {
     if (!list || list.length === 0) return '<div style="padding:40px; text-align:center; color:var(--text-muted);">ไม่พบข้อมูล</div>';
-    return \`<table class="data-table" style="font-size:0.85rem;">
+    return `<table class="data-table" style="font-size:0.85rem;">
         <thead><tr><th>#</th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
         <tbody>
-            \${list.map((st, i) => \`
+            ${list.map((st, i) => `
                 <tr>
-                    <td>\${i+1}</td>
-                    <td style="font-weight:600; color:var(--accent-primary);">\${st.studentId || st.id}</td>
-                    <td>\${st.prefix || ''}\${st.firstName} \${st.lastName}</td>
-                    <td>\${st.department || '-'}</td>
-                    <td>\${getStatusBadge(st.status || 'กำลังศึกษา')}</td>
-                    <td><button class="btn btn-secondary btn-sm" onclick="viewStudentProfile('\${st.studentId || st.id}')">ดูข้อมูล</button></td>
+                    <td>${i+1}</td>
+                    <td style="font-weight:600; color:var(--accent-primary);">${st.studentId || st.id}</td>
+                    <td>${st.prefix || ''}${st.firstName} ${st.lastName}</td>
+                    <td>${st.department || '-'}</td>
+                    <td>${getStatusBadge(st.status || 'กำลังศึกษา')}</td>
+                    <td><button class="btn btn-secondary btn-sm" onclick="viewStudentProfile('${st.studentId || st.id}')">ดูข้อมูล</button></td>
                 </tr>
-            \`).join('')}
+            `).join('')}
         </tbody>
-    </table>\`;
+    </table>`;
 }
 
 function renderTeacherListTable(list) {
     if (!list || list.length === 0) return '<div style="padding:40px; text-align:center; color:var(--text-muted);">ไม่พบข้อมูล</div>';
-    return \`<table class="data-table" style="font-size:0.85rem;">
-        <thead><tr><th>#</th><th>ชื่อ-นามุล</th><th>ตำแหน่ง</th><th>ความเชี่ยวชาญ</th><th>นศ. ในกำกับ</th></tr></thead>
+    return `<table class="data-table" style="font-size:0.85rem;">
+        <thead><tr><th>#</th><th>ชื่อ-นามสกุล</th><th>ตำแหน่ง</th><th>ความเชี่ยวชาญ</th><th>นศ. ในกำกับ</th></tr></thead>
         <tbody>
-            \${list.map((t, i) => \`
+            ${list.map((t, i) => `
                 <tr>
-                    <td>\${i+1}</td>
-                    <td style="font-weight:600;">\${t.name}</td>
-                    <td><span class="badge info" style="font-size:0.75rem;">\${t.position || '-'}</span></td>
-                    <td style="font-size:0.82rem;">\${t.expertise || '-'}</td>
-                    <td style="text-align:center; font-weight:600;">\${t.studentCount || 0}</td>
+                    <td>${i+1}</td>
+                    <td style="font-weight:600;">${t.name}</td>
+                    <td><span class="badge info" style="font-size:0.75rem;">${t.position || '-'}</span></td>
+                    <td style="font-size:0.82rem;">${t.expertise || '-'}</td>
+                    <td style="text-align:center; font-weight:600;">${t.studentCount || 0}</td>
                 </tr>
-            \`).join('')}
+            `).join('')}
         </tbody>
-    </table>\`;
+    </table>`;
 }
 
 window.viewStudentProfile = function(id) {
