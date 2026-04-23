@@ -1,5 +1,5 @@
 // ============================
-// Dashboard Page (Merged with Analytics)
+// Dashboard Page (Merged with Analytics & Enhanced)
 // ============================
 pages.dashboard = function() {
     // 1. Data Preparation
@@ -18,7 +18,7 @@ pages.dashboard = function() {
     const totalCourses = uniqueCourseNames.size || s.totalCourses || (MOCK.courses ? MOCK.courses.length : 0);
     const avgGpa = Number(s.avgGPA || 0).toFixed(2);
 
-    // Analytics Data Processing (from analytics_reports.js)
+    // Analytics Data Processing
     let cohorts = {};
     let majors = {};
     let genderStats = { male: 0, female: 0, maleCount: 0, femaleCount: 0 };
@@ -75,7 +75,7 @@ pages.dashboard = function() {
         <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
             <div>
                 <h1 class="page-title">แดชบอร์ด</h1>
-                <p class="page-subtitle">ภาพรวมข้อมูลระบบและการวิเคราะห์สถิติ</p>
+                <p class="page-subtitle">ภาพรวมข้อมูลระบบและการวิเคราะห์สถิติอัจฉริยะ</p>
             </div>
             <div class="header-semester" style="margin-bottom: 5px;">
                 อัปเดตล่าสุด: <span style="font-weight: 700; color: var(--accent-primary);">${new Date().toLocaleDateString('th-TH')}</span>
@@ -261,21 +261,22 @@ function renderDashboardOverview(cohorts, majors, genderStats, atRiskStudents) {
             </div>
 
             <div class="card animate-in animate-delay-3" style="border-left: 4px solid var(--danger);">
-                <div class="card-header" style="background: rgba(220, 38, 38, 0.05);">
+                <div class="card-header" style="background: rgba(220, 38, 38, 0.05); display: flex; justify-content: space-between; align-items: center;">
                     <h3 class="card-title" style="color:var(--danger);">นักศึกษาที่ควรเฝ้าระวัง (GPA < 2.5)</h3>
+                    <span class="badge danger" style="font-size: 0.7rem;">ต้องการความช่วยเหลือด่วน</span>
                 </div>
                 <div class="card-body" style="padding:0;">
                     ${atRiskStudents.length === 0 ? '<div style="padding:20px; text-align:center; color:var(--text-muted);">ไม่พบข้อมูล</div>' : 
                         atRiskStudents.map(st => `
-                            <div style="display:flex; justify-content:space-between; padding:12px 20px; border-bottom:1px solid var(--border-color); cursor:pointer;" onclick="viewStudentProfile('${st.studentId}')">
-                                <div>
+                            <div style="display:flex; justify-content:space-between; align-items: center; padding:12px 20px; border-bottom:1px solid var(--border-color);">
+                                <div style="cursor:pointer;" onclick="viewStudentProfile('${st.studentId}')">
                                     <div style="font-weight:600; font-size:0.9rem;">${st.prefix}${st.firstName} ${st.lastName}</div>
-                                    <div style="font-size:0.72rem; color:var(--text-muted);">${st.studentId} • ${st.department}</div>
+                                    <div style="font-size:0.72rem; color:var(--text-muted);">${st.studentId} • GPAX: <span style="color:var(--danger); font-weight:700;">${Number(st.gpa).toFixed(2)}</span></div>
                                 </div>
-                                <div style="text-align:right;">
-                                    <div style="color:var(--danger); font-weight:700;">${Number(st.gpa).toFixed(2)}</div>
-                                    <div style="font-size:0.65rem; color:var(--text-muted);">GPAX</div>
-                                </div>
+                                <button class="btn btn-secondary btn-sm" style="color: var(--danger); border-color: var(--danger); font-size: 0.7rem;" onclick="notifyAdvisor('${st.studentId}')">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                                    แจ้งที่ปรึกษา
+                                </button>
                             </div>
                         `).join('')
                     }
@@ -286,15 +287,59 @@ function renderDashboardOverview(cohorts, majors, genderStats, atRiskStudents) {
 }
 
 function renderDashboardData(activeStudents, advisors) {
+    const allStudents = MOCK.students || [];
+    const departments = [...new Set(allStudents.map(s => s.department).filter(Boolean))].sort();
+    const cohorts = [...new Set(allStudents.map(s => String(s.studentId || '').substring(0, 2)).filter(c => c && !isNaN(c)))].sort();
+
     return `
     <div class="animate-in">
-        <!-- Search Bar -->
-        <div class="admin-search-box" style="margin-bottom: 24px; background: white; padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-            <div style="flex: 1; position: relative; min-width: 250px;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="text" id="dashboardSearchInput" class="form-input" placeholder="ค้นหาชื่อ, รหัสนักศึกษา, สาขาวิชา หรืออาจารย์..." style="padding-left: 45px; width: 100%;" oninput="filterDashboardLists()">
+        <!-- Advanced Filter Bar -->
+        <div class="card" style="margin-bottom: 24px; border-bottom: 3px solid var(--accent-primary);">
+            <div class="card-body" style="padding: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; align-items: flex-end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="font-size: 0.75rem;">ค้นหาด้วยคำสำคัญ</label>
+                        <div style="position: relative;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%);"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="dashboardSearchInput" class="form-input" placeholder="ชื่อ, รหัส, วิชา..." style="padding-left: 35px; font-size: 0.82rem;" oninput="filterDashboardLists()">
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="font-size: 0.75rem;">รุ่น (Cohort)</label>
+                        <select id="filterCohort" class="form-select" style="font-size: 0.82rem;" onchange="filterDashboardLists()">
+                            <option value="">ทั้งหมด</option>
+                            ${cohorts.map(c => `<option value="${c}">รุ่น ${c}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="font-size: 0.75rem;">สาขาวิชา</label>
+                        <select id="filterMajor" class="form-select" style="font-size: 0.82rem;" onchange="filterDashboardLists()">
+                            <option value="">ทั้งหมด</option>
+                            ${departments.map(d => `<option value="${d}">${d}</option>`).join('')}
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label class="form-label" style="font-size: 0.75rem;">สถานะ</label>
+                        <select id="filterStatus" class="form-select" style="font-size: 0.82rem;" onchange="filterDashboardLists()">
+                            <option value="">ทั้งหมด</option>
+                            <option value="กำลังศึกษา">กำลังศึกษา</option>
+                            <option value="สำเร็จการศึกษา">สำเร็จการศึกษา</option>
+                            <option value="ลาพักการเรียน">ลาพักการเรียน</option>
+                            <option value="พ้นสภาพ">พ้นสภาพ</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" style="flex: 1; padding: 8px;" onclick="exportDashboardData('csv')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Excel
+                        </button>
+                        <button class="btn btn-primary" style="flex: 1; padding: 8px;" onclick="window.print()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                            Print
+                        </button>
+                    </div>
+                </div>
             </div>
-            <button class="btn btn-primary" onclick="filterDashboardLists()">ค้นหา</button>
         </div>
 
         <div style="display:grid; grid-template-columns: 1fr; gap:24px;">
@@ -333,10 +378,10 @@ function renderDashboardData(activeStudents, advisors) {
 
 window.switchDashboardTab = function(tab) {
     window._dashboardActiveTab = tab;
-    // Re-render only the dashboard
     const content = pages.dashboard();
-    document.getElementById('contentArea').innerHTML = content;
-    // Update active tab button classes
+    const contentArea = document.getElementById('contentArea');
+    if (contentArea) contentArea.innerHTML = content;
+    
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.textContent.includes(tab === 'overview' ? 'ภาพรวม' : 'จัดการข้อมูล')) {
@@ -346,16 +391,26 @@ window.switchDashboardTab = function(tab) {
 };
 
 window.filterDashboardLists = function() {
-    const input = document.getElementById('dashboardSearchInput');
-    const query = input ? input.value.trim().toLowerCase() : '';
+    const query = (document.getElementById('dashboardSearchInput')?.value || '').trim().toLowerCase();
+    const cohort = document.getElementById('filterCohort')?.value || '';
+    const major = document.getElementById('filterMajor')?.value || '';
+    const status = document.getElementById('filterStatus')?.value || '';
 
     const allStudents = MOCK.students || [];
-    const filteredStudents = query ? allStudents.filter(st => {
+    const filteredStudents = allStudents.filter(st => {
         const fullName = `${st.prefix || ''}${st.firstName || ''} ${st.lastName || ''}`.toLowerCase();
         const studentId = String(st.studentId || st.id || '').toLowerCase();
         const dept = String(st.department || '').toLowerCase();
-        return fullName.includes(query) || studentId.includes(query) || dept.includes(query);
-    }) : allStudents.filter(s => s.status !== 'สำเร็จการศึกษา' && s.status !== 'Graduated' && s.status !== 'พ้นสภาพ');
+        const stStatus = String(st.status || 'กำลังศึกษา');
+        const stCohort = studentId.substring(0, 2);
+
+        const matchesSearch = !query || fullName.includes(query) || studentId.includes(query) || dept.includes(query);
+        const matchesCohort = !cohort || stCohort === cohort;
+        const matchesMajor = !major || dept === major;
+        const matchesStatus = !status || stStatus === status;
+
+        return matchesSearch && matchesCohort && matchesMajor && matchesStatus;
+    });
 
     const studentContainer = document.getElementById('studentListContainer');
     if (studentContainer) studentContainer.innerHTML = renderStudentListTable(filteredStudents);
@@ -363,13 +418,13 @@ window.filterDashboardLists = function() {
     const studentBadge = document.getElementById('studentCountBadge');
     if (studentBadge) studentBadge.textContent = `${filteredStudents.length} คน`;
 
+    // Teachers filter (only matches search)
     const allTeachers = MOCK.academicAdvisors || [];
-    const filteredTeachers = query ? allTeachers.filter(t => {
+    const filteredTeachers = allTeachers.filter(t => {
         const name = String(t.name || '').toLowerCase();
         const expertise = String(t.expertise || '').toLowerCase();
-        const position = String(t.position || '').toLowerCase();
-        return name.includes(query) || expertise.includes(query) || position.includes(query);
-    }) : allTeachers;
+        return !query || name.includes(query) || expertise.includes(query);
+    });
 
     const teacherContainer = document.getElementById('teacherListContainer');
     if (teacherContainer) teacherContainer.innerHTML = renderTeacherListTable(filteredTeachers);
@@ -378,9 +433,54 @@ window.filterDashboardLists = function() {
     if (teacherBadge) teacherBadge.textContent = `${filteredTeachers.length} คน`;
 };
 
-// Helpers
+window.notifyAdvisor = function(studentId) {
+    const student = (MOCK.students || []).find(s => s.studentId === studentId);
+    if (student) {
+        showSuccessNotification(`ส่งข้อความแจ้งเตือนอาจารย์ที่ปรึกษาของ ${student.firstName} เรียบร้อยแล้ว`);
+    }
+};
+
+window.exportDashboardData = function(format) {
+    const query = (document.getElementById('dashboardSearchInput')?.value || '').trim().toLowerCase();
+    const cohort = document.getElementById('filterCohort')?.value || '';
+    const major = document.getElementById('filterMajor')?.value || '';
+    const status = document.getElementById('filterStatus')?.value || '';
+
+    const allStudents = MOCK.students || [];
+    const filtered = allStudents.filter(st => {
+        const fullName = `${st.prefix || ''}${st.firstName || ''} ${st.lastName || ''}`.toLowerCase();
+        const studentId = String(st.studentId || st.id || '').toLowerCase();
+        const dept = String(st.department || '').toLowerCase();
+        const stStatus = String(st.status || 'กำลังศึกษา');
+        const stCohort = studentId.substring(0, 2);
+
+        const matchesSearch = !query || fullName.includes(query) || studentId.includes(query) || dept.includes(query);
+        const matchesCohort = !cohort || stCohort === cohort;
+        const matchesMajor = !major || dept === major;
+        const matchesStatus = !status || stStatus === status;
+
+        return matchesSearch && matchesCohort && matchesMajor && matchesStatus;
+    });
+
+    if (format === 'csv') {
+        let csv = 'รหัสนักศึกษา,ชื่อ-นามสกุล,สาขาวิชา,สถานะ,GPAX\n';
+        filtered.forEach(st => {
+            csv += `${st.studentId},${st.prefix}${st.firstName} ${st.lastName},${st.department},${st.status || 'กำลังศึกษา'},${st.gpa || '0.00'}\n`;
+        });
+        
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.setAttribute('download', `student_report_${new Date().getTime()}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+};
+
+// Reusable Helpers
 function renderStudentListTable(list) {
-    if (!list || list.length === 0) return '<div style="padding:40px; text-align:center; color:var(--text-muted);">ไม่พบข้อมูล</div>';
+    if (!list || list.length === 0) return '<div style="padding:40px; text-align:center; color:var(--text-muted);">ไม่พบข้อมูลที่ค้นหา</div>';
     return `<table class="data-table" style="font-size:0.85rem;">
         <thead><tr><th>#</th><th>รหัสนักศึกษา</th><th>ชื่อ-นามสกุล</th><th>สาขาวิชา</th><th>สถานะ</th><th>จัดการ</th></tr></thead>
         <tbody>
@@ -424,3 +524,31 @@ window.viewStudentProfile = function(id) {
         navigateTo('student-profile');
     }
 };
+
+function showSuccessNotification(message) {
+    const toast = document.createElement('div');
+    toast.style.cssText = `
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: var(--success);
+        color: white;
+        padding: 15px 25px;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-lg);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideInRight 0.3s ease;
+    `;
+    toast.innerHTML = `
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <span>${message}</span>
+    `;
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.style.animation = 'slideOutRight 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
