@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบรับสมัครเข้าศึกษาต่อระดับบัณฑิตศึกษา | Graduate Admission Portal</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <div id="loading">
+        <div class="spinner"></div>
+        <p id="loading-text">กำลังประมวลผลข้อมูล...</p>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="logo-wrapper">
+                <img src="../assets/logo_faculty.png" alt="Faculty Logo" class="logo-img">
+            </div>
+            <h1>ระบบรับสมัครเข้าศึกษาต่อระดับบัณฑิตศึกษา</h1>
+            <p class="subtitle">วิทยาลัยพยาบาลบรมราชชนนี | สถาบันพระบรมราชชนก</p>
+        </header>
+
+        <div class="stepper" id="stepper">
+            <div class="step-item active" data-step="1">
+                <div class="step-number">1</div>
+                <span class="step-label">ข้อมูลส่วนตัว</span>
+            </div>
+            <div class="step-item" data-step="2">
+                <div class="step-number">2</div>
+                <span class="step-label">ประวัติการศึกษา</span>
+            </div>
+            <div class="step-item" data-step="3">
+                <div class="step-number">3</div>
+                <span class="step-label">ประสบการณ์ทำงาน</span>
+            </div>
+            <div class="step-item" data-step="4">
+                <div class="step-number">4</div>
+                <span class="step-label">แผนการศึกษา</span>
+            </div>
+            <div class="step-item" data-step="5">
+                <div class="step-number">5</div>
+                <span class="step-label">เอกสารประกอบ</span>
+            </div>
+        </div>
+
+        <main class="main-card">
+            <form id="admission-form">
+                <!-- Step 1: Personal Info -->
+                <div class="form-section active" data-section="1">
+                    <h2>1. ข้อมูลส่วนบุคคล</h2>
+                    
+                    <div class="photo-upload">
+                        <div class="preview-box" id="photo-preview">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                                <circle cx="12" cy="7" r="4" />
+                            </svg>
+                        </div>
+                        <input type="file" id="photo-input" accept="image/*" style="display: none;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('photo-input').click()">
+                            <span>📷 อัปโหลดรูปถ่ายหน้าตรง</span>
+                        </button>
+                        <p style="font-size: 0.8rem; color: var(--text-muted);">ไฟล์ JPG/PNG ขนาดไม่เกิน 2MB</p>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>สาขาวิชาที่ต้องการสมัคร</label>
+                            <select name="Major" required>
+                                <option value="">-- เลือกสาขาวิชา --</option>
+                                <option value="การพยาบาลผู้ใหญ่และผู้สูงอายุ">การพยาบาลผู้ใหญ่และผู้สูงอายุ</option>
+                                <option value="การพยาบาลเด็ก">การพยาบาลเด็ก</option>
+                                <option value="การผดุงครรภ์">การผดุงครรภ์</option>
+                                <option value="การพยาบาลจิตเวชและสุขภาพจิต">การพยาบาลจิตเวชและสุขภาพจิต</option>
+                                <option value="การพยาบาลเวชปฏิบัติชุมชน">การพยาบาลเวชปฏิบัติชุมชน</option>
+                                <option value="การบริหารทางการพยาบาล">การบริหารทางการพยาบาล</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>คำนำหน้าชื่อ</label>
+                            <select name="Prefix" required>
+                                <option value="นาย">นาย</option>
+                                <option value="นางสาว">นางสาว</option>
+                                <option value="นาง">นาง</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>ชื่อ-นามสกุล (ไทย)</label>
+                            <input type="text" name="FullName" placeholder="ชื่อ นามสกุล" required>
+                        </div>
+                        <div class="form-group">
+                            <label>เลขประจำตัวประชาชน</label>
+                            <input type="text" name="IdCard" placeholder="x-xxxx-xxxxx-xx-x" maxlength="17" id="id-card" required>
+                        </div>
+                        <div class="form-group">
+                            <label>วัน/เดือน/ปีเกิด (พ.ศ.)</label>
+                            <input type="date" name="Dob" required>
+                        </div>
+                        <div class="form-group">
+                            <label>เบอร์โทรศัพท์มือถือ</label>
+                            <input type="tel" name="Phone" placeholder="0xx-xxx-xxxx" required>
+                        </div>
+                        <div class="form-group">
+                            <label>อีเมล</label>
+                            <input type="email" name="Email" placeholder="example@email.com" required>
+                        </div>
+                        <div class="form-group full">
+                            <label>ที่อยู่ปัจจุบันที่ติดต่อได้</label>
+                            <textarea name="Address" rows="3" placeholder="ระบุเลขที่บ้าน ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์" required></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 2: Education -->
+                <div class="form-section" data-section="2">
+                    <h2>2. ประวัติการศึกษา</h2>
+                    <p style="margin-bottom: 20px; color: var(--text-muted);">ระบุประวัติการศึกษาในระดับปริญญาตรีขึ้นไป</p>
+                    
+                    <div id="education-list">
+                        <div class="education-item" style="padding: 20px; border: 1px solid var(--border); border-radius: var(--radius-md); margin-bottom: 20px;">
+                            <div class="form-grid">
+                                <div class="form-group full">
+                                    <label>ชื่อปริญญา / วุฒิการศึกษา</label>
+                                    <input type="text" name="edu_degree[]" placeholder="เช่น พยาบาลศาสตรบัณฑิต" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>สถาบันการศึกษา</label>
+                                    <input type="text" name="edu_inst[]" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>ปีที่สำเร็จการศึกษา (พ.ศ.)</label>
+                                    <input type="text" name="edu_year[]" placeholder="25xx" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>คะแนนเฉลี่ยสะสม (GPA)</label>
+                                    <input type="text" name="edu_gpa[]" placeholder="x.xx" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" onclick="addEducation()">+ เพิ่มประวัติการศึกษา</button>
+                </div>
+
+                <!-- Step 3: Work Info -->
+                <div class="form-section" data-section="3">
+                    <h2>3. ประวัติการทำงาน</h2>
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>สถานที่ทำงานปัจจุบัน</label>
+                            <input type="text" name="CurrentWorkplace" placeholder="ชื่อหน่วยงาน / โรงพยาบาล" required>
+                        </div>
+                        <div class="form-group">
+                            <label>ตำแหน่งงานปัจจุบัน</label>
+                            <input type="text" name="CurrentPosition" required>
+                        </div>
+                        <div class="form-group">
+                            <label>ประสบการณ์การทำงานพยาบาล (ปี)</label>
+                            <input type="number" name="WorkExperienceYears" min="1" required>
+                        </div>
+                        <div class="form-group full">
+                            <label>แหล่งทุนสนับสนุนการศึกษา</label>
+                            <select name="FundingType" required>
+                                <option value="ทุนส่วนตัว">ทุนส่วนตัว</option>
+                                <option value="ทุนต้นสังกัด">ทุนต้นสังกัด</option>
+                                <option value="ทุนอื่นๆ">ทุนอื่นๆ</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Research Plan -->
+                <div class="form-section" data-section="4">
+                    <h2>4. แผนการศึกษาและวิทยานิพนธ์</h2>
+                    <div class="form-group full">
+                        <label>ประเด็นที่สนใจทำวิจัย (Research Interest)</label>
+                        <textarea name="ResearchTopic" rows="8" placeholder="ระบุหัวข้อหรือประเด็นที่ท่านสนใจพัฒนาเป็นวิทยานิพนธ์" required></textarea>
+                    </div>
+                </div>
+
+                <!-- Step 5: Documents -->
+                <div class="form-section" data-section="5">
+                    <h2>5. เอกสารประกอบการสมัคร</h2>
+                    <p style="margin-bottom: 25px; color: var(--text-muted);">กรุณาอัปโหลดเอกสารในรูปแบบ PDF หรือรูปภาพ (JPG, PNG)</p>
+                    
+                    <style>
+                        .doc-row {
+                            display: flex;
+                            align-items: center;
+                            justify-content: space-between;
+                            padding: 15px;
+                            background: white;
+                            border: 1px solid var(--border);
+                            border-radius: var(--radius-md);
+                            margin-bottom: 12px;
+                        }
+                        .doc-info {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 4px;
+                        }
+                        .doc-title {
+                            font-weight: 600;
+                            font-size: 0.95rem;
+                        }
+                        .doc-status {
+                            font-size: 0.8rem;
+                            color: var(--text-muted);
+                        }
+                    </style>
+
+                    <div id="document-list">
+                        <!-- Documents will be added via JS for cleaner HTML -->
+                    </div>
+
+                    <div style="margin-top: 30px; padding: 20px; background: var(--primary-glow); border-radius: var(--radius-md); border: 1px solid var(--primary);">
+                        <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                            <input type="checkbox" style="margin-top: 5px;" required>
+                            <span style="font-size: 0.9rem; font-weight: 500;">
+                                ข้าพเจ้ายืนยันว่าข้อมูลที่ระบุในใบสมัครนี้เป็นความจริงทุกประการ หากตรวจพบว่าข้อมูลไม่ถูกต้อง ข้าพเจ้ายินยอมให้วิทยาลัยตัดสิทธิ์การสมัครโดยไม่มีข้อโต้แย้ง
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary" id="prev-btn" style="visibility: hidden;">ย้อนกลับ</button>
+                    <button type="button" class="btn btn-primary" id="next-btn">ถัดไป →</button>
+                    <button type="submit" class="btn btn-primary" id="submit-btn" style="display: none;">ส่งใบสมัคร ✓</button>
+                </div>
+            </form>
+
+            <div class="success-card" id="success-card">
+                <div class="success-icon">✨</div>
+                <h2>ส่งใบสมัครสำเร็จ!</h2>
+                <p>เราได้รับข้อมูลการสมัครของท่านเรียบร้อยแล้ว</p>
+                <div class="app-id" id="result-app-id">APP-000000</div>
+                <p style="color: var(--text-muted);">กรุณาจดจำรหัสการสมัครนี้เพื่อใช้ติดตามสถานะ</p>
+                <button class="btn btn-secondary" style="margin-top: 30px;" onclick="location.reload()">กลับสู่หน้าแรก</button>
+            </div>
+        </main>
+
+        <footer style="text-align: center; color: var(--text-muted); font-size: 0.85rem; padding-bottom: 40px;">
+            &copy; 2026 วิทยาลัยพยาบาลบรมราชชนนี | ระบบรับสมัครเข้าศึกษาต่อ
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
