@@ -102,7 +102,7 @@ header {
 .logo-wrapper {
     display: inline-flex;
     padding: 15px;
-    background: var(--bg-card);
+    background: #ffffff; /* Always white for the logo badge */
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-lg);
     margin-bottom: 24px;

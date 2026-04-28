@@ -208,16 +208,31 @@ input, select, textarea {
 .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    background: #ffffff; /* Always white background for the logo badge */
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 6px;
+    box-shadow: var(--shadow-sm);
     transition: var(--transition-normal);
     overflow: hidden;
 }
 
 .logo-img {
-    height: 50px;
+    max-width: 100%;
+    max-height: 100%;
     width: auto;
+    height: auto;
     object-fit: contain;
     transition: var(--transition-normal);
+}
+
+.sidebar.collapsed .logo {
+    width: 44px;
+    height: 44px;
+    padding: 4px;
 }
 
 .sidebar.collapsed .logo-img {
