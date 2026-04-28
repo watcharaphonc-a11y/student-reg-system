@@ -177,7 +177,6 @@ input, select, textarea {
 
 .sidebar.collapsed .nav-label,
 .sidebar.collapsed .nav-section-title,
-.sidebar.collapsed .logo-text,
 .sidebar.collapsed .user-info {
     display: none;
 }
@@ -210,33 +209,21 @@ input, select, textarea {
     display: flex;
     align-items: center;
     gap: 12px;
+    transition: var(--transition-normal);
+    overflow: hidden;
 }
 
-.logo-icon {
-    width: 40px;
-    height: 40px;
-    background: var(--accent-gradient);
-    border-radius: var(--radius-md);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    flex-shrink: 0;
+.logo-img {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+    transition: var(--transition-normal);
 }
 
-.logo-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--text-primary);
-    display: block;
-    letter-spacing: -0.02em;
+.sidebar.collapsed .logo-img {
+    height: 32px;
 }
 
-.logo-subtitle {
-    font-size: 0.7rem;
-    color: var(--text-muted);
-    display: block;
-}
 
 .sidebar-toggle {
     width: 32px;
