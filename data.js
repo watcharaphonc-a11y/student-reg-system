@@ -207,17 +207,39 @@ const MOCK = {
     // GPA History for chart
     gpaHistory: [],
 
-    // แบบประเมินการสอน (จาก API)
-    evaluations: [],
+    // แบบประเมินการสอน (ชุดข้อมูลทดสอบเบื้องต้น)
+    evaluations: [
+        { id: 'EV-001', type: 'course', studentId: '6701001', courseCode: 'NSG601', scores: '{"1":5,"2":4,"3":5,"4":4,"5":5}', comment: 'เนื้อหามีความทันสมัยมากครับ แต่อยากให้เพิ่มเคสศึกษาที่หลากหลายกว่านี้', date: '2026-04-10' },
+        { id: 'EV-002', type: 'course', studentId: '6701002', courseCode: 'NSG601', scores: '{"1":4,"2":4,"3":4,"4":3,"5":4}', comment: 'อยากให้เพิ่มเวลาในการทำเวิร์กชอป', date: '2026-04-11' },
+        { id: 'EV-003', type: 'instructor', studentId: '6701001', courseCode: 'NSG601', instructor: 'teacher-01', scores: '{"1":5,"2":5,"3":4,"4":5,"5":5}', comment: 'อาจารย์ถ่ายทอดความรู้ได้ดีมากครับ', date: '2026-04-10' },
+        { id: 'EV-004', type: 'course', studentId: '6701003', courseCode: 'NSG602', scores: '{"1":3,"2":3,"3":4,"4":3,"5":3}', comment: 'เอกสารประกอบการสอนบางส่วนอ่านยากครับ', date: '2026-04-12' },
+        { id: 'EV-005', type: 'course', studentId: '6701004', courseCode: 'NSG602', scores: '{"1":4,"2":3,"3":3,"4":4,"5":3}', comment: '', date: '2026-04-13' },
+        { id: 'EV-006', type: 'instructor', studentId: '6701003', courseCode: 'NSG602', instructor: 'teacher-02', scores: '{"1":4,"2":4,"3":5,"4":4,"5":4}', comment: 'อาจารย์เตรียมการสอนมาดีมาก', date: '2026-04-12' }
+    ],
 
-    // คำถามประเมินแยกตามวิชา (จาก API — EvalQuestions sheet)
-    evalQuestions: [],
+    // คำถามประเมินแยกตามวิชา (AUN-QA v4 Focused)
+    evalQuestions: [
+        { question_id: '1', question_text: 'ความชัดเจนของวัตถุประสงค์การเรียนรู้ (CLO)', section: 'ด้านหลักสูตรและการจัดการ' },
+        { question_id: '2', question_text: 'เนื้อหาความสอดคล้องกับวัตถุประสงค์ (LLO)', section: 'ด้านหลักสูตรและการจัดการ' },
+        { question_id: '3', question_text: 'ความทันสมัยของสื่อและเอกสารประกอบการสอน', section: 'ด้านสิ่งสนับสนุนการเรียนรู้' },
+        { question_id: '4', question_text: 'ความเหมาะสมของวิธีการประเมินผล', section: 'ด้านการวัดผลและประเมินผล' },
+        { question_id: '5', question_text: 'การได้รับข้อมูลป้อนกลับเพื่อพัฒนาการเรียนรู้', section: 'ด้านการวัดผลและประเมินผล' }
+    ],
 
-    // อาจารย์ที่สอนแต่ละวิชา (จาก API — CourseInstructors sheet)
-    courseInstructors: [],
+    // อาจารย์ที่สอนแต่ละวิชา
+    courseInstructors: [
+        { CourseCode: 'NSG601', InstructorID: 'teacher-01' },
+        { CourseCode: 'NSG602', InstructorID: 'teacher-02' }
+    ],
 
-    // คำถามประเมินอาจารย์ (จาก API — EvalInstructorQuestions sheet)
-    evalInstructorQuestions: [],
+    // คำถามประเมินอาจารย์
+    evalInstructorQuestions: [
+        { question_id: '1', question_text: 'อาจารย์เข้าสอนตรงเวลาและสม่ำเสมอ' },
+        { question_id: '2', question_text: 'ความเชี่ยวชาญและความแม่นยำในเนื้อหาของอาจารย์' },
+        { question_id: '3', question_text: 'อาจารย์เปิดโอกาสให้ซักถามและแสดงความคิดเห็น' },
+        { question_id: '4', question_text: 'ความสามารถในการถ่ายทอดเนื้อหาให้เข้าใจง่าย' },
+        { question_id: '5', question_text: 'อาจารย์เป็นแบบอย่างที่ดีด้านจริยธรรมวิชาชีพ' }
+    ],
 
     // คำถามแบบประเมินการบริหารหลักสูตร
     evalCurriculumQuestions: [
