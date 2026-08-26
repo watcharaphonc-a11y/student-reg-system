@@ -24,7 +24,7 @@ function renderLoginUI() {
             <div class="login-form" id="loginFormStudent">
                 <div class="form-group">
                     <label class="form-label">เลขประจำตัวประชาชน (13 หลัก)</label>
-                    <input type="text" id="studentIdInput" class="form-input" placeholder="เลขบัตรประชาชน 13 หลัก" maxlength="13" oninput="this.value = this.value.replace(/[^0-9]/g, '')" onkeydown="if(event.key === 'Enter') handleLogin('student')">
+                    <input type="text" id="studentIdInput" class="form-input" placeholder="เลขบัตรประชาชน 13 หลัก" maxlength="17" onkeydown="if(event.key === 'Enter') handleLogin('student')">
                 </div>
                 <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 1rem; margin-top: 10px;" onclick="handleLogin('student')">เข้าสู่ระบบ</button>
             </div>
@@ -79,7 +79,8 @@ function showError(msg) {
 
 function handleLogin(role) {
     if (role === 'student') {
-        const id = document.getElementById('studentIdInput').value;
+        let rawId = document.getElementById('studentIdInput').value;
+        const id = rawId.replace(/[^0-9]/g, ''); // Strip non-digits (like dashes)
         if (id.length !== 13) {
             return showError("กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก");
         }
@@ -87,17 +88,21 @@ function handleLogin(role) {
         // Find matching student by 13-digit ID or Student ID
         const idTrimmed = id.trim();
         const studentRecord = (MOCK.students || []).find(s =>
-            String(s.id || '').trim() === idTrimmed ||
-            String(s.studentId || '').trim() === idTrimmed ||
-            String(s.citizenId || s['เลขประจำตัวประชาชน'] || '').trim() === idTrimmed
+            String(s.id || s.ID || '').trim() === idTrimmed ||
+            String(s.studentId || s.StudentId || s.StudentID || '').trim() === idTrimmed ||
+            String(s.citizenId || s.CitizenId || s.CitizenID || s['เลขประจำตัวประชาชน'] || '').trim() === idTrimmed ||
+            Object.values(s).some(v => String(v).replace(/[^0-9]/g, '') === idTrimmed)
         );
-        const userRecord = (MOCK.users || []).find(u =>
-            (String(u.id || '').trim() === idTrimmed || String(u.username || '').trim() === idTrimmed) &&
-            u.role && (String(u.role).toLowerCase().trim() === 'student' || String(u.role).trim() === 'นักศึกษา')
-        );
+        const userRecord = (MOCK.users || []).find(u => {
+            const uId = String(u.id || u.ID || '').trim();
+            const uUsername = String(u.username || u.Username || '').trim();
+            const uRole = String(u.role || u.Role || '').toLowerCase().trim();
+            return (uId === idTrimmed || uUsername === idTrimmed || Object.values(u).some(v => String(v).replace(/[^0-9]/g, '') === idTrimmed)) &&
+                   (uRole === 'student' || uRole === 'นักศึกษา');
+        });
 
         if (studentRecord || userRecord) {
-            const name = studentRecord ? ((studentRecord.firstName && studentRecord.lastName) ? studentRecord.firstName + ' ' + studentRecord.lastName : studentRecord.name || id) : (userRecord.name || id);
+            const name = studentRecord ? ((studentRecord.firstName && studentRecord.lastName) ? studentRecord.firstName + ' ' + studentRecord.lastName : studentRecord.name || studentRecord.Name || id) : (userRecord.name || userRecord.Name || id);
             performLogin('student', { id: id, name: name });
         } else {
             recordLoginAttempt(id, 'Student', 'ล้มเหลว (ไม่พบบัญชีในระบบ)');
@@ -190,9 +195,10 @@ function performLogin(role, userData) {
         const nameStr = userData.name ? String(userData.name).trim() : null;
 
         let loggedInStudent = (MOCK.students || []).find(s =>
-            String(s.id || '').trim() === idStr ||
-            String(s.studentId || '').trim() === idStr ||
-            String(s.citizenId || s['เลขประจำตัวประชาชน'] || '').trim() === idStr
+            String(s.id || s.ID || '').trim() === idStr ||
+            String(s.studentId || s.StudentId || s.StudentID || '').trim() === idStr ||
+            String(s.citizenId || s.CitizenId || s.CitizenID || s['เลขประจำตัวประชาชน'] || '').trim() === idStr ||
+            Object.values(s).some(v => String(v).replace(/[^0-9]/g, '') === idStr)
         );
 
         // Fallback: If logged in using Citizen ID but Students sheet only has Student ID, try matching by Name
