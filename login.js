@@ -90,7 +90,7 @@ function handleLogin(role) {
         const studentRecord = (MOCK.students || []).find(s =>
             String(s.id || s.ID || '').trim() === idTrimmed ||
             String(s.studentId || s.StudentId || s.StudentID || '').trim() === idTrimmed ||
-            String(s.citizenId || s.CitizenId || s.CitizenID || s['เลขประจำตัวประชาชน'] || '').trim() === idTrimmed ||
+            String(s.citizenId || s.CitizenId || s.CitizenID || s['เลขประจำตัวประชาชน'] || s['เลขบัตรประชาชน'] || '').trim() === idTrimmed ||
             Object.values(s).some(v => String(v).replace(/[^0-9]/g, '') === idTrimmed)
         );
         const userRecord = (MOCK.users || []).find(u => {

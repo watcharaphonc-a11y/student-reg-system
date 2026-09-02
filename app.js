@@ -424,7 +424,7 @@ async function bootApp() {
                 return {
                     id: sId || s['เลขประจำตัวประชาชน'] || s['เลขบัตรประชาชน'] || s.id,
                     studentId: sId,
-                    citizenId: s['เลขประจำตัวประชาชน'] || s.citizenId || '',
+                    citizenId: s['เลขบัตรประชาชน'] || s['เลขประจำตัวประชาชน'] || s.citizenId || '',
                     prefix: s['คำนำหน้า'] || s.prefix,
                     firstName: s['ชื่อ (ไทย)'] || s['ชื่อ'] || s.firstName,
                     lastName: s['นามสกุล (ไทย)'] || s['นามสกุล'] || s.lastName,
